@@ -62,8 +62,24 @@ make setup
 - **App:** `http://localhost:3000`
 - **Mongo Express:** `http://localhost:8081` (User: `root`, Pass: `password`)
 
+```bash
 docker-compose up -d
 ```
+
+### Cara Paling Cepat (Pre-built Image)
+
+Jika Anda hanya ingin menjalankan aplikasi tanpa menyentuh kode sumber, Anda bisa menggunakan image yang sudah jadi dari Docker Hub:
+
+1.  **Siapkan file `.env`** (bisa copy dari [.env.example](.env.example)).
+2.  **Jalankan perintah berikut**:
+    ```bash
+    docker run -d \
+      --name spmb-wa \
+      -p 3000:3000 \
+      --env-file .env \
+      ardianryan/registrasi-spmb:0.1.0-alpha
+    ```
+    *Catatan: Pastikan Anda sudah memiliki database MongoDB yang bisa diakses.*
 
 ## Deployment Options
 
