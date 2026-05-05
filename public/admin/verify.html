@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifikasi - Admin SPMB</title>
+  <script src="/js/settings-loader.js"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Public+Sans:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="/css/app.css">
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { primary: '#003f87', 'primary-container': '#d4e3ff', 'on-primary': '#ffffff', 'surface-tint': '#115cb9', tertiary: '#004d10', 'tertiary-container': '#9cf8a1', error: '#ba1a1a', 'error-container': '#ffdad6', background: '#f9f9fc', surface: '#f9f9fc', 'surface-container-lowest': '#ffffff', 'surface-container-low': '#f3f3f6', 'on-surface': '#1a1c1e', 'on-surface-variant': '#424752', outline: '#72787f', 'outline-variant': '#c2c6d4' }, fontFamily: { display: ['Lexend', 'sans-serif'], body: ['Public Sans', 'sans-serif'] } } }
+    }
+  </script>
+</head>
+<body class="bg-background font-body text-on-surface min-h-screen flex">
+  <!-- Sidebar -->
+  <nav class="hidden md:flex flex-col fixed top-0 left-0 w-64 h-screen bg-surface-container-lowest border-r border-outline-variant p-6 z-40">
+    <div class="flex items-center gap-3 mb-8">
+      <span class="material-symbols-outlined text-primary" style="font-size:32px">admin_panel_settings</span>
+      <span class="font-display font-bold text-lg text-primary"><span data-setting="app_name">SPMB</span> Admin</span>
+    </div>
+    <ul class="space-y-1 flex-1">
+      <li><a href="/admin/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">dashboard</span>Dashboard</a></li>
+      <li><a href="/admin/students" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">groups</span>Data Siswa</a></li>
+      <li><a href="/admin/verify" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-medium text-sm"><span class="material-symbols-outlined" style="font-size:20px">verified</span>Verifikasi</a></li>
+      <li><a href="/admin/import" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">upload_file</span>Import Data</a></li>
+      <li><a href="/admin/operators" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">manage_accounts</span>Operator</a></li>
+      <li><a href="/admin/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">settings</span>Pengaturan</a></li>
+    </ul>
+    <button onclick="logout()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-error hover:bg-error-container/30 transition text-sm mt-auto">
+      <span class="material-symbols-outlined" style="font-size:20px">logout</span>Keluar
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="flex-1 md:ml-64">
+    <header class="sticky top-0 z-30 bg-surface-container-lowest border-b border-outline-variant px-6 py-4">
+      <h1 class="font-display text-xl font-bold">Verifikasi Data Siswa</h1>
+      <p class="text-sm text-on-surface-variant">Pilih siswa untuk memverifikasi data dan dokumen</p>
+    </header>
+
+    <main class="p-6">
+      <!-- Filters -->
+      <div class="flex flex-wrap items-center gap-3 mb-4">
+        <div class="relative flex-1 min-w-[200px] max-w-sm">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" style="font-size:20px">search</span>
+          <input type="text" id="searchInput" placeholder="Cari nama atau NISN..." class="w-full pl-10 pr-4 py-2.5 border border-outline-variant rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+        </div>
+        <select id="filterStatus" class="border border-outline-variant rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary">
+          <option value="pending">Menunggu Verifikasi</option>
+          <option value="submitted">Semua yang Submit</option>
+          <option value="verified">Sudah Diverifikasi</option>
+          <option value="rejected">Ditolak</option>
+        </select>
+        <select id="filterJalur" class="border border-outline-variant rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary">
+          <option value="">Semua Jalur</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="bg-surface-container-low border-b border-outline-variant text-sm">
+                <th class="px-4 py-3 font-medium text-on-surface-variant">No</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">NISN</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">Nama</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">Jalur</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">Dokumen</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">Status</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="7" class="px-4 py-12 text-center text-on-surface-variant">Memuat...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <div class="flex items-center justify-between px-4 py-3 border-t border-outline-variant">
+          <span id="paginationInfo" class="text-xs text-on-surface-variant"></span>
+          <div class="flex items-center gap-2">
+            <button id="prevPage" class="px-3 py-1.5 text-sm border border-outline-variant rounded-lg disabled:opacity-40" disabled>Prev</button>
+            <span id="pageNumbers" class="flex gap-1"></span>
+            <button id="nextPage" class="px-3 py-1.5 text-sm border border-outline-variant rounded-lg disabled:opacity-40" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/admin/role-guard.js"></script>
+  <script>
+    if (!API.getToken() || !localStorage.getItem('spmb_admin')) {
+      window.location.href = '/admin/login';
+    }
+
+    let currentPage = 1;
+    const limit = 20;
+    let totalPages = 1;
+    let totalItems = 0;
+    let searchTimeout = null;
+
+    const searchInput = document.getElementById('searchInput');
+    const filterStatus = document.getElementById('filterStatus');
+    const filterJalur = document.getElementById('filterJalur');
+    const tableBody = document.getElementById('tableBody');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const prevPage = document.getElementById('prevPage');
+    const nextPage = document.getElementById('nextPage');
+    const pageNumbers = document.getElementById('pageNumbers');
+
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => { currentPage = 1; loadData(); }, 400);
+    });
+    filterStatus.addEventListener('change', () => { currentPage = 1; loadData(); });
+    filterJalur.addEventListener('change', () => { currentPage = 1; loadData(); });
+    prevPage.addEventListener('click', () => { if (currentPage > 1) { currentPage--; loadData(); } });
+    nextPage.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; loadData(); } });
+
+    API.populateJalurOptions('filterJalur');
+    loadData();
+
+    async function loadData() {
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit,
+        status: filterStatus.value,
+        sort: '-submittedAt',
+      });
+      const search = searchInput.value.trim();
+      const jalur = filterJalur.value;
+      if (search) params.set('search', search);
+      if (jalur) params.set('jalur', jalur);
+
+      try {
+        const res = await API.request(`/admin/students?${params.toString()}`);
+        const students = Array.isArray(res.data) ? res.data : [];
+        totalItems = res.meta?.total || 0;
+        totalPages = res.meta?.totalPages || 1;
+        renderTable(students);
+        renderPagination();
+      } catch (err) {
+        if (err.status === 401) return;
+        tableBody.innerHTML = '<tr><td colspan="7" class="px-4 py-12 text-center text-on-surface-variant">Tidak ada data</td></tr>';
+      }
+    }
+
+    function renderTable(students) {
+      if (students.length === 0) {
+        tableBody.innerHTML = `
+          <tr><td colspan="7" class="px-4 py-12 text-center text-on-surface-variant">
+            <span class="material-symbols-outlined text-4xl text-outline mb-2 block">check_circle</span>
+            Tidak ada data dalam filter ini
+          </td></tr>`;
+        return;
+      }
+
+      const startNum = (currentPage - 1) * limit;
+      tableBody.innerHTML = students.map((s, i) => {
+        const nama = s.namaPreRegister || '-';
+        const vs = s.verifikasi?.status || 'pending';
+        const statusBadges = {
+          pending: '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Menunggu</span>',
+          verified: '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Verified</span>',
+          rejected: '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">Ditolak</span>',
+        };
+
+        // Count uploaded docs
+        const docs = ['kartuKeluarga', 'ijazahSkl', 'aktaKelahiran', 'foto4x6'];
+        const uploaded = docs.filter(d => s.dokumen?.[d]?.key).length;
+
+        return `
+          <tr class="border-b border-outline-variant hover:bg-surface-container-low/50 transition">
+            <td class="px-4 py-3 text-sm text-on-surface-variant">${startNum + i + 1}</td>
+            <td class="px-4 py-3 font-mono text-xs">${s.nisn || '-'}</td>
+            <td class="px-4 py-3 text-sm font-medium">${nama}</td>
+            <td class="px-4 py-3 text-sm text-on-surface-variant">${s.jalur || '-'}</td>
+            <td class="px-4 py-3 text-sm text-on-surface-variant">${uploaded}/4</td>
+            <td class="px-4 py-3">${statusBadges[vs] || statusBadges.pending}</td>
+            <td class="px-4 py-3">
+              <a href="/admin/verify-detail?id=${s._id}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-primary text-on-primary text-xs font-medium rounded-lg hover:bg-surface-tint transition">
+                <span class="material-symbols-outlined" style="font-size:16px">open_in_new</span>
+                Periksa
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderPagination() {
+      const start = totalItems === 0 ? 0 : (currentPage - 1) * limit + 1;
+      const end = Math.min(currentPage * limit, totalItems);
+      paginationInfo.textContent = `${start}-${end} dari ${totalItems}`;
+      prevPage.disabled = currentPage <= 1;
+      nextPage.disabled = currentPage >= totalPages;
+
+      let pages = [];
+      const maxVisible = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+      if (endPage - startPage < maxVisible - 1) startPage = Math.max(1, endPage - maxVisible + 1);
+      for (let p = startPage; p <= endPage; p++) pages.push(p);
+
+      pageNumbers.innerHTML = pages.map(p => `
+        <button onclick="goToPage(${p})" class="px-3 py-1.5 text-sm rounded-lg transition ${p === currentPage ? 'bg-primary text-on-primary font-medium' : 'border border-outline-variant text-on-surface-variant hover:bg-surface-container-low'}">${p}</button>
+      `).join('');
+    }
+
+    function goToPage(p) { currentPage = p; loadData(); }
+  </script>
+</body>
+</html>

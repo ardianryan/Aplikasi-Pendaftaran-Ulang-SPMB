@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login - Registrasi Ulang SMAN 1 Gedeg</title>
+        <script src="/js/settings-loader.js"></script>
+        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+        />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Public+Sans:wght@400;500;700&display=swap"
+        />
+        <link rel="stylesheet" href="/css/app.css" />
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: "#003f87",
+                            "primary-container": "#d4e3ff",
+                            "on-primary": "#ffffff",
+                            "surface-tint": "#115cb9",
+                            tertiary: "#004d10",
+                            error: "#ba1a1a",
+                            "error-container": "#ffdad6",
+                            background: "#f9f9fc",
+                            surface: "#f9f9fc",
+                            "surface-container-lowest": "#ffffff",
+                            "surface-container-low": "#f3f3f6",
+                            "on-surface": "#1a1c1e",
+                            "on-surface-variant": "#424752",
+                            outline: "#72787f",
+                            "outline-variant": "#c2c6d4",
+                        },
+                        fontFamily: {
+                            display: ["Lexend", "sans-serif"],
+                            body: ["Public Sans", "sans-serif"],
+                        },
+                    },
+                },
+            };
+        </script>
+    </head>
+    <body
+        class="bg-background font-body text-on-surface min-h-screen flex flex-col"
+    >
+        <a href="#login-form" class="skip-link">Langsung ke form login</a>
+
+        <!-- Mobile Header -->
+        <header
+            class="md:hidden sticky top-0 z-50 bg-surface-container-lowest border-b border-outline-variant"
+        >
+            <div class="px-4 h-14 flex items-center gap-3">
+                <a
+                    href="/"
+                    class="p-2 -ml-2 rounded-full hover:bg-surface-container-low"
+                    aria-label="Kembali ke beranda"
+                >
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </a>
+                <span class="font-display font-bold text-primary">Masuk</span>
+            </div>
+        </header>
+
+        <main class="flex-1 flex items-center justify-center p-4 md:p-8">
+            <div
+                class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-0 bg-surface-container-lowest rounded-2xl shadow-lg overflow-hidden border border-outline-variant"
+            >
+                <!-- Left Panel - Branding (hidden on mobile) -->
+                <div
+                    class="hidden md:flex flex-col items-center justify-center bg-primary p-10 relative overflow-hidden"
+                >
+                    <div
+                        class="absolute top-6 right-6 w-24 h-24 bg-white/10 rounded-full"
+                    ></div>
+                    <div
+                        class="absolute bottom-10 left-6 w-16 h-16 bg-white/10 rounded-full"
+                    ></div>
+                    <div class="relative text-center">
+                        <span
+                            class="material-symbols-outlined text-white/90 mb-6"
+                            style="font-size: 80px"
+                            >school</span
+                        >
+                        <h1
+                            class="font-display text-2xl font-bold text-white mb-3"
+                            data-setting="school_name"
+                        >
+                            SMAN 1 Gedeg
+                        </h1>
+                        <p class="text-white/70 text-sm leading-relaxed">
+                            Portal Registrasi Ulang<br />Peserta Didik Baru
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right Panel - Login Form -->
+                <div class="p-6 md:p-10 flex flex-col justify-center">
+                    <div class="mb-8">
+                        <h2
+                            class="font-display text-2xl font-bold text-on-surface mb-2"
+                        >
+                            Masuk
+                        </h2>
+                        <p class="text-on-surface-variant text-sm">
+                            Gunakan NISN dan Tanggal Lahir untuk masuk ke portal
+                            registrasi ulang.
+                        </p>
+                    </div>
+
+                    <!-- Error Alert -->
+                    <div
+                        id="login-error"
+                        class="hidden mb-6 p-4 bg-error-container rounded-lg border border-error/20"
+                        role="alert"
+                        aria-live="polite"
+                    >
+                        <div class="flex items-start gap-3">
+                            <span
+                                class="material-symbols-outlined text-error"
+                                style="font-size: 20px"
+                                >error</span
+                            >
+                            <p
+                                id="login-error-text"
+                                class="text-sm text-error font-medium"
+                            ></p>
+                        </div>
+                    </div>
+
+                    <form id="login-form" novalidate>
+                        <!-- NISN Field -->
+                        <div class="mb-5">
+                            <label
+                                for="nisn"
+                                class="block text-sm font-bold text-on-surface mb-2"
+                            >
+                                NISN <span class="text-error">*</span>
+                            </label>
+                            <div class="relative">
+                                <span
+                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
+                                    style="font-size: 20px"
+                                    >badge</span
+                                >
+                                <input
+                                    type="text"
+                                    id="nisn"
+                                    name="nisn"
+                                    inputmode="numeric"
+                                    pattern="[0-9]{10}"
+                                    maxlength="10"
+                                    required
+                                    aria-required="true"
+                                    aria-describedby="nisn-help"
+                                    placeholder="Masukkan 10 digit NISN"
+                                    class="w-full pl-11 pr-4 py-3.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow"
+                                />
+                            </div>
+                            <p
+                                id="nisn-help"
+                                class="mt-1.5 text-xs text-on-surface-variant"
+                            >
+                                Nomor Induk Siswa Nasional (10 digit)
+                            </p>
+                        </div>
+
+                        <!-- Tanggal Lahir Field -->
+                        <div class="mb-8">
+                            <label
+                                class="block text-sm font-bold text-on-surface mb-2"
+                            >
+                                Tanggal Lahir <span class="text-error">*</span>
+                            </label>
+                            <div
+                                class="flex items-center gap-2"
+                                aria-describedby="tgl-help"
+                            >
+                                <!-- Tanggal (DD) -->
+                                <input
+                                    type="text"
+                                    id="tgl-hari"
+                                    inputmode="numeric"
+                                    maxlength="2"
+                                    placeholder="HH"
+                                    required
+                                    aria-label="Tanggal"
+                                    class="w-16 text-center border border-outline-variant rounded-lg px-2 py-3.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow"
+                                />
+                                <!-- Bulan (dropdown) -->
+                                <select
+                                    id="tgl-bulan"
+                                    required
+                                    aria-label="Bulan"
+                                    class="flex-1 border border-outline-variant rounded-lg px-3 py-3.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow"
+                                >
+                                    <option value="">Bulan</option>
+                                    <option value="01">Januari</option>
+                                    <option value="02">Februari</option>
+                                    <option value="03">Maret</option>
+                                    <option value="04">April</option>
+                                    <option value="05">Mei</option>
+                                    <option value="06">Juni</option>
+                                    <option value="07">Juli</option>
+                                    <option value="08">Agustus</option>
+                                    <option value="09">September</option>
+                                    <option value="10">Oktober</option>
+                                    <option value="11">November</option>
+                                    <option value="12">Desember</option>
+                                </select>
+                                <!-- Tahun (YYYY) -->
+                                <input
+                                    type="text"
+                                    id="tgl-tahun"
+                                    inputmode="numeric"
+                                    maxlength="4"
+                                    placeholder="TTTT"
+                                    required
+                                    aria-label="Tahun"
+                                    class="w-20 text-center border border-outline-variant rounded-lg px-2 py-3.5 text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-shadow"
+                                />
+                            </div>
+                            <p
+                                id="tgl-help"
+                                class="mt-1.5 text-xs text-on-surface-variant"
+                            >
+                                Sesuai dengan data saat pendaftaran
+                                <span data-setting="app_name">SPMB</span>
+                            </p>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button
+                            type="submit"
+                            id="login-btn"
+                            class="w-full flex items-center justify-center gap-2 bg-primary text-on-primary font-bold text-base px-6 py-4 rounded-lg hover:bg-surface-tint transition-colors min-h-[56px] shadow-[0_4px_14px_rgba(0,63,135,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-size: 20px"
+                                >login</span
+                            >
+                            <span id="login-btn-text">Masuk</span>
+                        </button>
+                    </form>
+
+                    <div class="mt-6 text-center">
+                        <a
+                            href="/"
+                            class="text-sm text-primary font-medium hover:underline"
+                        >
+                            &larr; Kembali ke Beranda
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="py-4 text-center text-xs text-on-surface-variant">
+            &copy; 2025 <span data-setting="school_name">SMAN 1 Gedeg</span>
+        </footer>
+
+        <script src="/js/api.js"></script>
+        <script>
+            // Redirect if already logged in
+            if (API.isLoggedIn()) {
+                window.location.href = "/wizard";
+            }
+
+            const form = document.getElementById("login-form");
+            const errorDiv = document.getElementById("login-error");
+            const errorText = document.getElementById("login-error-text");
+            const loginBtn = document.getElementById("login-btn");
+            const loginBtnText = document.getElementById("login-btn-text");
+
+            // Check if registration is open and apply dynamic branding
+            (async () => {
+                try {
+                    const settings = await API.getPublicSettings();
+
+                    // Apply dynamic school name
+                    if (settings.school_name) {
+                        document
+                            .querySelectorAll("[data-school-name]")
+                            .forEach((el) => {
+                                el.textContent = settings.school_name;
+                            });
+                    }
+
+                    // Check registration status
+                    if (settings.registration_open === false) {
+                        const msg =
+                            settings.registration_closed_message ||
+                            "Registrasi ulang telah ditutup.";
+                        showError(msg);
+                        loginBtn.disabled = true;
+                        loginBtnText.textContent = "Registrasi Ditutup";
+                        form.querySelectorAll("input").forEach(
+                            (i) => (i.disabled = true),
+                        );
+                    }
+                } catch (e) {
+                    // Non-critical: settings fetch failed, continue with defaults
+                }
+            })();
+
+            form.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const nisn = document.getElementById("nisn").value.trim();
+                const hari = document.getElementById("tgl-hari").value.trim();
+                const bulan = document.getElementById("tgl-bulan").value;
+                const tahun = document.getElementById("tgl-tahun").value.trim();
+
+                // Client-side validation
+                if (!nisn || nisn.length !== 10) {
+                    showError("NISN harus tepat 10 digit angka.");
+                    document.getElementById("nisn").focus();
+                    return;
+                }
+
+                if (!hari || !bulan || !tahun) {
+                    showError(
+                        "Tanggal lahir wajib diisi lengkap (tanggal, bulan, tahun).",
+                    );
+                    if (!hari) document.getElementById("tgl-hari").focus();
+                    else if (!bulan)
+                        document.getElementById("tgl-bulan").focus();
+                    else document.getElementById("tgl-tahun").focus();
+                    return;
+                }
+
+                // Validate day range
+                const hariNum = parseInt(hari);
+                if (isNaN(hariNum) || hariNum < 1 || hariNum > 31) {
+                    showError("Tanggal tidak valid (1-31).");
+                    document.getElementById("tgl-hari").focus();
+                    return;
+                }
+
+                // Validate year range
+                const tahunNum = parseInt(tahun);
+                if (
+                    isNaN(tahunNum) ||
+                    tahun.length !== 4 ||
+                    tahunNum < 1990 ||
+                    tahunNum > 2015
+                ) {
+                    showError("Tahun tidak valid.");
+                    document.getElementById("tgl-tahun").focus();
+                    return;
+                }
+
+                // Build YYYY-MM-DD format for API
+                const tanggalLahir = `${tahun}-${bulan}-${hari.padStart(2, "0")}`;
+
+                // Show loading state
+                setLoading(true);
+                hideError();
+
+                try {
+                    await API.login(nisn, tanggalLahir);
+                    window.location.href = "/wizard";
+                } catch (err) {
+                    showError(
+                        err.message ||
+                            "Login gagal. Periksa kembali NISN dan Tanggal Lahir Anda.",
+                    );
+                    setLoading(false);
+                }
+            });
+
+            function showError(message) {
+                errorText.textContent = message;
+                errorDiv.classList.remove("hidden");
+                errorDiv.focus();
+            }
+
+            function hideError() {
+                errorDiv.classList.add("hidden");
+            }
+
+            function setLoading(loading) {
+                loginBtn.disabled = loading;
+                loginBtnText.textContent = loading ? "Memproses..." : "Masuk";
+            }
+
+            // Only allow numbers in NISN field
+            document.getElementById("nisn").addEventListener("input", (e) => {
+                e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
+            });
+
+            // Only allow numbers in tanggal & tahun fields
+            document
+                .getElementById("tgl-hari")
+                .addEventListener("input", (e) => {
+                    e.target.value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 2);
+                });
+            document
+                .getElementById("tgl-tahun")
+                .addEventListener("input", (e) => {
+                    e.target.value = e.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 4);
+                });
+
+            // Auto-focus next field
+            document
+                .getElementById("tgl-hari")
+                .addEventListener("input", (e) => {
+                    if (e.target.value.length === 2)
+                        document.getElementById("tgl-bulan").focus();
+                });
+            document
+                .getElementById("tgl-bulan")
+                .addEventListener("change", () => {
+                    document.getElementById("tgl-tahun").focus();
+                });
+        </script>
+    </body>
+</html>

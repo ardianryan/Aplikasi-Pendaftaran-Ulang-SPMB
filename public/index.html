@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrasi Ulang - SMAN 1 Gedeg</title>
+  <meta name="description" content="Portal Registrasi Ulang Peserta Didik Baru SMAN 1 Gedeg Kabupaten Mojokerto">
+  <script src="/js/settings-loader.js"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Public+Sans:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="/css/app.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#003f87',
+            'primary-container': '#d4e3ff',
+            'on-primary': '#ffffff',
+            'surface-tint': '#115cb9',
+            tertiary: '#004d10',
+            'tertiary-container': '#9cf8a1',
+            error: '#ba1a1a',
+            'error-container': '#ffdad6',
+            background: '#f9f9fc',
+            surface: '#f9f9fc',
+            'surface-container-lowest': '#ffffff',
+            'surface-container-low': '#f3f3f6',
+            'on-surface': '#1a1c1e',
+            'on-surface-variant': '#424752',
+            outline: '#72787f',
+            'outline-variant': '#c2c6d4',
+          },
+          fontFamily: {
+            display: ['Lexend', 'sans-serif'],
+            body: ['Public Sans', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background font-body text-on-surface min-h-screen flex flex-col">
+  <!-- Skip to content (WCAG) -->
+  <a href="#main-content" class="skip-link">Langsung ke konten utama</a>
+
+  <!-- Header / Navigation -->
+  <header class="sticky top-0 z-50 bg-surface-container-lowest border-b border-outline-variant shadow-sm">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary" style="font-size:32px">school</span>
+        <span class="font-display font-bold text-lg text-primary" data-setting="school_name">SMAN 1 Gedeg</span>
+      </div>
+      <nav class="flex items-center gap-2">
+        <a href="#alur" class="hidden md:inline-flex text-sm font-medium text-on-surface-variant hover:text-primary px-3 py-2 rounded-lg hover:bg-primary-container/30 transition-colors">Alur</a>
+        <a href="#persyaratan" class="hidden md:inline-flex text-sm font-medium text-on-surface-variant hover:text-primary px-3 py-2 rounded-lg hover:bg-primary-container/30 transition-colors">Persyaratan</a>
+        <a href="/login" class="inline-flex items-center gap-2 bg-primary text-on-primary font-bold text-sm px-4 py-2.5 rounded-lg hover:bg-surface-tint transition-colors shadow-sm">
+          <span class="material-symbols-outlined" style="font-size:18px">login</span>
+          Masuk
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content" class="flex-1">
+    <!-- Hero Section -->
+    <section class="relative bg-primary overflow-hidden">
+      <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-10 right-10 w-64 h-64 bg-white rounded-full blur-3xl"></div>
+        <div class="absolute bottom-10 left-10 w-48 h-48 bg-white rounded-full blur-2xl"></div>
+      </div>
+      <div class="relative max-w-[1200px] mx-auto px-4 md:px-6 py-16 md:py-24 text-center">
+        <span class="inline-flex items-center gap-2 bg-white/20 text-white text-sm font-medium px-4 py-1.5 rounded-full mb-6">
+          <span class="material-symbols-outlined" style="font-size:16px">verified</span>
+          Tahun Pelajaran 2025/2026
+        </span>
+        <h1 class="font-display text-3xl md:text-5xl font-bold text-white leading-tight mb-4">
+          Registrasi Ulang<br>Peserta Didik Baru
+        </h1>
+        <p class="text-white/80 text-lg md:text-xl max-w-2xl mx-auto mb-8">
+          Selamat! Anda telah diterima di <span data-setting="school_name">SMAN 1 Gedeg</span>. Silakan lengkapi data registrasi ulang Anda melalui portal ini.
+        </p>
+        <a href="/login" class="inline-flex items-center gap-3 bg-white text-primary font-bold text-lg px-8 py-4 rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all min-h-[56px]">
+          <span class="material-symbols-outlined">arrow_forward</span>
+          Mulai Registrasi Ulang
+        </a>
+      </div>
+    </section>
+
+    <!-- Alur Pendaftaran -->
+    <section id="alur" class="max-w-[1200px] mx-auto px-4 md:px-6 py-16">
+      <h2 class="font-display text-2xl md:text-3xl font-bold text-center mb-12">Alur Registrasi Ulang</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <!-- Step 1 -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 text-center hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-primary-container rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-symbols-outlined text-primary">login</span>
+          </div>
+          <div class="text-sm font-bold text-primary mb-1">Langkah 1</div>
+          <h3 class="font-display font-semibold text-base mb-2">Login</h3>
+          <p class="text-sm text-on-surface-variant">Masuk menggunakan NISN dan Tanggal Lahir</p>
+        </div>
+        <!-- Step 2 -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 text-center hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-primary-container rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-symbols-outlined text-primary">fact_check</span>
+          </div>
+          <div class="text-sm font-bold text-primary mb-1">Langkah 2</div>
+          <h3 class="font-display font-semibold text-base mb-2">Konfirmasi Data</h3>
+          <p class="text-sm text-on-surface-variant">Periksa data diri yang sudah terdaftar</p>
+        </div>
+        <!-- Step 3 -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 text-center hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-primary-container rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-symbols-outlined text-primary">edit_note</span>
+          </div>
+          <div class="text-sm font-bold text-primary mb-1">Langkah 3</div>
+          <h3 class="font-display font-semibold text-base mb-2">Isi Biodata</h3>
+          <p class="text-sm text-on-surface-variant">Lengkapi data buku induk siswa</p>
+        </div>
+        <!-- Step 4 -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 text-center hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-primary-container rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-symbols-outlined text-primary">upload_file</span>
+          </div>
+          <div class="text-sm font-bold text-primary mb-1">Langkah 4</div>
+          <h3 class="font-display font-semibold text-base mb-2">Upload Berkas</h3>
+          <p class="text-sm text-on-surface-variant">Unggah dokumen yang diperlukan</p>
+        </div>
+        <!-- Step 5 -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 text-center hover:shadow-md transition-shadow">
+          <div class="w-12 h-12 bg-tertiary-container rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-symbols-outlined text-tertiary">check_circle</span>
+          </div>
+          <div class="text-sm font-bold text-tertiary mb-1">Langkah 5</div>
+          <h3 class="font-display font-semibold text-base mb-2">Selesai</h3>
+          <p class="text-sm text-on-surface-variant">Review, kirim, dan unduh bukti</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Persyaratan Berkas -->
+    <section id="persyaratan" class="bg-primary-container/30">
+      <div class="max-w-[1200px] mx-auto px-4 md:px-6 py-16">
+        <h2 class="font-display text-2xl md:text-3xl font-bold text-center mb-12">Persyaratan Berkas</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div class="flex items-start gap-4 bg-surface-container-lowest rounded-xl p-5 border border-outline-variant">
+            <span class="material-symbols-outlined text-tertiary mt-0.5" style="font-variation-settings:'FILL' 1">check_circle</span>
+            <div>
+              <h3 class="font-semibold mb-1">Kartu Keluarga (KK)</h3>
+              <p class="text-sm text-on-surface-variant">Scan/foto KK yang jelas, format PDF/JPG/PNG, maks 5MB</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 bg-surface-container-lowest rounded-xl p-5 border border-outline-variant">
+            <span class="material-symbols-outlined text-tertiary mt-0.5" style="font-variation-settings:'FILL' 1">check_circle</span>
+            <div>
+              <h3 class="font-semibold mb-1">Ijazah / SKL</h3>
+              <p class="text-sm text-on-surface-variant">Scan ijazah SMP atau Surat Keterangan Lulus, format PDF/JPG/PNG</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 bg-surface-container-lowest rounded-xl p-5 border border-outline-variant">
+            <span class="material-symbols-outlined text-tertiary mt-0.5" style="font-variation-settings:'FILL' 1">check_circle</span>
+            <div>
+              <h3 class="font-semibold mb-1">Akta Kelahiran</h3>
+              <p class="text-sm text-on-surface-variant">Scan/foto akta kelahiran yang jelas, format PDF/JPG/PNG</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-4 bg-surface-container-lowest rounded-xl p-5 border border-outline-variant">
+            <span class="material-symbols-outlined text-tertiary mt-0.5" style="font-variation-settings:'FILL' 1">check_circle</span>
+            <div>
+              <h3 class="font-semibold mb-1">Pas Foto 4x6</h3>
+              <p class="text-sm text-on-surface-variant">Foto terbaru latar merah, format JPG/PNG, maks 5MB</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-surface-container-lowest border-t border-outline-variant">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      <p class="text-sm text-on-surface-variant">&copy; 2025 <span data-setting="school_name">SMAN 1 Gedeg</span></p>
+      <div class="flex items-center gap-4 text-sm">
+        <a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Bantuan</a>
+        <a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Panduan</a>
+        <a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Kontak</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

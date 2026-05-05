@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spmb-wa-app
+    restart: always
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:-spmb-wa-secret-key-123}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
+      - MONGODB_URI=mongodb://root:password@mongodb:27017/spmbwa?authSource=admin
+      - R2_ENDPOINT=${R2_ENDPOINT}
+      - R2_BUCKET=${R2_BUCKET}
+      - R2_REGION=${R2_REGION}
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_PUBLIC_URL=${R2_PUBLIC_URL}
+      - R2_PREFIX=${R2_PREFIX}
+      - SSO_BASE_URL=${SSO_BASE_URL}
+      - SSO_API_KEY=${SSO_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+    depends_on:
+      - mongodb
+    networks:
+      - spmb-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: spmb-wa-mongodb
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=spmbwa
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - spmb-network
+
+  mongo-express:
+    image: mongo-express
+    container_name: spmb-wa-mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+      - ME_CONFIG_MONGODB_URL=mongodb://root:password@mongodb:27017/?authSource=admin
+    depends_on:
+      - mongodb
+    networks:
+      - spmb-network
+
+networks:
+  spmb-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Siswa - Admin SPMB</title>
+  <script src="/js/settings-loader.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#003f87',
+            'on-primary': '#ffffff',
+            'surface-tint': '#115cb9',
+            tertiary: '#004d10',
+            error: '#ba1a1a',
+            background: '#f9f9fc',
+            'surface-lowest': '#ffffff',
+            'surface-low': '#f3f3f6',
+            'on-surface': '#1a1c1e',
+            'on-surface-variant': '#424752',
+            outline: '#72787f',
+            'outline-variant': '#c2c6d4',
+          },
+          fontFamily: {
+            display: ['Lexend', 'sans-serif'],
+            body: ['Public Sans', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="bg-background font-body text-on-surface min-h-screen flex">
+  <!-- Sidebar -->
+  <nav class="hidden md:flex flex-col fixed top-0 left-0 w-64 h-screen bg-surface-container-lowest border-r border-outline-variant p-6 z-40">
+    <div class="flex items-center gap-3 mb-8">
+      <span class="material-symbols-outlined text-primary" style="font-size:32px">admin_panel_settings</span>
+      <span class="font-display font-bold text-lg text-primary"><span data-setting="app_name">SPMB</span> Admin</span>
+    </div>
+    <ul class="space-y-1 flex-1">
+      <li><a href="/admin/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">dashboard</span>Dashboard</a></li>
+      <li><a href="/admin/students" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-medium text-sm"><span class="material-symbols-outlined" style="font-size:20px">groups</span>Data Siswa</a></li>
+      <li><a href="/admin/verify" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">verified</span>Verifikasi</a></li>
+      <li><a href="/admin/import" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">upload_file</span>Import Data</a></li>
+      <li><a href="/admin/operators" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">manage_accounts</span>Operator</a></li>
+      <li><a href="/admin/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">settings</span>Pengaturan</a></li>
+    </ul>
+    <button onclick="logout()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-error hover:bg-error-container/30 transition text-sm mt-auto">
+      <span class="material-symbols-outlined" style="font-size:20px">logout</span>Keluar
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="flex-1 md:ml-64">
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-30 bg-surface-lowest/80 backdrop-blur-md border-b border-outline-variant">
+      <div class="flex items-center justify-between px-6 py-3">
+        <div>
+          <h2 class="font-display font-semibold text-lg text-on-surface">Data Siswa</h2>
+          <p class="text-sm text-on-surface-variant">Kelola data pendaftar</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="exportBtn" class="flex items-center gap-2 px-4 py-2 bg-tertiary text-on-primary rounded-lg hover:bg-tertiary/90 transition text-sm font-medium">
+            <span class="material-symbols-outlined text-lg">download</span>
+            Export Excel
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="p-6">
+      <!-- Filters -->
+      <div class="bg-surface-lowest rounded-xl border border-outline-variant p-4 mb-6">
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Search -->
+          <div class="relative flex-1 min-w-[240px]">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-xl">search</span>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Cari nama atau NISN..."
+              class="w-full pl-10 pr-4 py-2 border border-outline-variant rounded-lg bg-surface-lowest text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm transition"
+            />
+          </div>
+
+          <!-- Jalur Filter -->
+          <select id="filterJalur" class="px-3 py-2 border border-outline-variant rounded-lg bg-surface-lowest text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+            <option value="">Semua Jalur</option>
+          </select>
+
+          <!-- Status Filter -->
+          <select id="filterStatus" class="px-3 py-2 border border-outline-variant rounded-lg bg-surface-lowest text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+            <option value="">Semua Status</option>
+            <option value="not_started">Belum Mulai</option>
+            <option value="in_progress">Sedang Mengisi</option>
+            <option value="submitted">Sudah Submit</option>
+            <option value="verified">Terverifikasi</option>
+            <option value="rejected">Ditolak</option>
+          </select>
+
+          <!-- Reset -->
+          <button id="resetFilters" class="px-3 py-2 text-sm text-on-surface-variant hover:text-on-surface border border-outline-variant rounded-lg hover:bg-surface-low transition">
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="bg-surface-lowest rounded-xl border border-outline-variant overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-surface-low border-b border-outline-variant">
+                <th class="text-left px-4 py-3 font-medium text-on-surface-variant">No</th>
+                <th class="text-left px-4 py-3 font-medium text-on-surface-variant">NISN</th>
+                <th class="text-left px-4 py-3 font-medium text-on-surface-variant">Nama Lengkap</th>
+                <th class="text-left px-4 py-3 font-medium text-on-surface-variant">Tgl Lahir</th>
+                <th class="text-left px-4 py-3 font-medium text-on-surface-variant">Jalur</th>
+                <th class="text-left px-4 py-3 font-medium text-on-surface-variant">Status</th>
+                <th class="text-left px-4 py-3 font-medium text-on-surface-variant">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="studentsTableBody">
+              <!-- Rows injected by JS -->
+              <tr>
+                <td colspan="7" class="px-4 py-12 text-center text-on-surface-variant">
+                  <span class="material-symbols-outlined text-4xl text-outline mb-2 block">hourglass_empty</span>
+                  Memuat data...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between px-4 py-3 border-t border-outline-variant">
+          <p id="paginationInfo" class="text-sm text-on-surface-variant">Menampilkan 0 dari 0 data</p>
+          <div class="flex items-center gap-1">
+            <button id="prevPage" disabled class="px-3 py-1.5 text-sm border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-low disabled:opacity-50 disabled:cursor-not-allowed transition">
+              Sebelumnya
+            </button>
+            <div id="pageNumbers" class="flex items-center gap-1"></div>
+            <button id="nextPage" disabled class="px-3 py-1.5 text-sm border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-low disabled:opacity-50 disabled:cursor-not-allowed transition">
+              Selanjutnya
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Detail Modal -->
+  <div id="detailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div class="bg-surface-lowest rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto mx-4">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-outline-variant sticky top-0 bg-surface-lowest rounded-t-2xl">
+        <h3 class="font-display font-semibold text-on-surface">Detail Siswa</h3>
+        <button id="closeModal" class="p-1 text-outline hover:text-on-surface transition">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div id="detailContent" class="p-6">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/admin/role-guard.js"></script>
+  <script src="/js/admin/students.js"></script>
+</body>
+</html>

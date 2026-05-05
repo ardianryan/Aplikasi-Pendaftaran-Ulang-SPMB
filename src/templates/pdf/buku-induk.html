@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12pt;
+      line-height: 1.0;
+      color: #000;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid black;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .header .logo {
+      height: 80px;
+      width: auto;
+    }
+    .header-text {
+      text-align: center;
+      flex-grow: 1;
+    }
+    .header-text p {
+      margin: 0;
+      font-size: 14px;
+    }
+    .header-text h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .header-text small {
+      display: block;
+      font-size: 10px;
+    }
+    .title {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: bold;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .section-title {
+      font-weight: bold;
+      margin-top: 15px;
+      margin-bottom: 10px;
+      font-size: 12pt;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 5px;
+    }
+    .data-table td {
+      padding: 5px;
+      vertical-align: top;
+      word-wrap: break-word;
+    }
+    .data-table td:first-child {
+      width: 50%;
+      padding-left: 1.5em;
+      text-align: left;
+    }
+    .data-table td:last-child {
+      width: 50%;
+      border-bottom: 1px dotted black;
+      text-transform: uppercase;
+      padding-left: 1.5em;
+      text-align: left;
+    }
+    .sub-judul {
+      padding-left: 3em !important;
+    }
+    .signature-section {
+      margin-top: 30px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .signature-block {
+      text-align: center;
+      width: 40%;
+    }
+    .signature-line {
+      border-top: 1px solid black;
+      margin-top: 100px;
+      padding-top: 5px;
+    }
+    .header-info {
+      text-align: center;
+      font-size: 10px;
+      margin-top: 2px;
+    }
+    @media print {
+      @page {
+        margin: 2cm 1.75cm 2.55cm 2.75cm;
+      }
+      body { margin: 0; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- School Letterhead (dynamic from settings) -->
+  <div class="header">
+    {{#kopLogoLeft}}<img src="{{kopLogoLeft}}" class="logo" alt="">{{/kopLogoLeft}}
+    <div class="header-text">
+      <p>{{kopLine1}}</p>
+      <p>{{kopLine2}}</p>
+      <h1>{{kopLine3}}</h1>
+      <h1>{{kopLine4}}</h1>
+      <small>{{kopLine5}}</small>
+      <small class="header-info">{{kopLine6}}</small>
+    </div>
+    {{#kopLogoRight}}<img src="{{kopLogoRight}}" class="logo" alt="">{{/kopLogoRight}}
+  </div>
+
+  <!-- Document Title -->
+  <div class="title">
+    <p>DATA BUKU INDUK</p>
+    <p>MURID KELAS X</p>
+    <p>TAHUN PELAJARAN {{schoolYear}}</p>
+  </div>
+
+  <!-- NISN & NIK -->
+  <table class="data-table">
+    <tr><td>NISN</td><td>{{nisn}}</td></tr>
+    <tr><td>NIK</td><td>{{nik}}</td></tr>
+  </table>
+
+  <!-- Section A: Data Diri Peserta Didik -->
+  <div class="section-title">A. Keterangan tentang Diri Peserta Didik</div>
+  <table class="data-table">
+    <tr><td>1. Nama Lengkap</td><td>{{namaLengkap}}</td></tr>
+    <tr><td>2. Nama Panggilan</td><td>{{namaPanggilan}}</td></tr>
+    <tr><td>3. Jenis Kelamin</td><td>{{jenisKelamin}}</td></tr>
+    <tr><td>4. Tempat dan Tanggal Lahir</td><td>{{tempatTanggalLahir}}</td></tr>
+    <tr><td>5. Agama</td><td>{{agama}}</td></tr>
+    <tr><td>6. Kewarganegaraan</td><td>{{kewarganegaraan}}</td></tr>
+    <tr><td>7. Anak Keberapa</td><td>{{anakKe}}</td></tr>
+    <tr><td>8. Jumlah Saudara</td><td>{{jumlahSaudara}}</td></tr>
+    <tr><td class="sub-judul">a. Saudara Kandung</td><td>{{saudaraKandung}}</td></tr>
+    <tr><td class="sub-judul">b. Saudara Tiri</td><td>{{saudaraTiri}}</td></tr>
+    <tr><td class="sub-judul">c. Saudara Angkat</td><td>{{saudaraAngkat}}</td></tr>
+    <tr><td>9. Status Anak</td><td>{{statusYatim}}</td></tr>
+    <tr><td>10. Bahasa Sehari-hari di Rumah</td><td>{{bahasaSehari}}</td></tr>
+  </table>
+
+  <!-- Section B: Tempat Tinggal -->
+  <div class="section-title">B. Keterangan Tempat Tinggal</div>
+  <table class="data-table">
+    <tr><td>11. Alamat</td><td>{{alamat}}</td></tr>
+    <tr><td>12. Telepon/HP/WA</td><td>{{telepon}}</td></tr>
+    <tr><td>13. Email</td><td>{{email}}</td></tr>
+    <tr><td>14. Tinggal dengan</td><td>{{tinggalDengan}}</td></tr>
+    <tr><td>15. Jarak Tempat Tinggal ke Sekolah</td><td>{{jarakSekolah}}</td></tr>
+    <tr><td>16. Transportasi ke Sekolah</td><td>{{transportasi}}</td></tr>
+  </table>
+
+  <!-- Section C: Kesehatan -->
+  <div class="section-title">C. Keterangan Kesehatan</div>
+  <table class="data-table">
+    <tr><td>17. Golongan Darah</td><td>{{golonganDarah}}</td></tr>
+    <tr><td>18. Penyakit yang Pernah Diderita</td><td>{{penyakit}}</td></tr>
+    <tr><td>19. Kelainan Jasmani</td><td>{{kelainanJasmani}}</td></tr>
+    <tr><td>20. Tinggi dan Berat Badan</td><td>{{tinggiBadanBeratBadan}}</td></tr>
+  </table>
+
+  <!-- Section D: Pendidikan -->
+  <div class="section-title">D. Keterangan Pendidikan</div>
+  <table class="data-table">
+    <tr><td>21. Asal Sekolah (SMP)</td><td>{{asalSekolah}}</td></tr>
+    <tr><td>22. Tanggal dan Nomor Ijazah</td><td>{{nomorIjazah}}</td></tr>
+    <tr><td>23. Lama Belajar (tahun)</td><td>{{lamaBelajar}}</td></tr>
+    <tr><td>24. Diterima di Kelas</td><td>{{kelas}}</td></tr>
+  </table>
+
+  <!-- Section E: Ayah Kandung -->
+  <div class="section-title">E. Keterangan tentang Ayah Kandung</div>
+  <table class="data-table">
+    <tr><td>25. Nama</td><td>{{namaAyah}}</td></tr>
+    <tr><td>26. Tempat dan Tanggal Lahir</td><td>{{tempatTanggalLahirAyah}}</td></tr>
+    <tr><td>27. Agama</td><td>{{agamaAyah}}</td></tr>
+    <tr><td>28. Kewarganegaraan</td><td>{{kewarganegaraanAyah}}</td></tr>
+    <tr><td>29. Pendidikan</td><td>{{pendidikanAyah}}</td></tr>
+    <tr><td>30. Pekerjaan</td><td>{{pekerjaanAyah}}</td></tr>
+    <tr><td>31. Penghasilan per bulan</td><td>{{penghasilanAyah}}</td></tr>
+    <tr><td>32. Alamat Rumah</td><td>{{alamatAyah}}</td></tr>
+    <tr><td>33. Telepon/HP/WA</td><td>{{teleponAyah}}</td></tr>
+    <tr><td>34. Status</td><td>{{statusAyah}}</td></tr>
+  </table>
+
+  <!-- Section F: Ibu Kandung -->
+  <div class="section-title">F. Keterangan tentang Ibu Kandung</div>
+  <table class="data-table">
+    <tr><td>35. Nama</td><td>{{namaIbu}}</td></tr>
+    <tr><td>36. Tempat dan Tanggal Lahir</td><td>{{tempatTanggalLahirIbu}}</td></tr>
+    <tr><td>37. Agama</td><td>{{agamaIbu}}</td></tr>
+    <tr><td>38. Kewarganegaraan</td><td>{{kewarganegaraanIbu}}</td></tr>
+    <tr><td>39. Pendidikan</td><td>{{pendidikanIbu}}</td></tr>
+    <tr><td>40. Pekerjaan</td><td>{{pekerjaanIbu}}</td></tr>
+    <tr><td>41. Penghasilan per bulan</td><td>{{penghasilanIbu}}</td></tr>
+    <tr><td>42. Alamat Rumah</td><td>{{alamatIbu}}</td></tr>
+    <tr><td>43. Telepon/HP/WA</td><td>{{teleponIbu}}</td></tr>
+    <tr><td>44. Status</td><td>{{statusIbu}}</td></tr>
+  </table>
+
+  <!-- Section G: Wali -->
+  <div class="section-title">G. Keterangan tentang Wali</div>
+  <table class="data-table">
+    <tr><td>45. Nama</td><td>{{namaWali}}</td></tr>
+    <tr><td>46. Tempat dan Tanggal Lahir</td><td>{{tempatTanggalLahirWali}}</td></tr>
+    <tr><td>47. Agama</td><td>{{agamaWali}}</td></tr>
+    <tr><td>48. Kewarganegaraan</td><td>{{kewarganegaraanWali}}</td></tr>
+    <tr><td>49. Pendidikan</td><td>{{pendidikanWali}}</td></tr>
+    <tr><td>50. Pekerjaan</td><td>{{pekerjaanWali}}</td></tr>
+    <tr><td>51. Penghasilan per bulan</td><td>{{penghasilanWali}}</td></tr>
+    <tr><td>52. Alamat Rumah</td><td>{{alamatWali}}</td></tr>
+    <tr><td>53. Telepon/HP/WA</td><td>{{teleponWali}}</td></tr>
+    <tr><td>54. Status</td><td>{{statusWali}}</td></tr>
+  </table>
+
+  <!-- Section H: Kegemaran -->
+  <div class="section-title">H. Kegemaran Peserta Didik</div>
+  <table class="data-table">
+    <tr><td>a. Kesenian</td><td>{{kesenian}}</td></tr>
+    <tr><td>b. Olahraga</td><td>{{olahraga}}</td></tr>
+    <tr><td>c. Kemasyarakatan/Organisasi</td><td>{{organisasi}}</td></tr>
+    <tr><td>d. Lain-lain</td><td>{{lainLain}}</td></tr>
+  </table>
+
+  <!-- Signature Section -->
+  <div class="signature-section">
+    <div class="signature-block">
+      <p>Mengetahui,</p>
+      <p>Orang Tua / Wali</p>
+      <div class="signature-line"></div>
+    </div>
+    <div class="signature-block">
+      <p>{{signatureDate}}</p>
+      <p>Peserta Didik</p>
+      <div class="signature-line">
+        <p>{{namaLengkap}}</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

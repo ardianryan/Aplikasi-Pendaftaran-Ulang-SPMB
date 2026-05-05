@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Operator - Admin SPMB</title>
+  <script src="/js/settings-loader.js"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Public+Sans:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="/css/app.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#003f87', 'primary-container': '#d4e3ff', 'on-primary': '#ffffff',
+            'surface-tint': '#115cb9', tertiary: '#004d10', 'tertiary-container': '#9cf8a1',
+            error: '#ba1a1a', 'error-container': '#ffdad6', background: '#f9f9fc',
+            surface: '#f9f9fc', 'surface-container-lowest': '#ffffff',
+            'surface-container-low': '#f3f3f6', 'on-surface': '#1a1c1e',
+            'on-surface-variant': '#424752', outline: '#72787f', 'outline-variant': '#c2c6d4',
+          },
+          fontFamily: { display: ['Lexend', 'sans-serif'], body: ['Public Sans', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background font-body text-on-surface min-h-screen flex">
+  <!-- Sidebar -->
+  <nav class="hidden md:flex flex-col fixed top-0 left-0 w-64 h-screen bg-surface-container-lowest border-r border-outline-variant p-6 z-40">
+    <div class="flex items-center gap-3 mb-8">
+      <span class="material-symbols-outlined text-primary" style="font-size:32px">admin_panel_settings</span>
+      <span class="font-display font-bold text-lg text-primary"><span data-setting="app_name">SPMB</span> Admin</span>
+    </div>
+    <ul class="space-y-1 flex-1">
+      <li><a href="/admin/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">dashboard</span>Dashboard</a></li>
+      <li><a href="/admin/students" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">groups</span>Data Siswa</a></li>
+      <li><a href="/admin/verify" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">verified</span>Verifikasi</a></li>
+      <li><a href="/admin/import" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">upload_file</span>Import Data</a></li>
+      <li><a href="/admin/operators" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-medium text-sm"><span class="material-symbols-outlined" style="font-size:20px">manage_accounts</span>Operator</a></li>
+      <li><a href="/admin/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">settings</span>Pengaturan</a></li>
+    </ul>
+    <button onclick="logout()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-error hover:bg-error-container/30 transition text-sm mt-auto">
+      <span class="material-symbols-outlined" style="font-size:20px">logout</span>Keluar
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="flex-1 md:ml-64">
+    <header class="sticky top-0 z-30 bg-surface-container-lowest border-b border-outline-variant px-6 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="font-display text-xl font-bold">Manajemen Operator</h1>
+        <p class="text-sm text-on-surface-variant">Kelola akun guru/tendik yang dapat mengakses panel admin</p>
+      </div>
+      <button onclick="pullSSO()" id="btn-pull" class="flex items-center gap-2 bg-primary text-on-primary font-medium px-4 py-2.5 rounded-lg hover:bg-surface-tint transition text-sm">
+        <span class="material-symbols-outlined" style="font-size:18px">sync</span>
+        <span id="btn-pull-text">Tarik Data SSO</span>
+      </button>
+    </header>
+
+    <main class="p-6">
+      <!-- Create Local Operator -->
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-6 mb-6">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="material-symbols-outlined text-primary">person_add</span>
+          <div>
+            <h2 class="font-display font-semibold text-base">Tambah Operator Lokal</h2>
+            <p class="text-xs text-on-surface-variant">Buat akun operator dengan username & password (tanpa Google)</p>
+          </div>
+        </div>
+        <div class="flex items-end gap-3 p-4 bg-surface-container-low rounded-lg">
+          <div class="flex-1">
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Nama</label>
+            <input type="text" id="local-nama" placeholder="Nama lengkap" class="w-full border border-outline-variant rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+          <div class="flex-1">
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Username</label>
+            <input type="text" id="local-username" placeholder="username" class="w-full border border-outline-variant rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary lowercase">
+          </div>
+          <div class="flex-1">
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Password</label>
+            <input type="password" id="local-password" placeholder="Min 6 karakter" class="w-full border border-outline-variant rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+          <div class="w-32">
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Role</label>
+            <select id="local-role" class="w-full border border-outline-variant rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+              <option value="operator">Operator</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <button onclick="createLocalOperator()" class="flex items-center gap-2 bg-primary text-on-primary font-medium px-4 py-2.5 rounded-lg hover:bg-surface-tint transition text-sm whitespace-nowrap">
+            <span class="material-symbols-outlined" style="font-size:18px">add</span>
+            Tambah
+          </button>
+        </div>
+      </div>
+
+      <!-- Referral Code Section -->
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-primary">vpn_key</span>
+            <div>
+              <h2 class="font-display font-semibold text-base">Kode Referral</h2>
+              <p class="text-xs text-on-surface-variant">Buat kode untuk registrasi operator baru. Format: PREFIX-NOMOR (1-99)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Create new referral -->
+        <div class="flex items-end gap-3 mb-4 p-4 bg-surface-container-low rounded-lg">
+          <div class="flex-1">
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Prefix Kode</label>
+            <input type="text" id="new-prefix" placeholder="Contoh: U240512005" class="w-full border border-outline-variant rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary uppercase">
+          </div>
+          <div class="w-32">
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Maks Slot</label>
+            <input type="number" id="new-maxslots" value="99" min="1" max="99" class="w-full border border-outline-variant rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+          <div class="flex-1">
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Label (opsional)</label>
+            <input type="text" id="new-label" placeholder="Batch Mei 2025" class="w-full border border-outline-variant rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+          <button onclick="createReferral()" class="flex items-center gap-2 bg-primary text-on-primary font-medium px-4 py-2.5 rounded-lg hover:bg-surface-tint transition text-sm whitespace-nowrap">
+            <span class="material-symbols-outlined" style="font-size:18px">add</span>
+            Buat
+          </button>
+        </div>
+
+        <!-- Referral list -->
+        <div id="referralList" class="space-y-2">
+          <p class="text-sm text-on-surface-variant text-center py-4">Memuat...</p>
+        </div>
+      </div>
+
+      <!-- Pull SSO Result -->
+      <div id="pull-result" class="hidden mb-6 p-4 rounded-lg border"></div>
+
+      <!-- Operators Table -->
+      <div class="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="bg-surface-container-low border-b border-outline-variant text-sm">
+                <th class="px-4 py-3 font-medium text-on-surface-variant">Nama</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">Email Google</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">NIP</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">Role</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">Status</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">Login Terakhir</th>
+                <th class="px-4 py-3 font-medium text-on-surface-variant">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="operatorsTable">
+              <tr><td colspan="7" class="px-4 py-12 text-center text-on-surface-variant">Memuat data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast bg-tertiary text-white px-5 py-3 rounded-lg shadow-lg text-sm font-medium" role="alert"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/admin/role-guard.js"></script>
+  <script>
+    // Auth guard
+    if (!API.getToken() || !localStorage.getItem('spmb_admin')) {
+      window.location.href = '/admin/login';
+    }
+
+    function logout() {
+      API.clearToken();
+      localStorage.removeItem('spmb_admin');
+      window.location.href = '/admin/login';
+    }
+
+    // Load data
+    loadOperators();
+    loadReferrals();
+
+    // ============================================
+    // Create Local Operator
+    // ============================================
+
+    async function createLocalOperator() {
+      const nama = document.getElementById('local-nama').value.trim();
+      const username = document.getElementById('local-username').value.trim();
+      const password = document.getElementById('local-password').value;
+      const role = document.getElementById('local-role').value;
+
+      if (!nama) { showToast('Nama wajib diisi.', 'error'); return; }
+      if (!username || username.length < 3) { showToast('Username minimal 3 karakter.', 'error'); return; }
+      if (!password || password.length < 6) { showToast('Password minimal 6 karakter.', 'error'); return; }
+
+      try {
+        await API.request('/admin/operators', {
+          method: 'POST',
+          body: JSON.stringify({ nama, username, password, role }),
+        });
+        // Clear form
+        document.getElementById('local-nama').value = '';
+        document.getElementById('local-username').value = '';
+        document.getElementById('local-password').value = '';
+        loadOperators();
+        showToast(`Operator "${nama}" berhasil dibuat.`, 'success');
+      } catch (err) {
+        showToast(err.message || 'Gagal membuat operator.', 'error');
+      }
+    }
+
+    // ============================================
+    // Referral Code Management
+    // ============================================
+
+    async function loadReferrals() {
+      try {
+        const res = await API.request('/admin/referrals');
+        const referrals = res.data || [];
+        renderReferrals(referrals);
+      } catch (err) {
+        document.getElementById('referralList').innerHTML = '<p class="text-sm text-on-surface-variant text-center py-2">Gagal memuat referral.</p>';
+      }
+    }
+
+    function renderReferrals(referrals) {
+      const container = document.getElementById('referralList');
+      if (referrals.length === 0) {
+        container.innerHTML = '<p class="text-sm text-on-surface-variant text-center py-4">Belum ada kode referral. Buat kode baru di atas.</p>';
+        return;
+      }
+
+      container.innerHTML = referrals.map(r => {
+        const usedCount = r.usedSlots ? r.usedSlots.length : 0;
+        const usedSuffixes = (r.usedSlots || []).map(s => s.suffix).sort((a,b) => a-b);
+        const statusClass = r.isActive ? 'bg-tertiary/10 border-tertiary/30 text-tertiary' : 'bg-surface-container-low border-outline-variant text-on-surface-variant';
+
+        return `
+          <div class="flex items-center gap-4 p-3 rounded-lg border ${r.isActive ? 'border-outline-variant' : 'border-outline-variant opacity-60'}">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <code class="font-mono font-bold text-sm text-primary">${r.prefix}</code>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${statusClass}">${r.isActive ? 'Aktif' : 'Nonaktif'}</span>
+                ${r.label ? `<span class="text-xs text-on-surface-variant">— ${r.label}</span>` : ''}
+              </div>
+              <p class="text-xs text-on-surface-variant mt-1">
+                Terpakai: <strong>${usedCount}/${r.maxSlots}</strong>
+                ${usedSuffixes.length > 0 ? ` (slot: ${usedSuffixes.join(', ')})` : ''}
+              </p>
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="toggleRef('${r._id}')" class="p-1.5 rounded hover:bg-surface-container-low transition" title="${r.isActive ? 'Nonaktifkan' : 'Aktifkan'}">
+                <span class="material-symbols-outlined text-on-surface-variant" style="font-size:18px">${r.isActive ? 'pause_circle' : 'play_circle'}</span>
+              </button>
+              <button onclick="deleteRef('${r._id}', '${r.prefix}')" class="p-1.5 rounded hover:bg-error-container/30 transition" title="Hapus">
+                <span class="material-symbols-outlined text-error" style="font-size:18px">delete</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function createReferral() {
+      const prefix = document.getElementById('new-prefix').value.trim();
+      const maxSlots = parseInt(document.getElementById('new-maxslots').value) || 99;
+      const label = document.getElementById('new-label').value.trim();
+
+      if (!prefix || prefix.length < 3) {
+        showToast('Prefix minimal 3 karakter.', 'error');
+        return;
+      }
+
+      try {
+        await API.request('/admin/referrals', {
+          method: 'POST',
+          body: JSON.stringify({ prefix, maxSlots, label }),
+        });
+        document.getElementById('new-prefix').value = '';
+        document.getElementById('new-label').value = '';
+        loadReferrals();
+        showToast('Kode referral berhasil dibuat.', 'success');
+      } catch (err) {
+        showToast(err.message || 'Gagal membuat referral.', 'error');
+      }
+    }
+
+    async function toggleRef(id) {
+      try {
+        await API.request(`/admin/referrals/${id}/toggle`, { method: 'PUT' });
+        loadReferrals();
+      } catch (err) {
+        showToast(err.message || 'Gagal mengubah status.', 'error');
+      }
+    }
+
+    async function deleteRef(id, prefix) {
+      if (!confirm(`Hapus kode referral "${prefix}"?`)) return;
+      try {
+        await API.request(`/admin/referrals/${id}`, { method: 'DELETE' });
+        loadReferrals();
+        showToast('Referral dihapus.', 'success');
+      } catch (err) {
+        showToast(err.message || 'Gagal menghapus.', 'error');
+      }
+    }
+
+    // ============================================
+
+    async function loadOperators() {
+      try {
+        const res = await API.request('/admin/operators');
+        const operators = res.data || [];
+        renderTable(operators);
+      } catch (err) {
+        if (err.status === 401) return;
+        renderTable([]);
+      }
+    }
+
+    function renderTable(operators) {
+      const tbody = document.getElementById('operatorsTable');
+
+      if (operators.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="7" class="px-4 py-12 text-center text-on-surface-variant">
+            <span class="material-symbols-outlined text-4xl text-outline mb-2 block">group_off</span>
+            Belum ada operator. Klik "Tarik Data SSO" untuk mengambil data guru/tendik.
+          </td></tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = operators.map(op => {
+        const lastLogin = op.lastLogin
+          ? new Date(op.lastLogin).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+          : 'Belum pernah';
+
+        const statusBadge = op.isActive
+          ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Aktif</span>'
+          : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">Nonaktif</span>';
+
+        const roleBadge = op.role === 'admin'
+          ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">Admin</span>'
+          : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-container-low text-on-surface-variant">Operator</span>';
+
+        const authIcon = op.authMethod === 'google'
+          ? '<svg width="14" height="14" viewBox="0 0 24 24" class="inline"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>'
+          : '<span class="material-symbols-outlined text-on-surface-variant" style="font-size:14px">key</span>';
+
+        return `
+          <tr class="border-b border-outline-variant hover:bg-surface-container-low/50 transition">
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                ${op.googleAvatar
+                  ? `<img src="${op.googleAvatar}" class="w-8 h-8 rounded-full" alt="">`
+                  : `<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><span class="material-symbols-outlined text-primary" style="font-size:16px">person</span></div>`
+                }
+                <div>
+                  <p class="text-sm font-medium text-on-surface">${op.nama}</p>
+                  <p class="text-xs text-on-surface-variant flex items-center gap-1">${authIcon} ${op.username}</p>
+                </div>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-sm text-on-surface-variant">${op.googleEmail || '-'}</td>
+            <td class="px-4 py-3 text-sm text-on-surface-variant font-mono">${op.nip || '-'}</td>
+            <td class="px-4 py-3">${roleBadge}</td>
+            <td class="px-4 py-3">${statusBadge}</td>
+            <td class="px-4 py-3 text-xs text-on-surface-variant">${lastLogin}</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-1">
+                <button onclick="toggleActive('${op._id}', ${!op.isActive})" class="p-1.5 rounded hover:bg-surface-container-low transition" title="${op.isActive ? 'Nonaktifkan' : 'Aktifkan'}">
+                  <span class="material-symbols-outlined text-on-surface-variant" style="font-size:18px">${op.isActive ? 'block' : 'check_circle'}</span>
+                </button>
+                <button onclick="toggleRole('${op._id}', '${op.role === 'admin' ? 'operator' : 'admin'}')" class="p-1.5 rounded hover:bg-surface-container-low transition" title="${op.role === 'admin' ? 'Jadikan Operator' : 'Jadikan Admin'}">
+                  <span class="material-symbols-outlined text-on-surface-variant" style="font-size:18px">${op.role === 'admin' ? 'arrow_downward' : 'arrow_upward'}</span>
+                </button>
+                <button onclick="deleteOp('${op._id}', '${op.nama.replace(/'/g, "\\'")}')" class="p-1.5 rounded hover:bg-error-container/30 transition" title="Hapus">
+                  <span class="material-symbols-outlined text-error" style="font-size:18px">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Pull SSO
+    async function pullSSO() {
+      const btn = document.getElementById('btn-pull');
+      const btnText = document.getElementById('btn-pull-text');
+      btn.disabled = true;
+      btnText.textContent = 'Menarik data...';
+
+      try {
+        const res = await API.request('/admin/sso/pull', {
+          method: 'POST',
+          body: JSON.stringify({}), // Backend fetches guru + tendik only
+        });
+
+        const result = res.data;
+        const pullResult = document.getElementById('pull-result');
+        pullResult.classList.remove('hidden');
+        pullResult.className = 'mb-6 p-4 rounded-lg border border-tertiary/30 bg-tertiary-container/10';
+        pullResult.innerHTML = `
+          <div class="flex items-start gap-3">
+            <span class="material-symbols-outlined text-tertiary">check_circle</span>
+            <div>
+              <p class="font-medium text-sm text-on-surface">${res.message}</p>
+              <p class="text-xs text-on-surface-variant mt-1">Total: ${result.total} | Baru: ${result.inserted} | Diperbarui: ${result.updated} | Dilewati: ${result.skipped}</p>
+            </div>
+          </div>
+        `;
+
+        // Reload table
+        loadOperators();
+      } catch (err) {
+        const pullResult = document.getElementById('pull-result');
+        pullResult.classList.remove('hidden');
+        pullResult.className = 'mb-6 p-4 rounded-lg border border-error/30 bg-error-container/10';
+        pullResult.innerHTML = `
+          <div class="flex items-start gap-3">
+            <span class="material-symbols-outlined text-error">error</span>
+            <p class="text-sm text-error">${err.message || 'Gagal menarik data SSO'}</p>
+          </div>
+        `;
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Tarik Data SSO';
+      }
+    }
+
+    // Toggle active status
+    async function toggleActive(id, isActive) {
+      try {
+        await API.request(`/admin/operators/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ isActive }),
+        });
+        loadOperators();
+        showToast(isActive ? 'Operator diaktifkan.' : 'Operator dinonaktifkan.', 'success');
+      } catch (err) {
+        showToast(err.message || 'Gagal mengubah status.', 'error');
+      }
+    }
+
+    // Toggle role
+    async function toggleRole(id, newRole) {
+      try {
+        await API.request(`/admin/operators/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ role: newRole }),
+        });
+        loadOperators();
+        showToast(`Role diubah menjadi ${newRole}.`, 'success');
+      } catch (err) {
+        showToast(err.message || 'Gagal mengubah role.', 'error');
+      }
+    }
+
+    // Delete operator
+    async function deleteOp(id, nama) {
+      if (!confirm(`Hapus operator "${nama}"? Akun ini tidak akan bisa login lagi.`)) return;
+      try {
+        await API.request(`/admin/operators/${id}`, { method: 'DELETE' });
+        loadOperators();
+        showToast(`Operator "${nama}" dihapus.`, 'success');
+      } catch (err) {
+        showToast(err.message || 'Gagal menghapus.', 'error');
+      }
+    }
+
+    // Toast
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast px-5 py-3 rounded-lg shadow-lg text-sm font-medium ${
+        type === 'success' ? 'bg-tertiary text-white' :
+        type === 'error' ? 'bg-error text-white' : 'bg-primary text-white'
+      }`;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+  </script>
+</body>
+</html>

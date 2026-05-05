@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengaturan - Admin SPMB</title>
+  <script src="/js/settings-loader.js"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Public+Sans:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="/css/app.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#003f87',
+            'primary-container': '#d4e3ff',
+            'on-primary': '#ffffff',
+            'surface-tint': '#115cb9',
+            tertiary: '#004d10',
+            'tertiary-container': '#9cf8a1',
+            error: '#ba1a1a',
+            'error-container': '#ffdad6',
+            background: '#f9f9fc',
+            surface: '#f9f9fc',
+            'surface-container-lowest': '#ffffff',
+            'surface-container-low': '#f3f3f6',
+            'on-surface': '#1a1c1e',
+            'on-surface-variant': '#424752',
+            outline: '#72787f',
+            'outline-variant': '#c2c6d4',
+          },
+          fontFamily: {
+            display: ['Lexend', 'sans-serif'],
+            body: ['Public Sans', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background font-body text-on-surface min-h-screen flex">
+  <!-- Sidebar -->
+  <nav class="hidden md:flex flex-col fixed top-0 left-0 w-64 h-screen bg-surface-container-lowest border-r border-outline-variant p-6 z-40">
+    <div class="flex items-center gap-3 mb-8">
+      <span class="material-symbols-outlined text-primary" style="font-size:32px">admin_panel_settings</span>
+      <span class="font-display font-bold text-lg text-primary"><span data-setting="app_name">SPMB</span> Admin</span>
+    </div>
+    <ul class="space-y-1 flex-1">
+      <li><a href="/admin/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">dashboard</span>Dashboard</a></li>
+      <li><a href="/admin/students" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">groups</span>Data Siswa</a></li>
+      <li><a href="/admin/verify" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">verified</span>Verifikasi</a></li>
+      <li><a href="/admin/import" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">upload_file</span>Import Data</a></li>
+      <li><a href="/admin/operators" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">manage_accounts</span>Operator</a></li>
+      <li><a href="/admin/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-medium text-sm"><span class="material-symbols-outlined" style="font-size:20px">settings</span>Pengaturan</a></li>
+    </ul>
+    <button onclick="logout()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-error hover:bg-error-container/30 transition text-sm mt-auto">
+      <span class="material-symbols-outlined" style="font-size:20px">logout</span>Keluar
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="flex-1 md:ml-64">
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-30 bg-surface-container-lowest border-b border-outline-variant px-6 py-4">
+      <h1 class="font-display text-xl font-bold">Pengaturan Portal</h1>
+      <p class="text-sm text-on-surface-variant">Kelola identitas, tampilan, dan akses portal registrasi</p>
+    </header>
+
+    <main class="p-6 max-w-6xl">
+      <!-- Toast -->
+      <div id="toast" class="toast bg-tertiary text-white px-5 py-3 rounded-lg shadow-lg text-sm font-medium" role="alert"></div>
+
+      <!-- Row 1: Identitas Sekolah + Identitas Aplikasi -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+      <!-- Section: Identitas Sekolah -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="material-symbols-outlined text-primary">school</span>
+          <h2 class="font-display font-semibold text-lg">Identitas Sekolah</h2>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label for="school_name" class="block text-sm font-bold mb-1.5">Nama Sekolah (Singkat)</label>
+            <input type="text" id="school_name" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary" placeholder="SMAN 1 Gedeg">
+            <p class="text-xs text-on-surface-variant mt-1">Ditampilkan di header navigasi</p>
+          </div>
+          <div>
+            <label for="school_name_full" class="block text-sm font-bold mb-1.5">Nama Sekolah (Lengkap)</label>
+            <input type="text" id="school_name_full" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary" placeholder="SMA Negeri 1 Gedeg Kabupaten Mojokerto">
+            <p class="text-xs text-on-surface-variant mt-1">Untuk kop surat dan PDF buku induk</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Identitas Aplikasi -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="material-symbols-outlined text-primary">apps</span>
+          <h2 class="font-display font-semibold text-lg">Identitas Aplikasi</h2>
+        </div>
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="app_name" class="block text-sm font-bold mb-1.5">Nama Sistem (Singkatan)</label>
+              <input type="text" id="app_name" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary" placeholder="SPMB">
+              <p class="text-xs text-on-surface-variant mt-1">Contoh: SPMB, PPDB, DAFTAR ULANG</p>
+            </div>
+            <div>
+              <label for="app_name_full" class="block text-sm font-bold mb-1.5">Nama Sistem (Lengkap)</label>
+              <input type="text" id="app_name_full" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Sistem Penerimaan Murid Baru">
+            </div>
+          </div>
+
+          <!-- Logo Upload -->
+          <div>
+            <label class="block text-sm font-bold mb-1.5">Logo Aplikasi</label>
+            <div class="flex items-center gap-4">
+              <div id="logo-preview" class="w-16 h-16 bg-surface-container-low rounded-lg border border-outline-variant flex items-center justify-center overflow-hidden">
+                <span class="material-symbols-outlined text-on-surface-variant" style="font-size:32px">image</span>
+              </div>
+              <div>
+                <input type="file" id="file-logo" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="hidden" onchange="uploadFile('app_logo', this)">
+                <button onclick="document.getElementById('file-logo').click()" class="inline-flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-lg text-sm font-medium hover:bg-primary-container/30 transition">
+                  <span class="material-symbols-outlined" style="font-size:18px">upload</span>
+                  Upload Logo
+                </button>
+                <p class="text-xs text-on-surface-variant mt-1">PNG, JPG, SVG, WEBP (maks 2MB)</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Icon Upload -->
+          <div>
+            <label class="block text-sm font-bold mb-1.5">Favicon / Icon</label>
+            <div class="flex items-center gap-4">
+              <div id="icon-preview" class="w-12 h-12 bg-surface-container-low rounded-lg border border-outline-variant flex items-center justify-center overflow-hidden">
+                <span class="material-symbols-outlined text-on-surface-variant" style="font-size:24px">image</span>
+              </div>
+              <div>
+                <input type="file" id="file-icon" accept="image/png,image/x-icon,image/vnd.microsoft.icon,image/svg+xml,image/webp" class="hidden" onchange="uploadFile('app_icon', this)">
+                <button onclick="document.getElementById('file-icon').click()" class="inline-flex items-center gap-2 px-4 py-2 border border-primary text-primary rounded-lg text-sm font-medium hover:bg-primary-container/30 transition">
+                  <span class="material-symbols-outlined" style="font-size:18px">upload</span>
+                  Upload Icon
+                </button>
+                <p class="text-xs text-on-surface-variant mt-1">PNG, ICO, SVG (maks 2MB, rekomendasi 64x64px)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      </div><!-- end Row 1 grid -->
+
+      <!-- Row 2: Kontrol Akses + Jadwal -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+      <!-- Section: Kontrol Akses -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="material-symbols-outlined text-primary">lock</span>
+          <h2 class="font-display font-semibold text-lg">Kontrol Akses Registrasi</h2>
+        </div>
+        <div class="space-y-4">
+          <!-- Toggle -->
+          <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-lg">
+            <div>
+              <p class="font-semibold text-sm">Akses Login Siswa</p>
+              <p class="text-xs text-on-surface-variant">Jika dimatikan, siswa tidak bisa login untuk registrasi ulang</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="registration_open" class="sr-only peer">
+              <div class="w-11 h-6 bg-outline-variant peer-focus:ring-2 peer-focus:ring-primary rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+          </div>
+
+          <!-- Closed Message -->
+          <div>
+            <label for="registration_closed_message" class="block text-sm font-bold mb-1.5">Pesan Saat Ditutup</label>
+            <textarea id="registration_closed_message" rows="3" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary text-sm" placeholder="Mohon maaf, periode registrasi ulang telah ditutup..."></textarea>
+            <p class="text-xs text-on-surface-variant mt-1">Pesan ini ditampilkan saat siswa mencoba login ketika registrasi ditutup</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Jadwal -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="material-symbols-outlined text-primary">event</span>
+          <h2 class="font-display font-semibold text-lg">Jadwal & Tahun Pelajaran</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label for="school_year" class="block text-sm font-bold mb-1.5">Tahun Pelajaran</label>
+            <input type="text" id="school_year" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary" placeholder="2025/2026">
+          </div>
+          <div>
+            <label for="registration_start_date" class="block text-sm font-bold mb-1.5">Mulai Registrasi</label>
+            <input type="date" id="registration_start_date" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+          <div>
+            <label for="registration_end_date" class="block text-sm font-bold mb-1.5">Akhir Registrasi</label>
+            <input type="date" id="registration_end_date" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary">
+          </div>
+        </div>
+      </section>
+
+      </div><!-- end Row 2 grid -->
+
+      <!-- Section: Pengumuman (full width) -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 mb-6">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="material-symbols-outlined text-primary">campaign</span>
+          <h2 class="font-display font-semibold text-lg">Pengumuman</h2>
+        </div>
+        <div>
+          <label for="announcement_text" class="block text-sm font-bold mb-1.5">Teks Pengumuman</label>
+          <textarea id="announcement_text" rows="3" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary text-sm" placeholder="Kosongkan jika tidak ada pengumuman"></textarea>
+          <p class="text-xs text-on-surface-variant mt-1">Ditampilkan sebagai banner di halaman portal utama. Kosongkan untuk menyembunyikan.</p>
+        </div>
+      </section>
+
+      <!-- Section: Kop Surat PDF -->
+      <section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 mb-6">
+        <div class="flex items-center gap-3 mb-5">
+          <span class="material-symbols-outlined text-primary">description</span>
+          <h2 class="font-display font-semibold text-lg">Kop Surat (PDF Buku Induk)</h2>
+        </div>
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="kop_line1" class="block text-sm font-bold mb-1.5">Baris 1 (Instansi Atas)</label>
+              <input type="text" id="kop_line1" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary" placeholder="PEMERINTAH PROVINSI JAWA TIMUR">
+            </div>
+            <div>
+              <label for="kop_line2" class="block text-sm font-bold mb-1.5">Baris 2</label>
+              <input type="text" id="kop_line2" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary" placeholder="DINAS PENDIDIKAN">
+            </div>
+          </div>
+          <div>
+            <label for="kop_line3" class="block text-sm font-bold mb-1.5">Baris 3 — Nama Sekolah (Bold)</label>
+            <input type="text" id="kop_line3" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary font-bold" placeholder="SEKOLAH MENENGAH ATAS NEGERI 1 GEDEG">
+          </div>
+          <div>
+            <label for="kop_line4" class="block text-sm font-bold mb-1.5">Baris 4 — Kabupaten/Kota (Bold)</label>
+            <input type="text" id="kop_line4" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary font-bold" placeholder="KABUPATEN MOJOKERTO">
+          </div>
+          <div>
+            <label for="kop_line5" class="block text-sm font-bold mb-1.5">Baris 5 — Alamat</label>
+            <input type="text" id="kop_line5" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary text-sm" placeholder="Jl. Raya Gedeg No. 1, Gedeg, Mojokerto, Jawa Timur 61351">
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="kop_line6" class="block text-sm font-bold mb-1.5">Baris 6 — Info Tambahan</label>
+              <input type="text" id="kop_line6" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary" placeholder="NPSN: 20503710 | Email: info@sekolah.sch.id | www.sekolah.sch.id">
+              <p class="text-xs text-on-surface-variant mt-1">NPSN, email, website, dll (ditampilkan di bawah alamat)</p>
+            </div>
+            <div>
+              <label for="kop_city" class="block text-sm font-bold mb-1.5">Kota (untuk tanggal tanda tangan)</label>
+              <input type="text" id="kop_city" class="w-full border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Mojokerto">
+              <p class="text-xs text-on-surface-variant mt-1">Contoh hasil: "Mojokerto, 5 Mei 2026"</p>
+            </div>
+          </div>
+
+          <!-- Logo Kop -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-outline-variant">
+            <div>
+              <label class="block text-sm font-bold mb-1.5">Logo Kiri</label>
+              <div class="flex items-center gap-3">
+                <div id="kop-logo-left-preview" class="w-14 h-14 bg-surface-container-low rounded-lg border border-outline-variant flex items-center justify-center overflow-hidden">
+                  <span class="material-symbols-outlined text-on-surface-variant" style="font-size:24px">image</span>
+                </div>
+                <div>
+                  <input type="file" id="file-kop-logo-left" accept="image/*" class="hidden" onchange="uploadFile('kop_logo_left', this)">
+                  <button onclick="document.getElementById('file-kop-logo-left').click()" class="text-sm text-primary font-medium hover:underline">Upload</button>
+                  <p class="text-xs text-on-surface-variant">PNG/JPG, maks 2MB</p>
+                </div>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-bold mb-1.5">Logo Kanan</label>
+              <div class="flex items-center gap-3">
+                <div id="kop-logo-right-preview" class="w-14 h-14 bg-surface-container-low rounded-lg border border-outline-variant flex items-center justify-center overflow-hidden">
+                  <span class="material-symbols-outlined text-on-surface-variant" style="font-size:24px">image</span>
+                </div>
+                <div>
+                  <input type="file" id="file-kop-logo-right" accept="image/*" class="hidden" onchange="uploadFile('kop_logo_right', this)">
+                  <button onclick="document.getElementById('file-kop-logo-right').click()" class="text-sm text-primary font-medium hover:underline">Upload</button>
+                  <p class="text-xs text-on-surface-variant">PNG/JPG, maks 2MB</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Save Button -->
+      <div class="flex justify-end">
+        <button id="btn-save" onclick="saveSettings()" class="flex items-center gap-2 bg-primary text-on-primary font-bold px-8 py-3.5 rounded-lg hover:bg-surface-tint transition-colors min-h-[56px] shadow-sm">
+          <span class="material-symbols-outlined" style="font-size:20px">save</span>
+          <span id="btn-save-text">Simpan Pengaturan</span>
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/admin/role-guard.js"></script>
+  <script>
+    // Auth guard
+    if (!API.getToken() || !localStorage.getItem('spmb_admin')) {
+      window.location.href = '/admin/login';
+    }
+
+    // Settings keys that are text-based (not file uploads)
+    const TEXT_SETTINGS = [
+      'school_name', 'school_name_full',
+      'app_name', 'app_name_full',
+      'registration_closed_message',
+      'registration_start_date', 'registration_end_date',
+      'school_year', 'announcement_text',
+      'kop_line1', 'kop_line2', 'kop_line3', 'kop_line4', 'kop_line5', 'kop_line6',
+      'kop_city'
+    ];
+
+    // Load settings on page load
+    async function loadSettings() {
+      try {
+        const res = await API.request('/admin/settings');
+        const settings = res.data;
+
+        // Populate text fields
+        for (const key of TEXT_SETTINGS) {
+          const el = document.getElementById(key);
+          if (el && settings[key]) {
+            el.value = settings[key].value ?? '';
+          }
+        }
+
+        // Registration open toggle
+        const regOpen = document.getElementById('registration_open');
+        if (regOpen && settings.registration_open) {
+          regOpen.checked = settings.registration_open.value === true;
+        }
+
+        // Logo preview
+        if (settings.app_logo && settings.app_logo.value) {
+          setPreview('logo-preview', settings.app_logo.value);
+        }
+
+        // Icon preview
+        if (settings.app_icon && settings.app_icon.value) {
+          setPreview('icon-preview', settings.app_icon.value);
+        }
+
+        // Kop logo previews
+        if (settings.kop_logo_left && settings.kop_logo_left.value) {
+          setPreview('kop-logo-left-preview', settings.kop_logo_left.value);
+        }
+        if (settings.kop_logo_right && settings.kop_logo_right.value) {
+          setPreview('kop-logo-right-preview', settings.kop_logo_right.value);
+        }
+      } catch (err) {
+        showToast('Gagal memuat pengaturan.', 'error');
+      }
+    }
+
+    function setPreview(containerId, url) {
+      const container = document.getElementById(containerId);
+      if (container && url) {
+        container.innerHTML = `<img src="${url}" alt="Preview" class="w-full h-full object-contain">`;
+      }
+    }
+
+    // Save text-based settings
+    async function saveSettings() {
+      const btn = document.getElementById('btn-save');
+      const btnText = document.getElementById('btn-save-text');
+      btn.disabled = true;
+      btnText.textContent = 'Menyimpan...';
+
+      try {
+        const data = {};
+
+        for (const key of TEXT_SETTINGS) {
+          const el = document.getElementById(key);
+          if (el) data[key] = el.value;
+        }
+
+        // Boolean toggle
+        const regOpen = document.getElementById('registration_open');
+        data.registration_open = regOpen ? regOpen.checked : true;
+
+        await API.request('/admin/settings', {
+          method: 'PUT',
+          body: JSON.stringify(data),
+        });
+
+        // Clear settings cache so changes reflect immediately
+        sessionStorage.removeItem('spmb_public_settings');
+        showToast('Pengaturan berhasil disimpan.', 'success');
+      } catch (err) {
+        showToast(err.message || 'Gagal menyimpan pengaturan.', 'error');
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Simpan Pengaturan';
+      }
+    }
+
+    // Upload logo/icon file
+    async function uploadFile(key, input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Ukuran file melebihi 2MB.', 'error');
+        return;
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const res = await API.request(`/admin/settings/upload/${key}`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        // Update preview
+        const previewId = key === 'app_logo' ? 'logo-preview' : 'icon-preview';
+        setPreview(previewId, res.data.url);
+        showToast(res.message || 'File berhasil diupload.', 'success');
+      } catch (err) {
+        showToast(err.message || 'Gagal mengupload file.', 'error');
+      }
+
+      // Reset input
+      input.value = '';
+    }
+
+    // Toast
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast px-5 py-3 rounded-lg shadow-lg text-sm font-medium ${
+        type === 'success' ? 'bg-tertiary text-white' :
+        type === 'error' ? 'bg-error text-white' :
+        'bg-primary text-white'
+      }`;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    function logout() {
+      API.clearToken();
+      localStorage.removeItem('spmb_admin');
+      window.location.href = '/admin/login';
+    }
+
+    // Init
+    loadSettings();
+  </script>
+</body>
+</html>

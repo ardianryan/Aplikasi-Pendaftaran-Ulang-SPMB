@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+bun.lockb
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Build output
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Uploads (local dev only)
+uploads/
+
+# ScholarGate API docs
+API-ScholarGate.md
+
+# Reference files (not part of app)
+old-spmb/
+stitch_registrasi_ulang_sman_1_gedeg/

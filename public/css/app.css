@@ -1,0 +1,99 @@
+/**
+ * Custom CSS - Minimal overrides for Tailwind
+ * Most styling is handled by Tailwind utility classes
+ */
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c2c6d4;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #72787f;
+}
+
+/* Skip to content link (WCAG) */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #003f87;
+  color: white;
+  padding: 8px 16px;
+  z-index: 9999;
+  transition: top 0.2s;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 0 0 8px 0;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* Accordion animation */
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+}
+.accordion-content.open {
+  max-height: 5000px;
+  transition: max-height 0.5s ease-in;
+}
+
+/* File upload drag-over state */
+.upload-zone.drag-over {
+  border-color: #003f87 !important;
+  background-color: rgba(0, 63, 135, 0.05) !important;
+}
+
+/* Progress bar animation */
+.progress-fill {
+  transition: width 0.4s ease-in-out;
+}
+
+/* Toast notification */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 3px solid #003f87;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .accordion-content,
+  .progress-fill,
+  .toast {
+    transition: none !important;
+  }
+}

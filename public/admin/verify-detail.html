@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifikasi Siswa - Admin</title>
+  <script src="/js/settings-loader.js"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=Public+Sans:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="/css/app.css">
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { primary: '#003f87', 'primary-container': '#d4e3ff', 'on-primary': '#ffffff', 'surface-tint': '#115cb9', tertiary: '#004d10', 'tertiary-container': '#9cf8a1', error: '#ba1a1a', 'error-container': '#ffdad6', background: '#f9f9fc', surface: '#f9f9fc', 'surface-container-lowest': '#ffffff', 'surface-container-low': '#f3f3f6', 'on-surface': '#1a1c1e', 'on-surface-variant': '#424752', outline: '#72787f', 'outline-variant': '#c2c6d4' }, fontFamily: { display: ['Lexend', 'sans-serif'], body: ['Public Sans', 'sans-serif'] } } }
+    }
+  </script>
+  <style>
+    .modal-backdrop { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+  </style>
+</head>
+<body class="bg-background font-body text-on-surface min-h-screen">
+  <!-- Top Bar -->
+  <header class="sticky top-0 z-40 bg-surface-container-lowest border-b border-outline-variant shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/admin/verify" class="p-2 -ml-2 rounded-lg hover:bg-surface-container-low transition" title="Kembali">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+        <div>
+          <p class="text-xs text-on-surface-variant">Data Pendaftar &rsaquo; <span id="breadcrumb-name">Siswa</span></p>
+          <h1 class="font-display font-bold text-base">Verifikasi Dokumen</h1>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="downloadPdf()" class="flex items-center gap-2 border border-outline-variant px-3 py-2 rounded-lg text-sm hover:bg-surface-container-low transition">
+          <span class="material-symbols-outlined" style="font-size:18px">print</span>
+          Cetak
+        </button>
+        <button onclick="verifyAll()" class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-bold hover:bg-surface-tint transition">
+          <span class="material-symbols-outlined" style="font-size:18px">done_all</span>
+          Verifikasi Semua
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto p-4 md:p-6">
+    <!-- Loading -->
+    <div id="loading" class="text-center py-16">
+      <div class="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3"></div>
+      <p class="text-sm text-on-surface-variant">Memuat data siswa...</p>
+    </div>
+
+    <!-- Content Grid -->
+    <div id="content" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Left: Student Profile -->
+      <div class="lg:col-span-4 space-y-4">
+        <!-- Profile Card -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 text-center">
+          <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-symbols-outlined text-primary" style="font-size:40px">person</span>
+          </div>
+          <h2 id="profile-name" class="font-display font-bold text-lg"></h2>
+          <p id="profile-nisn" class="text-sm text-on-surface-variant font-mono mt-1"></p>
+
+          <div class="mt-5 text-left space-y-3 border-t border-outline-variant pt-5">
+            <div><p class="text-xs text-on-surface-variant">Jalur Pendaftaran</p><p id="profile-jalur" class="text-sm font-medium"></p></div>
+            <div><p class="text-xs text-on-surface-variant">Asal Sekolah</p><p id="profile-smp" class="text-sm font-medium"></p></div>
+            <div><p class="text-xs text-on-surface-variant">Kontak</p><p id="profile-kontak" class="text-sm font-medium"></p></div>
+          </div>
+        </div>
+
+        <!-- Status & Actions -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-on-surface-variant" style="font-size:20px">history</span>
+            <h3 class="font-display font-semibold text-sm">Status</h3>
+          </div>
+          <div id="status-info" class="space-y-2"></div>
+        </div>
+
+        <!-- Edit Data Link -->
+        <a href="#biodata-section" class="flex items-center gap-3 bg-surface-container-lowest border border-outline-variant rounded-xl p-4 hover:border-primary transition">
+          <span class="material-symbols-outlined text-primary">edit_note</span>
+          <div>
+            <p class="text-sm font-medium">Edit Data Siswa</p>
+            <p class="text-xs text-on-surface-variant">Lihat & ubah biodata lengkap di bawah</p>
+          </div>
+          <span class="material-symbols-outlined text-on-surface-variant ml-auto">chevron_right</span>
+        </a>
+      </div>
+
+      <!-- Right: Document Verification -->
+      <div class="lg:col-span-8 space-y-4">
+        <div id="documents-list" class="space-y-4"></div>
+      </div>
+
+      <!-- Full Width: Biodata Edit Section -->
+      <div class="lg:col-span-12" id="biodata-section">
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden">
+          <div class="p-5 border-b border-outline-variant flex items-center justify-between bg-surface-container-low">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-primary">edit_note</span>
+              <h2 class="font-display font-semibold">Data Lengkap Siswa</h2>
+            </div>
+            <button onclick="saveChanges()" id="btn-save" class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface-tint transition">
+              <span class="material-symbols-outlined" style="font-size:18px">save</span>
+              Simpan Perubahan
+            </button>
+          </div>
+          <div id="biodata-fields" class="p-5"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Document Preview Modal (blur backdrop) -->
+  <div id="doc-modal" class="fixed inset-0 z-50 hidden items-center justify-center modal-backdrop" onclick="closeModal(event)">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-outline-variant">
+        <h3 id="modal-title" class="font-display font-semibold text-base"></h3>
+        <button onclick="closeModal()" class="p-2 rounded-lg hover:bg-surface-container-low transition">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div id="modal-content" class="flex-1 overflow-auto p-4 flex items-center justify-center min-h-[400px]"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast bg-tertiary text-white px-5 py-3 rounded-lg shadow-lg text-sm font-medium" role="alert"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/admin/role-guard.js"></script>
+  <script>
+    if (!API.getToken() || !localStorage.getItem('spmb_admin')) {
+      window.location.href = '/admin/login';
+    }
+
+    let student = null;
+    let r2PublicUrl = '';
+    const studentId = new URLSearchParams(window.location.search).get('id');
+    if (!studentId) window.location.href = '/admin/verify';
+
+    const DOC_TYPES = [
+      { key: 'kartuKeluarga', label: 'Kartu Keluarga (KK)', desc: 'Pastikan NIK dan alamat sesuai dengan data yang diinputkan pada form pendaftaran.', required: true },
+      { key: 'ijazahSkl', label: 'Ijazah / SKL', desc: 'Scan asli Surat Keterangan Lulus atau Ijazah dari sekolah asal.', required: true },
+      { key: 'aktaKelahiran', label: 'Akta Kelahiran', desc: 'Scan asli akta kelahiran yang jelas dan terbaca.', required: true },
+      { key: 'foto4x6', label: 'Pas Foto 4x6', desc: 'Foto terbaru dengan latar belakang merah.', required: true },
+    ];
+
+    init();
+
+    async function init() {
+      try {
+        const settings = await API.getPublicSettings();
+        r2PublicUrl = (settings.r2_public_url || '').replace(/\/$/, '');
+      } catch(e) {}
+
+      try {
+        const res = await API.request(`/admin/students/${studentId}`);
+        student = res.data;
+        render();
+      } catch (err) {
+        document.getElementById('loading').innerHTML = '<p class="text-error">Gagal memuat data.</p><a href="/admin/verify" class="text-primary text-sm hover:underline mt-2 inline-block">Kembali</a>';
+      }
+    }
+
+    function getDocUrl(doc) {
+      if (!doc || !doc.key) return '';
+      if (doc.key.startsWith('http')) return doc.key;
+      return r2PublicUrl ? `${r2PublicUrl}/${doc.key}` : doc.key;
+    }
+
+    function render() {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('content').classList.remove('hidden');
+
+      const bio = student.biodata || {};
+      const alm = student.alamat || {};
+      const nama = bio.namaLengkap || student.namaPreRegister || '-';
+
+      // Breadcrumb
+      document.getElementById('breadcrumb-name').textContent = nama;
+
+      // Profile
+      document.getElementById('profile-name').textContent = nama;
+      document.getElementById('profile-nisn').textContent = `NISN: ${student.nisn}`;
+      document.getElementById('profile-jalur').textContent = student.jalur || '-';
+      document.getElementById('profile-smp').textContent = student.pendidikan?.asalSekolah || student.asalSmpPreRegister || '-';
+      document.getElementById('profile-kontak').innerHTML = `${alm.telepon || '-'}<br><span class="text-xs">${alm.email || ''}</span>`;
+
+      // Status
+      const vs = student.verifikasi?.status || 'pending';
+      const statusMap = {
+        pending: { icon: 'pending', color: 'text-amber-600', bg: 'bg-amber-50', label: 'Menunggu Review' },
+        verified: { icon: 'verified', color: 'text-green-600', bg: 'bg-green-50', label: 'Terverifikasi' },
+        rejected: { icon: 'cancel', color: 'text-red-600', bg: 'bg-red-50', label: 'Ditolak' },
+      };
+      const st = statusMap[vs] || statusMap.pending;
+      document.getElementById('status-info').innerHTML = `
+        <div class="flex items-center gap-2 p-3 rounded-lg ${st.bg}">
+          <span class="material-symbols-outlined ${st.color}" style="font-size:20px">${st.icon}</span>
+          <span class="text-sm font-medium ${st.color}">${st.label}</span>
+        </div>
+        ${student.submittedAt ? `<p class="text-xs text-on-surface-variant">Dikirim: ${new Date(student.submittedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>` : ''}
+        ${student.verifikasi?.catatan ? `<div class="p-3 bg-error-container/20 border border-error/20 rounded-lg"><p class="text-xs text-error font-medium">Catatan:</p><p class="text-sm text-on-surface">${student.verifikasi.catatan}</p></div>` : ''}
+      `;
+
+      // Documents
+      renderDocuments();
+
+      // Biodata
+      renderBiodata();
+    }
+
+    function renderDocuments() {
+      const docs = student.dokumen || {};
+      const docStatuses = student.verifikasi?.dokumenStatus || {};
+
+      document.getElementById('documents-list').innerHTML = DOC_TYPES.map(dt => {
+        const doc = docs[dt.key];
+        const url = getDocUrl(doc);
+        const hasFile = doc && doc.key;
+        const docStatus = docStatuses[dt.key]?.status || 'pending';
+        const docCatatan = docStatuses[dt.key]?.catatan || '';
+        const isRejected = docStatus === 'rejected';
+        const isValid = docStatus === 'valid';
+
+        const borderClass = isRejected ? 'border-error bg-error-container/5' : isValid ? 'border-tertiary bg-tertiary-container/5' : 'border-outline-variant';
+
+        return `
+          <div class="bg-surface-container-lowest border ${borderClass} rounded-xl overflow-hidden flex flex-col md:flex-row">
+            <!-- Preview Area -->
+            <div class="md:w-1/3 p-4 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-outline-variant bg-surface-container-low/50 min-h-[160px]">
+              ${hasFile ? `
+                <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">${doc.mimeType?.startsWith('image/') ? 'image' : 'description'}</span>
+                <p class="text-xs text-on-surface-variant text-center truncate max-w-full">${doc.originalName || dt.key}</p>
+                <button onclick="openDocModal('${dt.label}', '${url}', '${doc.mimeType || ''}')" class="mt-2 flex items-center gap-1 text-xs text-primary font-medium hover:underline">
+                  <span class="material-symbols-outlined" style="font-size:16px">visibility</span>
+                  Lihat Dokumen
+                </button>
+              ` : `
+                <span class="material-symbols-outlined text-4xl text-outline mb-2">cloud_upload</span>
+                <p class="text-xs text-on-surface-variant">Belum diunggah</p>
+              `}
+            </div>
+
+            <!-- Info & Actions -->
+            <div class="flex-1 p-5">
+              <div class="flex items-start justify-between mb-2">
+                <h3 class="font-display font-bold text-base">${dt.label}</h3>
+                ${dt.required ? '<span class="px-2 py-0.5 bg-surface-container-low border border-outline-variant rounded text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">WAJIB</span>' : ''}
+                ${isRejected ? '<span class="px-2 py-0.5 bg-error-container border border-error/30 rounded text-[10px] font-bold uppercase tracking-wider text-error">DITOLAK</span>' : ''}
+                ${isValid ? '<span class="px-2 py-0.5 bg-tertiary-container border border-tertiary/30 rounded text-[10px] font-bold uppercase tracking-wider text-tertiary">VALID</span>' : ''}
+              </div>
+              <p class="text-sm text-on-surface-variant mb-4">${dt.desc}</p>
+
+              ${isRejected && docCatatan ? `
+                <div class="p-3 bg-error-container/30 border border-error/20 rounded-lg mb-4">
+                  <p class="text-xs text-error font-medium">Catatan Penolakan:</p>
+                  <p class="text-sm text-on-surface">${docCatatan}</p>
+                </div>
+              ` : ''}
+
+              ${hasFile ? `
+                <div class="flex items-center gap-2">
+                  ${!isValid ? `<button onclick="verifyDoc('${dt.key}')" class="flex items-center gap-2 bg-primary text-on-primary px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-surface-tint transition">
+                    <span class="material-symbols-outlined" style="font-size:18px">check_circle</span>
+                    Verifikasi
+                  </button>` : ''}
+                  ${!isRejected ? `<button onclick="rejectDoc('${dt.key}')" class="flex items-center gap-2 border-2 border-error text-error px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-error-container/20 transition">
+                    <span class="material-symbols-outlined" style="font-size:18px">cancel</span>
+                    Tolak
+                  </button>` : `
+                  <button onclick="verifyDoc('${dt.key}')" class="flex items-center gap-2 border border-outline-variant text-on-surface-variant px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-surface-container-low transition">
+                    <span class="material-symbols-outlined" style="font-size:18px">edit</span>
+                    Ubah Status
+                  </button>`}
+                </div>
+              ` : '<p class="text-xs text-outline italic">Dokumen belum diunggah oleh siswa</p>'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Dropdown options (same as wizard)
+    const OPTIONS = {
+      jenisKelamin: ['Laki-laki', 'Perempuan'],
+      agama: ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'],
+      statusYatim: ['Tidak', 'Yatim', 'Piatu', 'Yatim-Piatu'],
+      tinggalDengan: ['Orang Tua', 'Saudara', 'Wali', 'Kost', 'Asrama', 'Lainnya'],
+      jarakSekolah: ['< 1 km', '1-3 km', '3-5 km', '5-10 km', '> 10 km'],
+      transportasi: ['Jalan Kaki', 'Sepeda', 'Sepeda Motor', 'Mobil Pribadi', 'Angkutan Umum', 'Ojek', 'Lainnya'],
+      golonganDarah: ['A', 'B', 'AB', 'O', 'Tidak Tahu'],
+      pendidikan: ['SD/Sederajat', 'SMP/Sederajat', 'SMA/Sederajat', 'D1', 'D2', 'D3', 'D4/S1', 'S2', 'S3', 'Tidak Sekolah'],
+      penghasilan: ['< Rp 1.000.000', 'Rp 1.000.000 - Rp 3.000.000', 'Rp 3.000.000 - Rp 5.000.000', 'Rp 5.000.000 - Rp 10.000.000', '> Rp 10.000.000'],
+      statusHidup: ['Masih Hidup', 'Meninggal Dunia'],
+    };
+
+    function selectHtml(id, options, value, label) {
+      return `<div><label class="block text-xs text-on-surface-variant mb-1">${label}</label><select id="${id}" class="w-full border border-outline-variant rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"><option value="">-- Pilih --</option>${options.map(o => `<option value="${o}" ${o === value ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`;
+    }
+    function inputHtml(id, value, label, opts = {}) {
+      const ro = opts.readonly ? 'readonly' : '';
+      const cls = opts.readonly ? 'bg-surface-container-low cursor-not-allowed' : 'focus:ring-2 focus:ring-primary focus:border-primary';
+      const wide = opts.wide ? 'md:col-span-3' : '';
+      const type = opts.type || 'text';
+      return `<div class="${wide}"><label class="block text-xs text-on-surface-variant mb-1">${label}</label><input type="${type}" id="${id}" value="${value || ''}" ${ro} class="w-full border border-outline-variant rounded-lg px-3 py-2 text-sm ${cls}"></div>`;
+    }
+    function textareaHtml(id, value, label) {
+      return `<div class="md:col-span-3"><label class="block text-xs text-on-surface-variant mb-1">${label}</label><textarea id="${id}" rows="2" class="w-full border border-outline-variant rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary">${value || ''}</textarea></div>`;
+    }
+
+    function renderBiodata() {
+      const bio = student.biodata || {};
+      const alm = student.alamat || {};
+      const kes = student.kesehatan || {};
+      const pend = student.pendidikan || {};
+      const ayah = student.ayah || {};
+      const ibu = student.ibu || {};
+      const wali = student.wali || {};
+      const gem = student.kegemaran || {};
+
+      document.getElementById('biodata-fields').innerHTML = `
+        <!-- Section A: Data Diri -->
+        <div class="mb-6">
+          <h3 class="font-display font-semibold text-sm text-primary mb-3">Data Diri Peserta Didik</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${inputHtml('bio_namaLengkap', bio.namaLengkap, 'Nama Lengkap', { readonly: true })}
+            ${inputHtml('bio_namaPanggilan', bio.namaPanggilan, 'Nama Panggilan')}
+            ${selectHtml('bio_jenisKelamin', OPTIONS.jenisKelamin, bio.jenisKelamin, 'Jenis Kelamin')}
+            ${inputHtml('bio_tempatLahir', bio.tempatLahir, 'Tempat Lahir')}
+            ${inputHtml('bio_nik', bio.nik, 'NIK')}
+            ${selectHtml('bio_agama', OPTIONS.agama, bio.agama, 'Agama')}
+            ${inputHtml('bio_kewarganegaraan', bio.kewarganegaraan, 'Kewarganegaraan')}
+            ${inputHtml('bio_anakKe', bio.anakKe, 'Anak Ke-', { type: 'number' })}
+            ${inputHtml('bio_jumlahSaudara', bio.jumlahSaudara, 'Jumlah Saudara', { type: 'number' })}
+            ${inputHtml('bio_saudaraKandung', bio.saudaraKandung, 'Saudara Kandung', { type: 'number' })}
+            ${inputHtml('bio_saudaraTiri', bio.saudaraTiri, 'Saudara Tiri', { type: 'number' })}
+            ${inputHtml('bio_saudaraAngkat', bio.saudaraAngkat, 'Saudara Angkat', { type: 'number' })}
+            ${selectHtml('bio_statusYatim', OPTIONS.statusYatim, bio.statusYatim, 'Status Anak')}
+            ${inputHtml('bio_bahasaSehari', bio.bahasaSehari, 'Bahasa Sehari-hari')}
+          </div>
+        </div>
+
+        <!-- Section B: Alamat -->
+        <div class="mb-6">
+          <h3 class="font-display font-semibold text-sm text-primary mb-3">Tempat Tinggal</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${textareaHtml('alm_alamatLengkap', alm.alamatLengkap, 'Alamat Lengkap')}
+            ${inputHtml('alm_telepon', alm.telepon, 'Telepon/HP/WA')}
+            ${inputHtml('alm_email', alm.email, 'Email')}
+            ${selectHtml('alm_tinggalDengan', OPTIONS.tinggalDengan, alm.tinggalDengan, 'Tinggal dengan')}
+            ${selectHtml('alm_jarakSekolah', OPTIONS.jarakSekolah, alm.jarakSekolah, 'Jarak ke Sekolah')}
+            ${selectHtml('alm_transportasi', OPTIONS.transportasi, alm.transportasi, 'Transportasi')}
+          </div>
+        </div>
+
+        <!-- Section C: Kesehatan -->
+        <div class="mb-6">
+          <h3 class="font-display font-semibold text-sm text-primary mb-3">Kesehatan</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${selectHtml('kes_golonganDarah', OPTIONS.golonganDarah, kes.golonganDarah, 'Golongan Darah')}
+            ${inputHtml('kes_penyakit', kes.penyakit, 'Penyakit yang Pernah Diderita')}
+            ${inputHtml('kes_kelainanJasmani', kes.kelainanJasmani, 'Kelainan Jasmani')}
+            ${inputHtml('kes_tinggiBadan', kes.tinggiBadan, 'Tinggi Badan (cm)', { type: 'number' })}
+            ${inputHtml('kes_beratBadan', kes.beratBadan, 'Berat Badan (kg)', { type: 'number' })}
+          </div>
+        </div>
+
+        <!-- Section D: Pendidikan -->
+        <div class="mb-6">
+          <h3 class="font-display font-semibold text-sm text-primary mb-3">Pendidikan</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${inputHtml('pend_asalSekolah', pend.asalSekolah, 'Asal SMP')}
+            ${inputHtml('pend_nomorIjazah', pend.nomorIjazah, 'Nomor Ijazah')}
+            ${inputHtml('pend_lamaBelajar', pend.lamaBelajar, 'Lama Belajar (tahun)')}
+          </div>
+        </div>
+
+        <!-- Section E: Ayah -->
+        <div class="mb-6">
+          <h3 class="font-display font-semibold text-sm text-primary mb-3">Data Ayah Kandung</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${inputHtml('ayah_nama', ayah.nama, 'Nama Ayah')}
+            ${inputHtml('ayah_tempatLahir', ayah.tempatLahir, 'Tempat Lahir')}
+            ${selectHtml('ayah_agama', OPTIONS.agama, ayah.agama, 'Agama')}
+            ${inputHtml('ayah_kewarganegaraan', ayah.kewarganegaraan, 'Kewarganegaraan')}
+            ${selectHtml('ayah_pendidikan', OPTIONS.pendidikan, ayah.pendidikan, 'Pendidikan')}
+            ${inputHtml('ayah_pekerjaan', ayah.pekerjaan, 'Pekerjaan')}
+            ${selectHtml('ayah_penghasilan', OPTIONS.penghasilan, ayah.penghasilan, 'Penghasilan/bulan')}
+            ${inputHtml('ayah_alamat', ayah.alamat, 'Alamat')}
+            ${inputHtml('ayah_telepon', ayah.telepon, 'Telepon/HP')}
+            ${inputHtml('ayah_email', ayah.email, 'Email')}
+            ${selectHtml('ayah_status', OPTIONS.statusHidup, ayah.status, 'Status')}
+          </div>
+        </div>
+
+        <!-- Section F: Ibu -->
+        <div class="mb-6">
+          <h3 class="font-display font-semibold text-sm text-primary mb-3">Data Ibu Kandung</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${inputHtml('ibu_nama', ibu.nama, 'Nama Ibu')}
+            ${inputHtml('ibu_tempatLahir', ibu.tempatLahir, 'Tempat Lahir')}
+            ${selectHtml('ibu_agama', OPTIONS.agama, ibu.agama, 'Agama')}
+            ${inputHtml('ibu_kewarganegaraan', ibu.kewarganegaraan, 'Kewarganegaraan')}
+            ${selectHtml('ibu_pendidikan', OPTIONS.pendidikan, ibu.pendidikan, 'Pendidikan')}
+            ${inputHtml('ibu_pekerjaan', ibu.pekerjaan, 'Pekerjaan')}
+            ${selectHtml('ibu_penghasilan', OPTIONS.penghasilan, ibu.penghasilan, 'Penghasilan/bulan')}
+            ${inputHtml('ibu_alamat', ibu.alamat, 'Alamat')}
+            ${inputHtml('ibu_telepon', ibu.telepon, 'Telepon/HP')}
+            ${inputHtml('ibu_email', ibu.email, 'Email')}
+            ${selectHtml('ibu_status', OPTIONS.statusHidup, ibu.status, 'Status')}
+          </div>
+        </div>
+
+        <!-- Section G: Wali -->
+        <div class="mb-6">
+          <h3 class="font-display font-semibold text-sm text-primary mb-3">Data Wali <span class="text-xs font-normal text-on-surface-variant">(opsional)</span></h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${inputHtml('wali_nama', wali.nama, 'Nama Wali')}
+            ${inputHtml('wali_tempatLahir', wali.tempatLahir, 'Tempat Lahir')}
+            ${selectHtml('wali_agama', OPTIONS.agama, wali.agama, 'Agama')}
+            ${inputHtml('wali_kewarganegaraan', wali.kewarganegaraan, 'Kewarganegaraan')}
+            ${selectHtml('wali_pendidikan', OPTIONS.pendidikan, wali.pendidikan, 'Pendidikan')}
+            ${inputHtml('wali_pekerjaan', wali.pekerjaan, 'Pekerjaan')}
+            ${selectHtml('wali_penghasilan', OPTIONS.penghasilan, wali.penghasilan, 'Penghasilan/bulan')}
+            ${inputHtml('wali_alamat', wali.alamat, 'Alamat')}
+            ${inputHtml('wali_telepon', wali.telepon, 'Telepon/HP')}
+            ${selectHtml('wali_status', OPTIONS.statusHidup, wali.status, 'Status')}
+          </div>
+        </div>
+
+        <!-- Section H: Kegemaran -->
+        <div class="mb-6">
+          <h3 class="font-display font-semibold text-sm text-primary mb-3">Kegemaran <span class="text-xs font-normal text-on-surface-variant">(opsional)</span></h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            ${inputHtml('gem_kesenian', gem.kesenian, 'Kesenian')}
+            ${inputHtml('gem_olahraga', gem.olahraga, 'Olahraga')}
+            ${inputHtml('gem_organisasi', gem.organisasi, 'Organisasi')}
+            ${inputHtml('gem_lainLain', gem.lainLain, 'Lain-lain')}
+          </div>
+        </div>
+      `;
+    }
+
+    // === Document Modal ===
+    function openDocModal(title, url, mimeType) {
+      const modal = document.getElementById('doc-modal');
+      document.getElementById('modal-title').textContent = title;
+
+      const isImage = mimeType.startsWith('image/') || url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+      const isPdf = mimeType === 'application/pdf' || url.endsWith('.pdf');
+
+      let content = '';
+      if (isImage) {
+        content = `<img src="${url}" alt="${title}" class="max-w-full max-h-[70vh] object-contain rounded-lg">`;
+      } else if (isPdf) {
+        content = `<iframe src="${url}" class="w-full h-[70vh] border-0 rounded-lg"></iframe>`;
+      } else {
+        content = `<div class="text-center"><p class="mb-3">Preview tidak tersedia</p><a href="${url}" target="_blank" class="text-primary hover:underline">Buka di tab baru</a></div>`;
+      }
+
+      document.getElementById('modal-content').innerHTML = content;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal(e) {
+      if (e && e.target !== document.getElementById('doc-modal')) return;
+      const modal = document.getElementById('doc-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // === Verification Actions ===
+    async function verifyDoc(key) {
+      try {
+        await API.request(`/admin/students/${studentId}/verify`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            status: student.verifikasi?.status || 'pending', // Don't change overall status
+            dokumenStatus: { [key]: { status: 'valid', catatan: '' } }
+          }),
+        });
+        // Update local state
+        if (!student.verifikasi) student.verifikasi = { status: 'pending', dokumenStatus: {} };
+        if (!student.verifikasi.dokumenStatus) student.verifikasi.dokumenStatus = {};
+        student.verifikasi.dokumenStatus[key] = { status: 'valid', catatan: '' };
+        renderDocuments();
+        showToast('Dokumen diverifikasi', 'success');
+      } catch (err) {
+        showToast(err.message || 'Gagal', 'error');
+      }
+    }
+
+    async function rejectDoc(key) {
+      const catatan = prompt('Alasan penolakan dokumen:');
+      if (catatan === null) return;
+      try {
+        await API.request(`/admin/students/${studentId}/verify`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            status: student.verifikasi?.status || 'pending',
+            dokumenStatus: { [key]: { status: 'rejected', catatan } }
+          }),
+        });
+        if (!student.verifikasi) student.verifikasi = { status: 'pending', dokumenStatus: {} };
+        if (!student.verifikasi.dokumenStatus) student.verifikasi.dokumenStatus = {};
+        student.verifikasi.dokumenStatus[key] = { status: 'rejected', catatan };
+        renderDocuments();
+        showToast('Dokumen ditolak', 'error');
+      } catch (err) {
+        showToast(err.message || 'Gagal', 'error');
+      }
+    }
+
+    async function verifyAll() {
+      if (!confirm('Verifikasi semua dokumen dan setujui siswa ini?')) return;
+      try {
+        const dokumenStatus = {};
+        DOC_TYPES.forEach(dt => { dokumenStatus[dt.key] = { status: 'valid', catatan: '' }; });
+        await API.request(`/admin/students/${studentId}/verify`, {
+          method: 'PUT',
+          body: JSON.stringify({ status: 'verified', catatan: '', dokumenStatus }),
+        });
+        showToast('Siswa berhasil diverifikasi!', 'success');
+        setTimeout(() => window.location.href = '/admin/verify', 1500);
+      } catch (err) {
+        showToast(err.message || 'Gagal', 'error');
+      }
+    }
+
+    async function saveChanges() {
+      const updateData = {};
+      const sectionMap = { bio: 'biodata', alm: 'alamat', kes: 'kesehatan', pend: 'pendidikan', ayah: 'ayah', ibu: 'ibu', wali: 'wali', gem: 'kegemaran' };
+
+      // Collect all inputs and selects (not readonly)
+      document.querySelectorAll('#biodata-fields input:not([readonly]), #biodata-fields select, #biodata-fields textarea').forEach(el => {
+        const parts = el.id.split('_');
+        if (parts.length < 2) return;
+        const prefix = parts[0];
+        const field = parts.slice(1).join('_'); // Handle fields like "lainLain"
+        const section = sectionMap[prefix];
+        if (!section) return;
+
+        if (!updateData[section]) updateData[section] = {};
+
+        // Convert number fields
+        if (el.type === 'number' && el.value !== '') {
+          updateData[section][field] = Number(el.value);
+        } else {
+          updateData[section][field] = el.value;
+        }
+      });
+
+      // Remove empty sections
+      Object.keys(updateData).forEach(k => {
+        if (Object.keys(updateData[k]).length === 0) delete updateData[k];
+      });
+
+      if (Object.keys(updateData).length === 0) { showToast('Tidak ada perubahan', 'info'); return; }
+
+      try {
+        await API.request(`/admin/students/${studentId}/update`, { method: 'PUT', body: JSON.stringify(updateData) });
+        showToast('Data berhasil disimpan', 'success');
+      } catch (err) {
+        showToast(err.message || 'Gagal menyimpan', 'error');
+      }
+    }
+
+    async function downloadPdf() {
+      try {
+        const token = API.getToken();
+        const res = await fetch(`/api/admin/students/${studentId}/pdf`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) throw new Error('Gagal');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `Buku_Induk_${student.nisn}.pdf`; a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) { showToast('Gagal download PDF', 'error'); }
+    }
+
+    function showToast(msg, type = 'info') {
+      const toast = document.getElementById('toast');
+      const colors = { success: 'bg-tertiary text-white', error: 'bg-error text-white', info: 'bg-primary text-white' };
+      toast.textContent = msg;
+      toast.className = `toast ${colors[type] || colors.info} px-5 py-3 rounded-lg shadow-lg text-sm font-medium`;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+  </script>
+</body>
+</html>
