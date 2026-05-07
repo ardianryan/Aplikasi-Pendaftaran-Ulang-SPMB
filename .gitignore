@@ -23,6 +23,7 @@ Thumbs.db
 
 # Uploads (local dev only)
 uploads/
+*.ico
 
 # ScholarGate API docs
 API-ScholarGate.md
