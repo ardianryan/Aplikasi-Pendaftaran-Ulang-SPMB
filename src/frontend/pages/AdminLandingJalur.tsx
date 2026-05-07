@@ -64,12 +64,7 @@ export const AdminLandingJalur = (props: any) => {
                     type="text" 
                     className="item-icon w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:border-blue-500 outline-none font-mono text-xs" 
                     placeholder="share_location" 
-                    oninput="handleIconInput(this)"
-                    onfocus="showSuggestions(this, 'icons')"
-                    onblur="setTimeout(() => hideSuggestions(this), 200)"
                   />
-                  {/* Suggestions Popover */}
-                  {/* Suggestions Popover */}
                   <div className="suggestions-list absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl border border-slate-100 shadow-2xl z-[60] hidden max-h-48 overflow-y-auto p-2">
                     <div className="grid grid-cols-4 gap-1 icons-grid"></div>
                     <div className="mt-2 p-2 border-t border-slate-50 suggestions-footer hidden">
@@ -92,8 +87,6 @@ export const AdminLandingJalur = (props: any) => {
       </template>
 
       <script dangerouslySetInnerHTML={{ __html: `
-        let masterPaths = [];
-        let landingJalur = [];
         const COMMON_ICONS = [
           'school', 'verified', 'star', 'rocket_launch', 'share_location', 'emoji_events', 'handshake', 
           'group', 'person', 'history_edu', 'military_tech', 'campaign', 'contact_page', 'note_add',
@@ -110,65 +103,62 @@ export const AdminLandingJalur = (props: any) => {
         async function loadData() {
           try {
             const res = await API.request('/admin/settings');
-            masterPaths = res.data.admission_paths?.value || [];
-            landingJalur = res.data.landing_jalur_json?.value || [];
-            renderItems();
+            const masterPaths = res.data.admission_paths?.value || [];
+            let landingJalur = res.data.landing_jalur_json?.value || [];
+
+            // Seed from active master paths if landing list is empty
+            if (landingJalur.length === 0) {
+              landingJalur = masterPaths
+                .filter(p => p.active)
+                .map(p => ({ title: p.name, badge: '', icon: 'share_location', desc: '' }));
+            }
+
+            landingJalur.forEach(item => addCardToDOM(item));
+            updateCount();
           } catch (e) { console.error(e); }
         }
 
-        function renderItems() {
-          const container = document.getElementById('jalur-list-container');
-          container.innerHTML = '';
+        function addCardToDOM(data) {
+          data = data || {};
+          const template = document.getElementById('jalur-item-template');
+          const clone = template.content.cloneNode(true);
+          const root = clone.querySelector('.jalur-item');
+
+          root.querySelector('.item-title').value = data.title || '';
           
-          // Only show paths that are active in Master Jalur
-          const activePaths = masterPaths.filter(p => p.active);
+          const badgeInput = root.querySelector('.item-badge');
+          badgeInput.value = data.badge || '';
+          badgeInput.addEventListener('focus', () => showSuggestions(badgeInput, 'badges'));
+          badgeInput.addEventListener('blur', () => setTimeout(() => hideSuggestions(badgeInput), 200));
 
-          if (activePaths.length === 0) {
-            container.innerHTML = '<div class="col-span-2 py-20 text-center bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">Silakan aktifkan jalur di menu <a href="/admin/admission-paths" class="text-blue-600 font-bold underline">Master Jalur</a> terlebih dahulu.</div>';
-            return;
-          }
-
-          activePaths.forEach((path, index) => {
-            // Find existing landing data for this path name
-            const existing = landingJalur.find(lj => lj.title === path.name) || {};
-
-            const template = document.getElementById('jalur-item-template');
-            const clone = template.content.cloneNode(true);
-            const root = clone.querySelector('.jalur-item');
-            
-            // Remove delete button since it's managed by Master Jalur
-            root.querySelector('button[onclick="removeItem(this)"]').remove();
-
-            root.querySelector('.item-title').value = path.name;
-            root.querySelector('.item-title').readOnly = true;
-            root.querySelector('.item-title').classList.add('bg-slate-100', 'cursor-not-allowed');
-            
-            const badgeInput = root.querySelector('.item-badge');
-            badgeInput.value = existing.badge || '';
-            badgeInput.onfocus = () => showSuggestions(badgeInput, 'badges');
-            badgeInput.onblur = () => setTimeout(() => hideSuggestions(badgeInput), 200);
-
-            root.querySelector('.item-icon').value = existing.icon || 'share_location';
-            root.querySelector('.item-icon-preview').textContent = existing.icon || 'share_location';
-            root.querySelector('.item-desc').value = existing.desc || '';
-            
-            container.appendChild(clone);
+          const iconInput = root.querySelector('.item-icon');
+          iconInput.value = data.icon || 'share_location';
+          root.querySelector('.item-icon-preview').textContent = data.icon || 'share_location';
+          iconInput.addEventListener('input', () => {
+            root.querySelector('.item-icon-preview').textContent = iconInput.value || 'help';
+            showSuggestions(iconInput, 'icons');
           });
+          iconInput.addEventListener('focus', () => showSuggestions(iconInput, 'icons'));
+          iconInput.addEventListener('blur', () => setTimeout(() => hideSuggestions(iconInput), 200));
+
+          root.querySelector('.item-desc').value = data.desc || '';
+
+          document.getElementById('jalur-list-container').appendChild(clone);
+        }
+
+        function addItem() {
+          addCardToDOM({ title: '', badge: '', icon: 'share_location', desc: '' });
           updateCount();
         }
 
-        function handleIconInput(input) {
-          updateIcon(input);
-          showSuggestions(input, 'icons');
-        }
-
-        function updateIcon(input) {
-          const preview = input.parentElement.querySelector('.item-icon-preview');
-          preview.textContent = input.value || 'help';
+        function removeItem(btn) {
+          btn.closest('.jalur-item').remove();
+          updateCount();
         }
 
         function showSuggestions(input, type) {
-          const container = input.parentElement.querySelector('.suggestions-list');
+          const wrapper = input.closest('.relative') || input.parentElement;
+          const container = wrapper.querySelector('.suggestions-list');
           if (!container) return;
           
           const grid = container.querySelector('.icons-grid') || container;
@@ -176,7 +166,7 @@ export const AdminLandingJalur = (props: any) => {
           
           const query = input.value.toLowerCase();
           const list = type === 'icons' ? COMMON_ICONS : COMMON_BADGES;
-          const filtered = list.filter(item => item.toLowerCase().includes(query));
+          const filtered = list.filter(i => i.toLowerCase().includes(query));
           
           if (filtered.length === 0 && type === 'badges') {
             container.classList.add('hidden');
@@ -195,12 +185,20 @@ export const AdminLandingJalur = (props: any) => {
                 : 'px-3 py-2 rounded-lg hover:bg-blue-50 text-xs font-bold text-slate-600 hover:text-blue-600 transition-all text-left w-full';
               
               if (type === 'icons') {
-                btn.innerHTML = \`<span class="material-symbols-outlined text-xl">\${item}</span><span class="text-[8px] mt-1 font-mono">\${item}</span>\`;
+                btn.innerHTML = '<span class="material-symbols-outlined text-xl">' + item + '</span><span class="text-[8px] mt-1 font-mono">' + item + '</span>';
               } else {
                 btn.textContent = item;
               }
               
-              btn.onclick = () => selectSuggestion(input, item, type);
+              btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                input.value = item;
+                if (type === 'icons') {
+                  const preview = input.closest('.relative').querySelector('.item-icon-preview');
+                  if (preview) preview.textContent = item;
+                }
+                hideSuggestions(input);
+              });
               grid.appendChild(btn);
             });
           }
@@ -218,14 +216,9 @@ export const AdminLandingJalur = (props: any) => {
         }
 
         function hideSuggestions(input) {
-          const container = input.parentElement.querySelector('.suggestions-list');
+          const wrapper = input.closest('.relative') || input.parentElement;
+          const container = wrapper.querySelector('.suggestions-list');
           if (container) container.classList.add('hidden');
-        }
-
-        function selectSuggestion(input, value, type) {
-          input.value = value;
-          if (type === 'icons') updateIcon(input);
-          hideSuggestions(input);
         }
 
         function updateCount() {
@@ -235,17 +228,19 @@ export const AdminLandingJalur = (props: any) => {
 
         async function saveJalur() {
           const btn = document.getElementById('btn-save');
-          const originalText = btn.innerHTML;
+          const originalHTML = btn.innerHTML;
           btn.disabled = true;
-          btn.innerHTML = '<span class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> Menyimpan...';
+          btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Menyimpan...';
           
           try {
             const newItems = [];
             document.querySelectorAll('.jalur-item').forEach(el => {
+              const title = el.querySelector('.item-title').value.trim();
+              if (!title) return;
               newItems.push({
-                title: el.querySelector('.item-title').value,
+                title,
                 badge: el.querySelector('.item-badge').value,
-                icon: el.querySelector('.item-icon').value,
+                icon: el.querySelector('.item-icon').value || 'share_location',
                 desc: el.querySelector('.item-desc').value
               });
             });
@@ -260,7 +255,7 @@ export const AdminLandingJalur = (props: any) => {
             UI.error('Terjadi Kesalahan', e.message);
           } finally {
             btn.disabled = false;
-            btn.innerHTML = originalText;
+            btn.innerHTML = originalHTML;
           }
         }
 
