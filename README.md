@@ -70,7 +70,7 @@ docker run -d \
   --name spmb-wa \
   -p 3000:3000 \
   --env-file .env \
-  ardianryan/registrasi-spmb:0.1.0-alpha
+  ardianryan/registrasi-spmb:0.1.1-alpha
 ```
 
 ### C. Otomatisasi dengan Script Setup

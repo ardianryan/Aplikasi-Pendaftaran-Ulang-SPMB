@@ -1,6 +1,6 @@
 {
   "name": "spmb-wa",
-  "version": "1.0.0",
+  "version": "0.1.1-alpha",
   "description": "Aplikasi Registrasi Ulang Siswa Baru SMAN 1 Gedeg",
   "type": "module",
   "scripts": {
