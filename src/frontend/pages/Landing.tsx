@@ -53,9 +53,13 @@ export const Landing = (props: any) => {
       <nav id="main-nav" className="fixed top-0 z-[100] w-full py-6 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary-variant flex items-center justify-center text-white font-display font-bold">
-              {settings.app_name?.substring(0, 2) || 'SG'}
-            </div>
+            {settings.app_logo ? (
+              <img src={settings.app_logo} alt="Logo" className="w-10 h-10 object-contain" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-primary-variant flex items-center justify-center text-white font-display font-bold">
+                {settings.app_name?.substring(0, 2) || 'SG'}
+              </div>
+            )}
             <div className="text-xl font-display font-bold text-primary">
               {settings.school_name || 'SMAN 1 Gedeg'}
             </div>
@@ -267,9 +271,13 @@ export const Landing = (props: any) => {
       <footer className="w-full bg-[#051120] text-blue-100/60 border-t border-white/10 py-12">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white font-display font-bold text-xs">
-              {settings.app_name?.substring(0, 2) || 'SG'}
-            </div>
+            {settings.app_logo ? (
+              <img src={settings.app_logo} alt="Logo" className="w-12 h-12 object-contain" />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-display font-bold text-xl">
+                {settings.app_name?.substring(0, 2) || 'SG'}
+              </div>
+            )}
             <div className="font-sans text-sm font-medium">
               © {new Date().getFullYear()} Panitia {settings.app_name || 'SPMB'} {settings.school_name || 'SMAN 1 Gedeg'}.
             </div>

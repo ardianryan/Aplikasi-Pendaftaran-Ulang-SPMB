@@ -8,7 +8,11 @@ export const Wizard = (props: any) => {
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
         <div className="px-4 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-outlined text-blue-600" style={{ fontSize: '28px' }}>school</span>
+            {props.settings?.app_logo ? (
+              <img src={props.settings.app_logo} alt="Logo" className="w-8 h-8 object-contain" />
+            ) : (
+              <span className="material-symbols-outlined text-blue-600" style={{ fontSize: '28px' }}>school</span>
+            )}
             <span className="font-bold text-slate-800 hidden sm:inline">{props.schoolName || 'SMAN 1 Gedeg'}</span>
           </div>
           {/* Mobile Progress Bar */}

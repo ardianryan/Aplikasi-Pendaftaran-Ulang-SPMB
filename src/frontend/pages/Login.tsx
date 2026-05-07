@@ -12,7 +12,11 @@ export const Login = (props: any) => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
 
-            <span className="material-symbols-outlined text-7xl mb-6">school</span>
+            {props.settings?.app_logo ? (
+              <img src={props.settings.app_logo} alt="Logo" className="w-24 h-24 object-contain mb-6" />
+            ) : (
+              <span className="material-symbols-outlined text-7xl mb-6">school</span>
+            )}
             <h1 className="text-3xl font-extrabold text-center mb-4">{props.schoolName || 'SMAN 1 Gedeg'}</h1>
             <p className="text-blue-100 text-center leading-relaxed opacity-90">
               {props.appName || 'SPMB'} — Portal Registrasi Ulang <br /> Calon Murid Baru

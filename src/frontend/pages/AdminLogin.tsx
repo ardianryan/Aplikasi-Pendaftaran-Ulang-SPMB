@@ -10,9 +10,15 @@ export const AdminLogin = (props: any) => {
         <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
           <div className="p-8 md:p-10">
             <div className="text-center mb-10">
-              <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/20">
-                <span className="material-symbols-outlined text-white text-4xl">admin_panel_settings</span>
-              </div>
+              {props.settings?.app_logo ? (
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 overflow-hidden">
+                  <img src={props.settings.app_logo} alt="Logo" className="w-full h-full object-contain" />
+                </div>
+              ) : (
+                <div className="w-20 h-20 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-blue-500/20">
+                  <span className="material-symbols-outlined text-white text-4xl">admin_panel_settings</span>
+                </div>
+              )}
               <h1 className="text-2xl font-bold text-slate-800">{props.schoolName || 'Admin Portal'}</h1>
               <p className="text-slate-500 mt-2">Masuk ke Panel Kontrol {props.appName || 'SPMB'}</p>
             </div>

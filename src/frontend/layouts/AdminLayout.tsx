@@ -20,6 +20,7 @@ export const AdminLayout = (props: any) => {
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{props.title ? `${props.title} - Admin ${props.appName}` : `Admin ${props.appName}`}</title>
+        {props.settings?.app_icon && <link rel="icon" href={props.settings.app_icon} />}
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
@@ -44,7 +45,11 @@ export const AdminLayout = (props: any) => {
         {/* Sidebar */}
         <nav className="hidden md:flex flex-col fixed top-0 left-0 w-64 h-screen bg-white border-r border-slate-200 p-6 z-40">
           <div className="flex items-center gap-3 mb-10">
-            <span className="material-symbols-outlined text-blue-600" style={{ fontSize: '32px' }}>admin_panel_settings</span>
+            {props.settings?.app_logo ? (
+              <img src={props.settings.app_logo} alt="Logo" className="w-8 h-8 object-contain" />
+            ) : (
+              <span className="material-symbols-outlined text-blue-600" style={{ fontSize: '32px' }}>admin_panel_settings</span>
+            )}
             <span className="font-bold text-lg text-blue-900">{props.appName || 'SPMB'} Admin</span>
           </div>
           

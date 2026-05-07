@@ -9,10 +9,12 @@ export const Layout = (props: {
   appName?: string;
   appDescription?: string;
   schoolName?: string;
+  settings?: Record<string, any>;
 }) => {
   const appName = props.appName || 'SPMB';
   const appDescription = props.appDescription || 'Sistem Penerimaan Murid Baru';
   const schoolName = props.schoolName || 'SMAN 1 Gedeg';
+  const appIcon = props.settings?.app_icon || '';
 
   return (
     <html lang="id">
@@ -21,6 +23,7 @@ export const Layout = (props: {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{props.title ? `${props.title} - ${appName}` : `${appName} — ${appDescription}`}</title>
         <meta name="description" content={`${appDescription} di ${schoolName}`} />
+        {appIcon && <link rel="icon" href={appIcon} />}
         
         {/* Tailwind CSS via CDN */}
         <script src="https://cdn.tailwindcss.com"></script>
