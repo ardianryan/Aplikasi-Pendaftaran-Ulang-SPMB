@@ -110,6 +110,14 @@ export const AdminLandingBerkas = (props: any) => {
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Internal ID</label>
                   <input type="text" className="item-id w-full px-4 py-2 bg-white border border-slate-200 rounded-xl outline-none font-mono text-[10px] focus:border-slate-400 transition-all" placeholder="doc_unique_id" />
                 </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-1">Maks. Ukuran (MB)</label>
+                  <div className="relative flex items-center">
+                    <input type="number" min="1" max="50" className="item-max-size w-full px-4 py-2 bg-white border border-slate-200 rounded-xl outline-none font-mono text-[10px] focus:border-sky-500 transition-all" placeholder="5" />
+                    <span className="absolute right-3 text-[10px] font-bold text-slate-400">MB</span>
+                  </div>
+                  <p className="text-[8px] text-slate-300 mt-1 ml-1">Default: 5 MB</p>
+                </div>
               </div>
 
               <button onclick="removeItem(this)" className="w-full py-3 mt-4 bg-white text-slate-300 rounded-xl flex items-center justify-center gap-2 hover:bg-red-50 hover:text-red-500 transition-all border border-slate-100 group/del">
@@ -162,6 +170,7 @@ export const AdminLandingBerkas = (props: any) => {
           root.querySelector('.item-icon').value = data.icon || 'description';
           root.querySelector('.item-required').checked = data.required !== false;
           root.querySelector('.item-active').checked = data.active !== false;
+          root.querySelector('.item-max-size').value = data.max_size_mb || '';
           
           const jalurValue = Array.isArray(data.jalur) ? data.jalur.join(', ') : (data.jalur || 'all');
           const jalurInput = root.querySelector('.item-jalur');
@@ -305,7 +314,8 @@ export const AdminLandingBerkas = (props: any) => {
                 icon: el.querySelector('.item-icon').value,
                 required: el.querySelector('.item-required').checked,
                 active: el.querySelector('.item-active').checked,
-                jalur: jalurs.includes('all') ? 'all' : jalurs
+                jalur: jalurs.includes('all') ? 'all' : jalurs,
+                max_size_mb: parseInt(el.querySelector('.item-max-size').value) || 5
               });
             });
 

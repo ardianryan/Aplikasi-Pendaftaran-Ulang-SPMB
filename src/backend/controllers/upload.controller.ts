@@ -32,11 +32,25 @@ export async function uploadDocument(c: Context) {
       return error(c, "File tidak ditemukan dalam request.", 400);
     }
 
-    // Validate file size
-    if (file.size > UPLOAD_CONFIG.maxFileSize) {
+    // Validate file size — check per-berkas max_size_mb setting first
+    let effectiveMaxSize = UPLOAD_CONFIG.maxFileSize;
+    try {
+      const { Setting } = await import("../models/Setting");
+      const berkasSetting = await Setting.findOne({ key: "landing_berkas_json" }).lean();
+      if (berkasSetting?.value && Array.isArray(berkasSetting.value)) {
+        const berkas = (berkasSetting.value as any[]).find((b: any) => b.id === docType);
+        if (berkas?.max_size_mb && typeof berkas.max_size_mb === "number") {
+          effectiveMaxSize = berkas.max_size_mb * 1024 * 1024;
+        }
+      }
+    } catch {
+      // fallback to global config
+    }
+
+    if (file.size > effectiveMaxSize) {
       return error(
         c,
-        `Ukuran file melebihi batas maksimal (${UPLOAD_CONFIG.maxFileSize / 1024 / 1024}MB).`,
+        `Ukuran file melebihi batas maksimal (${Math.round(effectiveMaxSize / 1024 / 1024)}MB) untuk dokumen ini.`,
         422
       );
     }

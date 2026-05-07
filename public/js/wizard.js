@@ -593,11 +593,12 @@ const Wizard = {
     const zone = document.getElementById(`upload-${docId}`);
     if (!zone) return;
     
-    // Find doc title if label not provided
+    // Find doc entry for title and max_size_mb
+    const doc = (this.activeBerkas || []).find(b => b.id === docId);
     if(!label) {
-       const doc = (this.activeBerkas || []).find(b => b.id === docId);
        label = doc ? doc.title : docId;
     }
+    const maxMB = doc?.max_size_mb || 5;
 
     zone.innerHTML = `
       <div class="flex flex-col items-center justify-center p-6 text-center w-full" onclick="document.getElementById('file-${docId}').click()">
@@ -605,7 +606,7 @@ const Wizard = {
           <span class="material-symbols-outlined text-2xl">cloud_upload</span>
         </div>
         <p class="text-sm font-bold text-slate-700">${label}</p>
-        <p class="text-xs text-slate-400 mt-1">PDF, JPG, PNG (maks 5MB)</p>
+        <p class="text-xs text-slate-400 mt-1">PDF, JPG, PNG (maks ${maxMB}MB)</p>
       </div>
       <input type="file" id="file-${docId}" class="hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="Wizard.handleFileSelect('${docId}', this)">
     `;
@@ -617,8 +618,11 @@ const Wizard = {
   async handleFileSelect(docId, input) {
     const file = input.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      UI.toast("Ukuran file melebihi 5MB.", "error");
+    const doc = (this.activeBerkas || []).find(b => b.id === docId);
+    const maxMB = (doc?.max_size_mb) || 5;
+    if (file.size > maxMB * 1024 * 1024) {
+      UI.toast(`Ukuran file melebihi ${maxMB}MB untuk dokumen ini.`, 'error');
+      input.value = '';
       return;
     }
     const zone = document.getElementById(`upload-${docId}`);
