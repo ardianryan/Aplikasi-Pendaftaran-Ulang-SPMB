@@ -48,9 +48,22 @@ Aplikasi registrasi ulang (daftar ulang) peserta didik baru untuk **SMAN 1 Gedeg
 
 ## 🐳 Deployment with Docker (Recommended)
 
-Kami menyediakan berbagai cara untuk menjalankan aplikasi di lingkungan Docker.
+Kami menyediakan berbagai cara untuk menjalankan aplikasi di lingkungan Docker. Pastikan Anda telah menyalin dan menyesuaikan file `.env` sebelum memulai.
 
-### A. Cara Paling Cepat (Pre-built Image)
+### ⚙️ Persiapan Environment
+Sebelum menjalankan Docker, pastikan file `.env` sudah ada:
+```bash
+cp .env.example .env
+# Edit .env dan sesuaikan nilainya (terutama JWT_SECRET dan Cloudflare R2)
+```
+
+### A. Docker Compose (Paling Direkomendasikan)
+Cara ini akan menjalankan aplikasi beserta database MongoDB secara otomatis:
+```bash
+docker-compose up -d
+```
+
+### B. Cara Cepat (Pre-built Image)
 Gunakan image yang sudah jadi dari Docker Hub:
 ```bash
 docker run -d \
@@ -60,13 +73,26 @@ docker run -d \
   ardianryan/registrasi-spmb:0.1.0-alpha
 ```
 
-### B. Otomatisasi dengan Script Setup
+### C. Otomatisasi dengan Script Setup
 Jalankan satu perintah untuk menyiapkan seluruh stack (App + MongoDB):
 ```bash
+chmod +x docker-setup.sh
 ./docker-setup.sh
 # ATAU
 make setup
 ```
+
+## 🔐 Default Admin Login
+Setelah instalasi selesai dan database di-seed (`bun run seed`), Anda dapat masuk ke dashboard admin dengan kredensial berikut:
+
+| Field | Value |
+|-------|-------|
+| **URL Admin** | `http://localhost:3000/admin` |
+| **Username** | `admin` |
+| **Password** | `admin123` |
+
+> [!WARNING]
+> Segera ganti password admin Anda setelah login pertama kali untuk keamanan.
 
 ## 🌍 Cloud Deployment Options
 

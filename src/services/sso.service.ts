@@ -88,6 +88,8 @@ export async function fetchSSOMembers(
     headers: {
       "X-API-Key": apiKey,
       "Content-Type": "application/json",
+      "Referer": process.env.APP_URL || "https://spmb-wa.local",
+      "User-Agent": "SPMB-WA-Client/1.0",
     },
   });
 
@@ -136,6 +138,8 @@ export async function lookupSSOMember(identifier: string): Promise<SSOLookupResp
       headers: {
         "X-API-Key": apiKey,
         "Content-Type": "application/json",
+        "Referer": process.env.APP_URL || "https://spmb-wa.local",
+        "User-Agent": "SPMB-WA-Client/1.0",
       },
     });
 
