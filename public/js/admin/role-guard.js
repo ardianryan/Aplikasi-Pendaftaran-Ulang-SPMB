@@ -15,9 +15,7 @@ function logout() {
   window.location.href = "/admin/login";
 }
 
-(function () {
-  "use strict";
-
+document.addEventListener("DOMContentLoaded", function () {
   const admin = JSON.parse(localStorage.getItem("spmb_admin") || "{}");
   const role = admin.role || "operator";
 
@@ -48,4 +46,4 @@ function logout() {
       window.location.href = "/admin/dashboard";
     }
   }
-})();
+});

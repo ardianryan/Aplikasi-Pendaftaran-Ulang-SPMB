@@ -36,7 +36,7 @@ const Wizard = {
       // Resume from last step
       this.goToStep(this.studentData.wizardStep || 1);
     } catch (err) {
-      this.showToast("Gagal memuat data. Silakan login ulang.", "error");
+      UI.toast("Gagal memuat data. Silakan login ulang.", "error");
       setTimeout(() => API.logout(), 2000);
     }
   },
@@ -162,15 +162,17 @@ const Wizard = {
       await API.confirmData();
       this.goToStep(2);
     } catch (err) {
-      this.showToast(err.message || "Gagal mengkonfirmasi data.", "error");
+      UI.toast(err.message || "Gagal mengkonfirmasi data.", "error");
     } finally {
       this.setButtonLoading("btn-confirm", false);
     }
   },
 
   // ============================================
-  // Step 2: Biodata (with Accordion)
+  // Step 2: Biodata (Section Management)
   // ============================================
+  
+  currentSection: 'bio',
 
   async loadBiodata() {
     try {
@@ -178,9 +180,106 @@ const Wizard = {
       this.biodataData = res.data;
       this.populateBiodataForm(res.data);
       this.setupAutoSave();
+      
+      // Initialize Step 2 UI
+      this.switchSection('bio');
+      this.updateBiodataProgress();
     } catch (err) {
-      this.showToast("Gagal memuat biodata.", "error");
+      UI.toast("Gagal memuat biodata.", "error");
     }
+  },
+
+  switchSection(sectionId) {
+    this.currentSection = sectionId;
+    
+    // Hide all sections
+    document.querySelectorAll('.biodata-section').forEach(el => el.classList.add('hidden'));
+    
+    // Show target section
+    const target = document.getElementById(`sec-${sectionId}`);
+    if (target) {
+      target.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Update nav sidebar
+    document.querySelectorAll('.sub-step').forEach(el => {
+      el.classList.remove('bg-blue-50', 'text-blue-600', 'border-blue-200', 'border');
+      el.querySelector('.sub-step-num').classList.replace('bg-blue-600', 'bg-slate-100');
+      el.querySelector('.sub-step-num').classList.replace('text-white', 'text-slate-400');
+    });
+
+    const activeNav = document.getElementById(`nav-sec-${sectionId}`);
+    if (activeNav) {
+      activeNav.classList.add('bg-blue-50', 'text-blue-600', 'border-blue-100', 'border');
+      activeNav.querySelector('.sub-step-num').classList.replace('bg-slate-100', 'bg-blue-600');
+      activeNav.querySelector('.sub-step-num').classList.replace('text-slate-400', 'text-white');
+    }
+  },
+
+  nextSection(currentId) {
+    const sections = ['bio', 'alm', 'kes', 'pend', 'ayah', 'ibu', 'wali', 'gem'];
+    const idx = sections.indexOf(currentId);
+    if (idx < sections.length - 1) {
+      this.switchSection(sections[idx + 1]);
+    }
+  },
+
+  prevSection(currentId) {
+    const sections = ['bio', 'alm', 'kes', 'pend', 'ayah', 'ibu', 'wali', 'gem'];
+    const idx = sections.indexOf(currentId);
+    if (idx > 0) {
+      this.switchSection(sections[idx - 1]);
+    }
+  },
+
+  updateBiodataProgress() {
+    const sections = {
+      bio: ['bio-namaPanggilan', 'bio-jenisKelamin', 'bio-tempatLahir', 'bio-nik', 'bio-agama', 'bio-anakKe'],
+      alm: ['alm-alamatLengkap', 'alm-telepon', 'alm-email', 'alm-tinggalDengan'],
+      kes: ['kes-golonganDarah', 'kes-tinggiBadan', 'kes-beratBadan'],
+      pend: ['pend-nomorIjazah'],
+      ayah: ['ayah-nama', 'ayah-status', 'ayah-pekerjaan'],
+      ibu: ['ibu-nama', 'ibu-status', 'ibu-pekerjaan'],
+      wali: [], // optional
+      gem: ['gem-kesenian', 'gem-olahraga']
+    };
+
+    let totalFields = 0;
+    let filledFields = 0;
+
+    Object.keys(sections).forEach(secId => {
+      const fields = sections[secId];
+      let secFilled = true;
+      
+      fields.forEach(fId => {
+        totalFields++;
+        const val = this.getVal(fId);
+        if (val && val.trim() !== '') {
+          filledFields++;
+        } else {
+          secFilled = false;
+        }
+      });
+
+      // Update sidebar checkmark
+      const navEl = document.getElementById(`nav-sec-${secId}`);
+      if (navEl) {
+        const check = navEl.querySelector('.sub-step-check');
+        if (fields.length > 0 && secFilled) {
+          check.classList.replace('opacity-0', 'opacity-100');
+        } else if (fields.length > 0) {
+          check.classList.replace('opacity-100', 'opacity-0');
+        }
+      }
+    });
+
+    const pct = Math.round((filledFields / totalFields) * 100);
+    const progressBar = document.getElementById('biodata-progress-bar');
+    const progressPct = document.getElementById('biodata-progress-pct');
+    
+    if (progressBar) progressBar.style.width = `${pct}%`;
+    if (progressPct) progressPct.textContent = `${pct}%`;
   },
 
   populateBiodataForm(data) {
@@ -226,6 +325,7 @@ const Wizard = {
     this.setVal("pend-asalSekolah", p.asalSekolah);
     this.setVal("pend-nomorIjazah", p.nomorIjazah);
     this.setVal("pend-lamaBelajar", p.lamaBelajar);
+    this.setVal("pend-kelas", p.kelas);
 
     // Section E: Ayah
     this.populateOrangTua("ayah", data.ayah || {});
@@ -266,32 +366,22 @@ const Wizard = {
     }
   },
 
-  /**
-   * Set a date picker (DD / Bulan / YYYY) from an ISO date string
-   * Elements: {id}-hari, {id}-bulan, {id}-tahun, {id} (hidden)
-   */
   setDatePicker(id, dateValue) {
     if (!dateValue) return;
     const dateStr = typeof dateValue === "string" ? dateValue : new Date(dateValue).toISOString();
-    const parts = dateStr.split("T")[0].split("-"); // YYYY-MM-DD
+    const parts = dateStr.split("T")[0].split("-");
     if (parts.length !== 3) return;
-
     const [year, month, day] = parts;
     this.setVal(`${id}-hari`, day);
     this.setVal(`${id}-bulan`, month);
     this.setVal(`${id}-tahun`, year);
-    // Also set hidden field
     this.setVal(id, `${year}-${month}-${day}`);
   },
 
-  /**
-   * Get date value from a date picker (DD / Bulan / YYYY) as YYYY-MM-DD or null
-   */
   getDatePicker(id) {
     const hari = this.getVal(`${id}-hari`).trim();
     const bulan = this.getVal(`${id}-bulan`);
     const tahun = this.getVal(`${id}-tahun`).trim();
-
     if (!hari || !bulan || !tahun || tahun.length < 4) return null;
     return `${tahun}-${bulan}-${hari.padStart(2, "0")}`;
   },
@@ -346,6 +436,7 @@ const Wizard = {
         asalSekolah: this.getVal("pend-asalSekolah"),
         nomorIjazah: this.getVal("pend-nomorIjazah"),
         lamaBelajar: this.getVal("pend-lamaBelajar"),
+        kelas: this.getVal("pend-kelas"),
       },
       ayah: this.collectOrangTua("ayah"),
       ibu: this.collectOrangTua("ibu"),
@@ -377,17 +468,15 @@ const Wizard = {
   },
 
   setupAutoSave() {
-    // Mark form as dirty on any input change
     const form = document.getElementById("biodata-form");
     if (form) {
-      form.addEventListener("input", () => {
+      const handleInput = () => {
         this.isDirty = true;
+        this.updateBiodataProgress(); // Live update progress
         this.scheduleAutoSave();
-      });
-      form.addEventListener("change", () => {
-        this.isDirty = true;
-        this.scheduleAutoSave();
-      });
+      };
+      form.addEventListener("input", handleInput);
+      form.addEventListener("change", handleInput);
     }
   },
 
@@ -398,195 +487,193 @@ const Wizard = {
 
   async saveBiodata(showFeedback = true) {
     if (!this.isDirty && !showFeedback) return;
-
     const data = this.collectBiodataForm();
-
     try {
       await API.saveBiodata(data);
       this.isDirty = false;
-      if (showFeedback) {
-        this.showToast("Data berhasil disimpan.", "success");
-      }
+      if (showFeedback) UI.toast("Data berhasil disimpan.", "success");
     } catch (err) {
-      if (showFeedback) {
-        this.showToast(err.message || "Gagal menyimpan data.", "error");
-      }
+      if (showFeedback) UI.toast(err.message || "Gagal menyimpan data.", "error");
     }
   },
 
   async completeBiodataAndNext() {
     this.setButtonLoading("btn-biodata-next", true);
-
-    // ALWAYS save current form data before completing (ignore isDirty flag)
     const data = this.collectBiodataForm();
     try {
       await API.saveBiodata(data);
       this.isDirty = false;
     } catch (saveErr) {
-      this.showToast(saveErr.message || "Gagal menyimpan data.", "error");
+      UI.toast(saveErr.message || "Gagal menyimpan data.", "error");
       this.setButtonLoading("btn-biodata-next", false);
       return;
     }
 
-    // Now validate completeness on backend
     try {
       await API.completeBiodata();
       this.goToStep(3);
     } catch (err) {
       if (err.errors && err.errors.length > 0) {
-        this.showToast(`Data belum lengkap: ${err.errors[0].message}`, "error");
+        UI.toast(`Data belum lengkap: ${err.errors[0].message}`, "error");
       } else {
-        this.showToast(err.message || "Biodata belum lengkap.", "error");
+        UI.toast(err.message || "Biodata belum lengkap.", "error");
       }
     } finally {
       this.setButtonLoading("btn-biodata-next", false);
     }
   },
 
-  // ============================================
-  // Step 3: Upload
-  // ============================================
-
   async loadUploadStatus() {
     try {
       const res = await API.getReview();
       const docs = res.data.dokumen || {};
+      const studentJalur = this.studentData?.konfirmasi?.jalur || "all";
+      const berkasSettings = window.WizardSettings?.landing_berkas_json || [];
 
-      ["kartuKeluarga", "ijazahSkl", "aktaKelahiran", "foto4x6"].forEach((type) => {
-        const zone = document.getElementById(`upload-${type}`);
-        if (!zone) return;
-
-        if (docs[type] && docs[type].key) {
-          this.setUploadSuccess(type, docs[type].originalName);
-        } else {
-          this.setUploadEmpty(type);
-        }
+      // Filter berkas based on active status and student's jalur
+      this.activeBerkas = berkasSettings.filter(b => {
+        if (!b.active) return false;
+        if (!b.jalur || b.jalur.includes("all")) return true;
+        return b.jalur.includes(studentJalur);
       });
 
+      const container = document.getElementById("upload-zones-container");
+      if (container) {
+        container.innerHTML = "";
+        this.activeBerkas.forEach(doc => {
+          const zoneId = `upload-${doc.id}`;
+          const col = document.createElement("div");
+          col.className = "bg-white p-6 rounded-3xl border border-slate-200 shadow-sm";
+          col.innerHTML = `
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-slate-800">${doc.title}</h3>
+              ${doc.required ? '<span class="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg uppercase tracking-wider">Wajib</span>' : ""}
+            </div>
+            <div id="${zoneId}" class="min-h-[160px] border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center p-6 hover:border-blue-400 transition-colors cursor-pointer">
+            </div>
+          `;
+          container.appendChild(col);
+
+          if (docs[doc.id] && docs[doc.id].key) {
+            this.setUploadSuccess(doc.id, docs[doc.id].originalName);
+          } else {
+            this.setUploadEmpty(doc.id, doc.title);
+          }
+        });
+      }
       this.updateUploadNextButton();
     } catch (err) {
-      this.showToast("Gagal memuat status dokumen.", "error");
+      UI.toast("Gagal memuat status dokumen.", "error");
     }
   },
 
-  setUploadSuccess(type, filename) {
-    const zone = document.getElementById(`upload-${type}`);
+  setUploadSuccess(docId, filename) {
+    const zone = document.getElementById(`upload-${docId}`);
     if (!zone) return;
-
     zone.innerHTML = `
-      <div class="flex items-center gap-3 p-4">
-        <span class="material-symbols-outlined text-tertiary" style="font-variation-settings:'FILL' 1">check_circle</span>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-on-surface truncate">${filename}</p>
-          <p class="text-xs text-on-surface-variant">Berhasil diunggah</p>
+      <div class="flex items-center gap-4 p-4 w-full">
+        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-2xl">check_circle</span>
         </div>
-        <button onclick="Wizard.removeFile('${type}')" class="text-sm text-error font-medium hover:underline" aria-label="Hapus file ${filename}">Ganti</button>
+        <div class="flex-1 min-w-0 text-left">
+          <p class="text-sm font-bold text-slate-800 truncate">${filename}</p>
+          <p class="text-xs text-emerald-600 font-medium">Berhasil diunggah</p>
+        </div>
+        <button onclick="Wizard.removeFile('${docId}')" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
       </div>
     `;
-    zone.classList.remove("border-dashed");
-    zone.classList.add("border-solid", "border-tertiary/50", "bg-tertiary-container/10");
+    zone.onclick = null;
+    zone.classList.remove("border-dashed", "hover:border-blue-400", "cursor-pointer");
+    zone.classList.add("border-emerald-100", "bg-emerald-50/30");
   },
 
-  setUploadEmpty(type) {
-    const labels = {
-      kartuKeluarga: "Kartu Keluarga",
-      ijazahSkl: "Ijazah / SKL",
-      aktaKelahiran: "Akta Kelahiran",
-      foto4x6: "Pas Foto 4x6",
-    };
-
-    const zone = document.getElementById(`upload-${type}`);
+  setUploadEmpty(docId, label) {
+    const zone = document.getElementById(`upload-${docId}`);
     if (!zone) return;
+    
+    // Find doc title if label not provided
+    if(!label) {
+       const doc = (this.activeBerkas || []).find(b => b.id === docId);
+       label = doc ? doc.title : docId;
+    }
 
     zone.innerHTML = `
-      <div class="flex flex-col items-center justify-center p-6 text-center cursor-pointer" onclick="document.getElementById('file-${type}').click()">
-        <span class="material-symbols-outlined text-on-surface-variant mb-2" style="font-size:36px">cloud_upload</span>
-        <p class="text-sm font-medium text-on-surface">${labels[type]}</p>
-        <p class="text-xs text-on-surface-variant mt-1">PDF, JPG, PNG (maks 5MB)</p>
+      <div class="flex flex-col items-center justify-center p-6 text-center w-full" onclick="document.getElementById('file-${docId}').click()">
+        <div class="w-12 h-12 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
+          <span class="material-symbols-outlined text-2xl">cloud_upload</span>
+        </div>
+        <p class="text-sm font-bold text-slate-700">${label}</p>
+        <p class="text-xs text-slate-400 mt-1">PDF, JPG, PNG (maks 5MB)</p>
       </div>
-      <input type="file" id="file-${type}" class="hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="Wizard.handleFileSelect('${type}', this)">
+      <input type="file" id="file-${docId}" class="hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="Wizard.handleFileSelect('${docId}', this)">
     `;
-    zone.classList.add("border-dashed");
-    zone.classList.remove("border-solid", "border-tertiary/50", "bg-tertiary-container/10");
+    zone.onclick = () => document.getElementById(`file-${docId}`).click();
+    zone.classList.add("border-dashed", "hover:border-blue-400", "cursor-pointer");
+    zone.classList.remove("border-emerald-100", "bg-emerald-50/30");
   },
 
-  async handleFileSelect(type, input) {
+  async handleFileSelect(docId, input) {
     const file = input.files[0];
     if (!file) return;
-
-    // Validate size
     if (file.size > 5 * 1024 * 1024) {
-      this.showToast("Ukuran file melebihi 5MB.", "error");
+      UI.toast("Ukuran file melebihi 5MB.", "error");
       return;
     }
-
-    // Show uploading state
-    const zone = document.getElementById(`upload-${type}`);
+    const zone = document.getElementById(`upload-${docId}`);
     zone.innerHTML = `
-      <div class="flex items-center gap-3 p-4">
-        <div class="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full"></div>
-        <p class="text-sm text-on-surface-variant">Mengunggah ${file.name}...</p>
+      <div class="flex flex-col items-center justify-center p-6 text-center w-full">
+        <div class="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-3"></div>
+        <p class="text-xs font-bold text-slate-500">Mengunggah ${file.name}...</p>
       </div>
     `;
-
     try {
-      const res = await API.uploadDocument(type, file);
-      this.setUploadSuccess(type, file.name);
-      this.showToast("Dokumen berhasil diunggah.", "success");
+      await API.uploadDocument(docId, file);
+      this.setUploadSuccess(docId, file.name);
+      UI.toast("Dokumen berhasil diunggah.", "success");
       this.updateUploadNextButton();
     } catch (err) {
-      this.setUploadEmpty(type);
-      this.showToast(err.message || "Gagal mengunggah dokumen.", "error");
+      this.setUploadEmpty(docId);
+      UI.toast(err.message || "Gagal mengunggah dokumen.", "error");
     }
   },
 
-  async removeFile(type) {
+  async removeFile(docId) {
+    if(!await UI.confirm('Hapus Dokumen?', 'Dokumen yang dihapus tidak dapat dikembalikan.')) return;
     try {
-      await API.deleteDocument(type);
-      this.setUploadEmpty(type);
+      await API.deleteDocument(docId);
+      this.setUploadEmpty(docId);
       this.updateUploadNextButton();
+      UI.toast("Dokumen berhasil dihapus.", "success");
     } catch (err) {
-      this.showToast(err.message || "Gagal menghapus dokumen.", "error");
+      UI.toast(err.message || "Gagal menghapus dokumen.", "error");
     }
   },
 
   updateUploadNextButton() {
-    const allUploaded = ["kartuKeluarga", "ijazahSkl", "aktaKelahiran", "foto4x6"].every((type) => {
-      const zone = document.getElementById(`upload-${type}`);
-      return zone && zone.classList.contains("border-solid");
+    const allRequiredUploaded = (this.activeBerkas || []).every((doc) => {
+      if (!doc.required) return true;
+      const zone = document.getElementById(`upload-${doc.id}`);
+      return zone && zone.classList.contains("bg-emerald-50/30");
     });
-
     const btn = document.getElementById("btn-upload-next");
-    if (btn) {
-      btn.disabled = !allUploaded;
-    }
+    if (btn) btn.disabled = !allRequiredUploaded;
   },
-
-  // ============================================
-  // Step 4: Review & Submit
-  // ============================================
 
   async loadReview() {
     try {
       const res = await API.getReview();
-      const d = res.data;
-
-      // Populate review sections
       const reviewContainer = document.getElementById("review-content");
-      if (reviewContainer) {
-        reviewContainer.innerHTML = this.buildReviewHTML(d);
-      }
+      if (reviewContainer) reviewContainer.innerHTML = this.buildReviewHTML(res.data);
     } catch (err) {
-      this.showToast("Gagal memuat data review.", "error");
+      UI.toast("Gagal memuat data review.", "error");
     }
   },
 
   buildReviewHTML(d) {
     const b = d.biodata || {};
     const a = d.alamat || {};
-    const k = d.kesehatan || {};
-    const p = d.pendidikan || {};
-
     return `
       <div class="space-y-4">
         <div class="bg-surface-container-low rounded-lg p-4">
@@ -603,36 +690,7 @@ const Wizard = {
           <dl class="grid grid-cols-1 gap-2 text-sm">
             <div><dt class="text-on-surface-variant">Alamat</dt><dd class="font-medium">${a.alamatLengkap || "-"}</dd></div>
             <div><dt class="text-on-surface-variant">Telepon</dt><dd class="font-medium">${a.telepon || "-"}</dd></div>
-            <div><dt class="text-on-surface-variant">Email</dt><dd class="font-medium">${a.email || "-"}</dd></div>
           </dl>
-        </div>
-        <div class="bg-surface-container-low rounded-lg p-4">
-          <h4 class="font-bold text-sm text-primary mb-3">Orang Tua</h4>
-          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-            <div><dt class="text-on-surface-variant">Nama Ayah</dt><dd class="font-medium">${d.ayah?.nama || "-"}</dd></div>
-            <div><dt class="text-on-surface-variant">Nama Ibu</dt><dd class="font-medium">${d.ibu?.nama || "-"}</dd></div>
-          </dl>
-        </div>
-        <div class="bg-surface-container-low rounded-lg p-4">
-          <h4 class="font-bold text-sm text-primary mb-3">Dokumen</h4>
-          <ul class="space-y-1 text-sm">
-            <li class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-tertiary" style="font-size:16px;font-variation-settings:'FILL' 1">check_circle</span>
-              Kartu Keluarga: ${d.dokumen?.kartuKeluarga?.originalName || "Belum"}
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-tertiary" style="font-size:16px;font-variation-settings:'FILL' 1">check_circle</span>
-              Ijazah/SKL: ${d.dokumen?.ijazahSkl?.originalName || "Belum"}
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-tertiary" style="font-size:16px;font-variation-settings:'FILL' 1">check_circle</span>
-              Akta Kelahiran: ${d.dokumen?.aktaKelahiran?.originalName || "Belum"}
-            </li>
-            <li class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-tertiary" style="font-size:16px;font-variation-settings:'FILL' 1">check_circle</span>
-              Pas Foto: ${d.dokumen?.foto4x6?.originalName || "Belum"}
-            </li>
-          </ul>
         </div>
       </div>
     `;
@@ -641,48 +699,36 @@ const Wizard = {
   async submitFinal() {
     const checkbox = document.getElementById("pernyataan-check");
     if (!checkbox || !checkbox.checked) {
-      this.showToast("Anda harus menyetujui pernyataan integritas.", "error");
+      UI.toast("Anda harus menyetujui pernyataan integritas.", "error");
       return;
     }
-
-    if (!confirm("Apakah Anda yakin ingin mengirim data? Data tidak dapat diubah setelah dikirim.")) {
-      return;
-    }
-
+    if (!await UI.confirm('Kirim Pendaftaran?', "Setelah dikirim, data tidak dapat diubah lagi. Pastikan semua isian sudah benar.")) return;
     try {
       this.setButtonLoading("btn-submit-final", true);
       await API.submitFinal();
       this.goToStep(5);
     } catch (err) {
-      this.showToast(err.message || "Gagal mengirim data.", "error");
+      UI.toast(err.message || "Gagal mengirim data.", "error");
     } finally {
       this.setButtonLoading("btn-submit-final", false);
     }
   },
 
-  // ============================================
-  // Step 5: Done
-  // ============================================
-
   async renderDone() {
-    // Update verification status badge
     try {
       const res = await API.getReview();
       const status = res.data?.verifikasi?.status || "pending";
       const statusEl = document.getElementById("verification-status");
       if (statusEl) {
         if (status === "verified") {
-          statusEl.className = "inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 mb-8";
+          statusEl.className = "inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm";
           statusEl.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">verified</span><span>Status: Terverifikasi</span>';
         } else if (status === "rejected") {
-          statusEl.className = "inline-flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 mb-8";
-          statusEl.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">cancel</span><span>Status: Ditolak — Hubungi panitia</span>';
+          statusEl.className = "inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-lg text-sm";
+          statusEl.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">cancel</span><span>Status: Ditolak</span>';
         }
-        // pending stays as default
       }
-    } catch (e) {
-      // Non-critical
-    }
+    } catch (e) {}
   },
 
   async downloadPdf() {
@@ -692,30 +738,13 @@ const Wizard = {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Buku_Induk_${this.studentData?.nisn || "siswa"}.pdf`;
+      a.download = `Buku_Induk.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      this.showToast("Gagal mengunduh PDF.", "error");
+      UI.toast("Gagal mengunduh PDF.", "error");
     } finally {
       this.setButtonLoading("btn-download-pdf", false);
-    }
-  },
-
-  // ============================================
-  // Accordion Toggle
-  // ============================================
-
-  toggleAccordion(id) {
-    const content = document.getElementById(id);
-    const icon = document.getElementById(`${id}-icon`);
-
-    if (content.classList.contains("open")) {
-      content.classList.remove("open");
-      if (icon) icon.textContent = "expand_more";
-    } else {
-      content.classList.add("open");
-      if (icon) icon.textContent = "expand_less";
     }
   },
 
@@ -732,34 +761,6 @@ const Wizard = {
       textEl.textContent = loading ? "Memproses..." : textEl.dataset.original || textEl.textContent;
       if (!loading && !textEl.dataset.original) textEl.dataset.original = textEl.textContent;
     }
-  },
-
-  showToast(message, type = "info") {
-    // Remove existing toast
-    const existing = document.querySelector(".toast");
-    if (existing) existing.remove();
-
-    const colors = {
-      success: "bg-tertiary text-white",
-      error: "bg-error text-white",
-      info: "bg-primary text-white",
-    };
-
-    const toast = document.createElement("div");
-    toast.className = `toast ${colors[type] || colors.info} px-5 py-3 rounded-lg shadow-lg max-w-sm text-sm font-medium`;
-    toast.textContent = message;
-    toast.setAttribute("role", "alert");
-    toast.setAttribute("aria-live", "assertive");
-    document.body.appendChild(toast);
-
-    // Animate in
-    requestAnimationFrame(() => toast.classList.add("show"));
-
-    // Auto-remove after 4s
-    setTimeout(() => {
-      toast.classList.remove("show");
-      setTimeout(() => toast.remove(), 300);
-    }, 4000);
   },
 };
 

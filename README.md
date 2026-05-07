@@ -1,7 +1,7 @@
 # 🎓 SPMB-WA — Sistem Registrasi Ulang Siswa Baru
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Bun-000000?style=for-the-badge&logo=bun&logoColor=white" />
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" />
   <img src="https://img.shields.io/badge/Hono-E36002?style=for-the-badge&logo=hono&logoColor=white" />
   <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" />
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" />
@@ -16,7 +16,7 @@ Aplikasi registrasi ulang (daftar ulang) peserta didik baru untuk **SMAN 1 Gedeg
 
 | Layer | Teknologi |
 |-------|-----------|
-| **Runtime** | [Bun](https://bun.sh) 🚀 |
+| **Runtime** | [Node.js](https://nodejs.org) 🚀 |
 | **Backend** | [Hono.js](https://hono.dev) (TypeScript) ⚡ |
 | **Database** | MongoDB (Mongoose ODM) 🍃 |
 | **Storage** | Cloudflare R2 (S3-compatible) ☁️ |
@@ -33,7 +33,7 @@ Aplikasi registrasi ulang (daftar ulang) peserta didik baru untuk **SMAN 1 Gedeg
     ```
 2.  **Install Dependencies**
     ```bash
-    bun install
+    npm install
     ```
 3.  **Setup Environment**
     ```bash
@@ -42,8 +42,8 @@ Aplikasi registrasi ulang (daftar ulang) peserta didik baru untuk **SMAN 1 Gedeg
     ```
 4.  **Seed Data & Run**
     ```bash
-    bun run seed
-    bun run dev
+    npm run seed
+    npm run dev
     ```
 
 ## 🐳 Deployment with Docker (Recommended)
@@ -51,11 +51,20 @@ Aplikasi registrasi ulang (daftar ulang) peserta didik baru untuk **SMAN 1 Gedeg
 Kami menyediakan berbagai cara untuk menjalankan aplikasi di lingkungan Docker. Pastikan Anda telah menyalin dan menyesuaikan file `.env` sebelum memulai.
 
 ### ⚙️ Persiapan Environment
-Sebelum menjalankan Docker, pastikan file `.env` sudah ada:
+Sebelum menjalankan aplikasi, pastikan file `.env` sudah dikonfigurasi:
 ```bash
 cp .env.example .env
-# Edit .env dan sesuaikan nilainya (terutama JWT_SECRET dan Cloudflare R2)
+# Edit .env dan sesuaikan nilainya
 ```
+
+| Variabel | Deskripsi | Default |
+|----------|-----------|---------|
+| `APP_URL` | URL utama aplikasi (untuk SSO Referer) | `http://localhost:3000` |
+| `JWT_SECRET` | Kunci rahasia untuk enkripsi token | - |
+| `MONGODB_URI` | URL koneksi ke database MongoDB | - |
+| `R2_*` | Konfigurasi Cloudflare R2 untuk penyimpanan file | - |
+| `SSO_*` | Integrasi SSO ScholarGate | - |
+| `GOOGLE_*` | Client ID & Secret untuk Google OAuth | - |
 
 ### A. Docker Compose (Paling Direkomendasikan)
 Cara ini akan menjalankan aplikasi beserta database MongoDB secara otomatis:
@@ -70,7 +79,7 @@ docker run -d \
   --name spmb-wa \
   -p 3000:3000 \
   --env-file .env \
-  ardianryan/registrasi-spmb:0.1.1-alpha
+  ardianryan/registrasi-spmb:latest
 ```
 
 ### C. Otomatisasi dengan Script Setup
@@ -83,7 +92,7 @@ make setup
 ```
 
 ## 🔐 Default Admin Login
-Setelah instalasi selesai dan database di-seed (`bun run seed`), Anda dapat masuk ke dashboard admin dengan kredensial berikut:
+Setelah instalasi selesai dan database di-seed (`npm run seed`), Anda dapat masuk ke dashboard admin dengan kredensial berikut:
 
 | Field | Value |
 |-------|-------|
@@ -99,7 +108,7 @@ Setelah instalasi selesai dan database di-seed (`bun run seed`), Anda dapat masu
 | Platform | Status | Cara |
 |----------|--------|------|
 | **Coolify** | ✅ Recommended | Hubungkan repo & pilih build pack **Docker Compose**. |
-| **Vercel** | ✅ Compatible | Klik **Import** di dashboard Vercel (Bun Runtime). |
+| **Vercel** | ✅ Compatible | Klik **Import** di dashboard Vercel (Node.js Runtime). |
 | **Railway** | ✅ Compatible | Gunakan `Dockerfile` yang tersedia. |
 
 ## 📁 Struktur Folder Utama

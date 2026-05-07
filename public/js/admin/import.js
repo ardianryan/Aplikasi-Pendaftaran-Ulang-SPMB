@@ -70,7 +70,7 @@
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Gagal mendownload template: ' + err.message);
+      UI.error('Download Gagal', 'Gagal mendownload template: ' + err.message);
     }
   });
 
@@ -128,13 +128,13 @@
     const ext = '.' + file.name.split('.').pop().toLowerCase();
 
     if (!validTypes.includes(file.type) && !validExtensions.includes(ext)) {
-      alert('Format file tidak valid. Gunakan file .xlsx atau .xls');
+      UI.toast('Format file tidak valid. Gunakan file .xlsx atau .xls', 'error');
       return;
     }
 
     // Validate size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('Ukuran file terlalu besar. Maksimal 5MB.');
+      UI.toast('Ukuran file terlalu besar. Maksimal 5MB.', 'error');
       return;
     }
 
@@ -165,9 +165,9 @@
 
     // First, check for duplicates by doing a dry-run check
     // We'll ask for confirmation if there might be updates
-    const proceed = confirm(
-      'Apakah Anda yakin ingin mengimport file ini?\n\n' +
-      'Catatan: Jika ada NISN yang sudah terdaftar, data akan diperbarui dengan data terbaru dari file ini.'
+    const proceed = await UI.confirm(
+      'Mulai Import?',
+      'Jika ada NISN yang sudah terdaftar, data akan diperbarui dengan data terbaru dari file ini.'
     );
     if (!proceed) return;
 
@@ -284,7 +284,7 @@
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Gagal mengexport data: ' + err.message);
+      UI.error('Export Gagal', 'Gagal mengexport data: ' + err.message);
     }
   }
 })();

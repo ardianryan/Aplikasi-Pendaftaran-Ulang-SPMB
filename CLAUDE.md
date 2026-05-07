@@ -6,7 +6,7 @@ This is **SPMB-WA**, a student re-registration (daftar ulang) web application fo
 
 ## Architecture
 
-- **Runtime:** Bun
+- **Runtime:** Node.js (via `tsx` for TypeScript execution)
 - **Backend:** Hono.js (TypeScript)
 - **Database:** MongoDB via Mongoose
 - **File Storage:** Cloudflare R2 (S3-compatible SDK)
@@ -180,16 +180,16 @@ Files go to R2 with key: `{R2_PREFIX}{nisn}/{docType}.{ext}`
 No test framework is currently set up. To verify:
 ```bash
 # Type check
-bunx tsc --noEmit
+npx tsc --noEmit
 
 # JS syntax check
 node --check public/js/wizard.js
 
 # Run server
-bun run dev
+npm run dev
 
 # Seed test data
-bun run seed
+npm run seed
 ```
 
 ## Important Notes
@@ -197,7 +197,7 @@ bun run seed
 - The `old-spmb/` and `stitch_registrasi_ulang_sman_1_gedeg/` directories are reference materials only, not part of the application.
 - MongoDB connection string in `.env` points to a specific internal server (10.1.0.3). Ensure network access.
 - Puppeteer requires Chrome/Chromium. On servers without a display, use `--no-sandbox` flag (already configured).
-- The app uses `import.meta.dir` (Bun-specific) in `pdf.service.ts` for template path resolution.
+- The app uses `import.meta.dirname` (Node.js 20.11+) or `fileURLToPath(import.meta.url)` in `pdf.service.ts` for template path resolution.
 - R2 public URL is exposed to frontend via `/api/settings/public` as `r2_public_url` for document preview.
 - Jalur/tahap options are dynamic from `GET /api/jalur-options` (not hardcoded).
 - Google OAuth uses GIS Token Client (popup mode) — requires only "Authorized JavaScript Origins" in Google Console, not Redirect URIs.

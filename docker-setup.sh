@@ -25,7 +25,7 @@ read -p "❓ Do you want to seed the database with default admin? (y/n) " -n 1 -
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "🌱 Seeding database..."
-    docker-compose exec app bun run seed
+    docker-compose exec app npm run seed
 fi
 
 echo ""

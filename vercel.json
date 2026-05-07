@@ -1,9 +1,9 @@
 {
   "version": 2,
   "framework": null,
-  "installCommand": "bun install",
-  "buildCommand": "bun run build",
-  "devCommand": "bun run dev",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
   "routes": [
     {
       "src": "/api/(.*)",

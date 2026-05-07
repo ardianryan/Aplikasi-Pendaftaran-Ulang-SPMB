@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Release script for SPMB-WA
-VERSION="0.1.0-alpha"
+VERSION="0.2.0"
 IMAGE_NAME="ardianryan/registrasi-spmb"
 
 echo "📦 Starting release for version $VERSION..."

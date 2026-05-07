@@ -71,34 +71,30 @@
       {
         label: 'Total Pendaftar',
         value: stats.total || 0,
-        icon: 'group',
-        color: 'primary',
-        bgColor: 'bg-primary/10',
-        textColor: 'text-primary',
+        icon: 'groups',
+        bgColor: 'bg-blue-50',
+        textColor: 'text-blue-600',
       },
       {
         label: 'Sudah Submit',
         value: stats.submitted || 0,
         icon: 'send',
-        color: 'surface-tint',
-        bgColor: 'bg-[#115cb9]/10',
-        textColor: 'text-[#115cb9]',
+        bgColor: 'bg-indigo-50',
+        textColor: 'text-indigo-600',
       },
       {
         label: 'Terverifikasi',
         value: stats.verification?.verified || 0,
         icon: 'verified',
-        color: 'tertiary',
-        bgColor: 'bg-tertiary/10',
-        textColor: 'text-tertiary',
+        bgColor: 'bg-emerald-50',
+        textColor: 'text-emerald-600',
       },
       {
         label: 'Menunggu Verifikasi',
         value: stats.verification?.pending || 0,
         icon: 'pending',
-        color: 'amber',
-        bgColor: 'bg-amber-100',
-        textColor: 'text-amber-700',
+        bgColor: 'bg-amber-50',
+        textColor: 'text-amber-600',
       },
     ];
 
@@ -106,14 +102,14 @@
     grid.innerHTML = cards
       .map(
         (card) => `
-      <div class="bg-surface-lowest rounded-xl border border-outline-variant p-5 hover:shadow-sm transition">
-        <div class="flex items-center justify-between mb-3">
-          <span class="text-sm text-on-surface-variant">${card.label}</span>
-          <div class="w-9 h-9 ${card.bgColor} rounded-lg flex items-center justify-center">
-            <span class="material-symbols-outlined ${card.textColor} text-xl">${card.icon}</span>
+      <div class="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-12 h-12 ${card.bgColor} ${card.textColor} rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
+            <span class="material-symbols-outlined">${card.icon}</span>
           </div>
         </div>
-        <p class="text-3xl font-display font-bold text-on-surface">${card.value.toLocaleString('id-ID')}</p>
+        <p class="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">${card.label}</p>
+        <p class="text-3xl font-extrabold text-slate-800">${card.value.toLocaleString('id-ID')}</p>
       </div>
     `
       )
@@ -166,20 +162,22 @@
   function renderVerificationStatus(verification) {
     const container = document.getElementById('verificationStatus');
     const items = [
-      { label: 'Terverifikasi', value: verification.verified || 0, icon: 'check_circle', color: 'text-tertiary', bg: 'bg-tertiary/10' },
-      { label: 'Menunggu', value: verification.pending || 0, icon: 'pending', color: 'text-amber-600', bg: 'bg-amber-100' },
-      { label: 'Ditolak', value: verification.rejected || 0, icon: 'cancel', color: 'text-error', bg: 'bg-error/10' },
+      { label: 'Terverifikasi', value: verification.verified || 0, icon: 'check_circle', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+      { label: 'Menunggu', value: verification.pending || 0, icon: 'pending', color: 'text-amber-600', bg: 'bg-amber-50' },
+      { label: 'Ditolak', value: verification.rejected || 0, icon: 'cancel', color: 'text-red-600', bg: 'bg-red-50' },
     ];
 
     container.innerHTML = items
       .map(
         (item) => `
-      <div class="flex items-center gap-3 p-3 rounded-lg ${item.bg}">
-        <span class="material-symbols-outlined ${item.color} text-xl">${item.icon}</span>
-        <div class="flex-1">
-          <p class="text-sm font-medium text-on-surface">${item.label}</p>
+      <div class="flex items-center gap-4 p-4 rounded-3xl ${item.bg} border border-white shadow-sm">
+        <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center ${item.color} shadow-sm">
+           <span class="material-symbols-outlined text-xl">${item.icon}</span>
         </div>
-        <p class="text-lg font-display font-bold text-on-surface">${item.value}</p>
+        <div class="flex-1">
+          <p class="text-xs font-bold text-slate-700">${item.label}</p>
+        </div>
+        <p class="text-xl font-extrabold text-slate-800">${item.value}</p>
       </div>
     `
       )
@@ -206,7 +204,7 @@
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Gagal mengexport data: ' + err.message);
+      UI.error('Export Gagal', 'Gagal mengexport data: ' + err.message);
     }
   }
 })();

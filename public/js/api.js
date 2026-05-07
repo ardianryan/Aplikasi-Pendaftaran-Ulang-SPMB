@@ -1,9 +1,6 @@
-/**
- * API Client - Fetch wrapper with JWT handling
- * Provides a clean interface for all API calls
- */
-
-const API = {
+// Prevent double declaration
+if (typeof window.API === 'undefined') {
+  window.API = {
   baseUrl: "/api",
 
   /**
@@ -77,7 +74,8 @@ const API = {
       if (response.status === 401) {
         this.clearToken();
         if (!window.location.pathname.includes("login")) {
-          window.location.href = "/login";
+          const isAdmin = window.location.pathname.startsWith("/admin");
+          window.location.href = isAdmin ? "/admin/login" : "/login";
         }
         const data = await response.json();
         throw new Error(data.message || "Sesi telah berakhir");
@@ -203,6 +201,12 @@ const API = {
       const options = json.data || [];
       const select = document.getElementById(selectId);
       if (!select) return;
+      
+      // Clear existing options (keep the first one like "Semua Jalur")
+      while (select.options.length > 1) {
+        select.remove(1);
+      }
+
       options.forEach(jalur => {
         const opt = document.createElement('option');
         opt.value = jalur;
@@ -210,7 +214,7 @@ const API = {
         select.appendChild(opt);
       });
     } catch (e) {
-      // Silent fail — dropdown stays with just "Semua Jalur"
+      // Silent fail
     }
   },
 
@@ -221,10 +225,12 @@ const API = {
   logout() {
     this.clearToken();
     localStorage.removeItem("spmb_admin");
-    window.location.href = "/login";
+    const isAdmin = window.location.pathname.startsWith("/admin");
+    window.location.href = isAdmin ? "/admin/login" : "/login";
   },
 
   isLoggedIn() {
     return !!this.getToken();
   },
 };
+}

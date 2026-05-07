@@ -1,5 +1,5 @@
-# Use the official Bun image
-FROM oven/bun:latest AS base
+# Use the official Node image
+FROM node:20-slim AS base
 WORKDIR /usr/src/app
 
 # Install dependencies for Puppeteer (Chromium)
@@ -20,22 +20,23 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 # Install dependencies
 FROM base AS install
-RUN mkdir -p /temp/dev
-COPY package.json bun.lock /temp/dev/
-RUN cd /temp/dev && bun install
+COPY package.json package-lock.json* ./
+RUN npm install
 
-# Install production dependencies
-RUN mkdir -p /temp/prod
-COPY package.json bun.lock /temp/prod/
-RUN cd /temp/prod && bun install --production
-
-# Copy node_modules and source code
+# Copy source code and build (if needed)
 FROM base AS release
-COPY --from=install /temp/prod/node_modules node_modules
+COPY --from=install /usr/src/app/node_modules node_modules
 COPY . .
 
 # Expose the port
 EXPOSE 3000
 
 # Run the app
-ENTRYPOINT [ "bun", "run", "src/index.ts" ]
+# Use tsx for direct execution or build to JS first
+# For production, it's better to build to JS, but for now we follow the user's request for "node js saja"
+# and we'll use tsx for simplicity in this transition if they want to run .ts files directly.
+# However, the "start" script in package.json is "node src/index.ts" which expects JS if not using a loader.
+# I'll update it to use tsx in start for now if they aren't building, 
+# or suggest building.
+# Actually, I'll update package.json's start to use tsx as well for direct .ts execution in container.
+ENTRYPOINT [ "npx", "tsx", "src/index.ts" ]

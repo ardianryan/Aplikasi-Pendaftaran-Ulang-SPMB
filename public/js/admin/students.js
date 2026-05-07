@@ -1,6 +1,6 @@
 /**
  * Admin Students Table Logic
- * Handles search, filters, pagination, and detail modal
+ * Handles search, filters, pagination, detail modal, manual add, and export modal
  */
 
 (function () {
@@ -43,10 +43,11 @@
   const prevPage = document.getElementById('prevPage');
   const nextPage = document.getElementById('nextPage');
   const pageNumbers = document.getElementById('pageNumbers');
+  
+  // Modals
   const detailModal = document.getElementById('detailModal');
-  const closeModal = document.getElementById('closeModal');
-  const detailContent = document.getElementById('detailContent');
-  const exportBtn = document.getElementById('exportBtn');
+  const exportModal = document.getElementById('exportModal');
+  const addStudentModal = document.getElementById('addStudentModal');
 
   // Event listeners
   searchInput.addEventListener('input', () => {
@@ -89,22 +90,66 @@
     }
   });
 
-  closeModal.addEventListener('click', () => {
-    detailModal.classList.add('hidden');
+  // Close modals logic
+  document.getElementById('closeModal')?.addEventListener('click', () => detailModal.classList.add('hidden'));
+  document.getElementById('closeExportModal')?.addEventListener('click', () => exportModal.classList.add('hidden'));
+  document.getElementById('closeAddModal')?.addEventListener('click', () => addStudentModal.classList.add('hidden'));
+
+  // Open modals
+  document.getElementById('exportModalBtn')?.addEventListener('click', () => {
+    exportModal.classList.remove('hidden');
+    API.populateJalurOptions('exportFilterJalur');
   });
 
-  detailModal.addEventListener('click', (e) => {
-    if (e.target === detailModal) {
-      detailModal.classList.add('hidden');
+  document.getElementById('addStudentBtn')?.addEventListener('click', () => {
+    addStudentModal.classList.remove('hidden');
+    API.populateJalurOptions('add_jalur');
+  });
+
+  // Export action
+  document.getElementById('doExportBtn')?.addEventListener('click', async () => {
+    const jalur = document.getElementById('exportFilterJalur').value;
+    const status = document.getElementById('exportFilterStatus').value;
+    const btn = document.getElementById('doExportBtn');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-spin material-symbols-outlined">sync</span> Mengunduh...';
+
+    await downloadExport(jalur, status);
+    
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined">description</span> Unduh Excel (.xlsx)';
+    exportModal.classList.add('hidden');
+  });
+
+  // Add student action
+  document.getElementById('doAddStudentBtn')?.addEventListener('click', async () => {
+    const nisn = document.getElementById('add_nisn').value.trim();
+    const nama = document.getElementById('add_name').value.trim();
+    const asalSmp = document.getElementById('add_school').value.trim();
+    const jalur = document.getElementById('add_jalur').value;
+    const btn = document.getElementById('doAddStudentBtn');
+
+    if (!nisn || nisn.length !== 10) { UI.toast('NISN harus 10 digit', 'error'); return; }
+    if (!nama) { UI.toast('Nama wajib diisi', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Menyimpan...';
+
+    try {
+      await API.request('/admin/students', {
+        method: 'POST',
+        body: JSON.stringify({ nisn, nama, asalSmp, jalur })
+      });
+      UI.toast('Siswa berhasil ditambahkan!', 'success');
+      addStudentModal.classList.add('hidden');
+      loadStudents();
+    } catch (err) {
+      UI.toast(err.message || 'Gagal menambahkan siswa', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Simpan Data Siswa';
     }
-  });
-
-  exportBtn?.addEventListener('click', downloadExport);
-
-  // Export link in sidebar
-  document.getElementById('exportLink')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    downloadExport();
   });
 
   // Initial load
@@ -127,7 +172,6 @@
 
     try {
       const res = await API.request(`/admin/students?${params.toString()}`);
-      // API returns { success, data: [...], meta: { page, limit, total, totalPages } }
       const students = Array.isArray(res.data) ? res.data : [];
       totalItems = res.meta?.total || 0;
       totalPages = res.meta?.totalPages || Math.ceil(totalItems / limit) || 1;
@@ -136,7 +180,6 @@
       renderPagination();
     } catch (err) {
       if (err.status === 401) return;
-      // Show empty state instead of error for non-critical failures
       console.error('Failed to load students:', err);
       renderTable([]);
       renderPagination();
@@ -147,20 +190,19 @@
     if (students.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" class="px-4 py-12 text-center text-on-surface-variant">
-            <span class="material-symbols-outlined text-4xl text-outline mb-2 block">search_off</span>
-            Tidak ada data ditemukan
+          <td colspan="6" class="px-6 py-20 text-center">
+            <div class="flex flex-col items-center">
+              <span class="material-symbols-outlined text-4xl text-slate-200 mb-2">person_off</span>
+              <p class="text-slate-400 font-medium">Tidak ada data siswa ditemukan</p>
+            </div>
           </td>
         </tr>
       `;
       return;
     }
 
-    const startNum = (currentPage - 1) * limit;
-
     tableBody.innerHTML = students
-      .map((s, i) => {
-        // Derive status from isSubmitted + verifikasi.status
+      .map((s) => {
         let status = 'not_started';
         if (s.isSubmitted && s.verifikasi?.status === 'verified') status = 'verified';
         else if (s.isSubmitted && s.verifikasi?.status === 'rejected') status = 'rejected';
@@ -168,34 +210,27 @@
         else if (s.wizardStep > 1) status = 'in_progress';
 
         const statusBadge = getStatusBadge(status);
-        const nama = s.namaPreRegister || s.biodata?.namaLengkap || '-';
-
-        // Format tanggal lahir
-        let tglLahir = '-';
-        if (s.tanggalLahirPreRegister) {
-          try {
-            const d = new Date(s.tanggalLahirPreRegister);
-            tglLahir = d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-          } catch(e) { tglLahir = '-'; }
-        }
+        const name = s.namaPreRegister || '-';
 
         return `
-        <tr class="border-b border-outline-variant hover:bg-surface-low/50 transition">
-          <td class="px-4 py-3 text-on-surface-variant text-sm">${startNum + i + 1}</td>
-          <td class="px-4 py-3 text-on-surface font-mono text-xs">${s.nisn || '-'}</td>
-          <td class="px-4 py-3 text-on-surface font-medium text-sm">${nama}</td>
-          <td class="px-4 py-3 text-on-surface-variant text-xs">${tglLahir}</td>
-          <td class="px-4 py-3">
-            <span class="capitalize text-on-surface-variant text-sm">${s.jalur || '-'}</span>
+        <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
+          <td class="px-6 py-4">
+            <div class="flex flex-col">
+              <span class="text-sm font-bold text-slate-800">${name}</span>
+              <span class="text-[10px] font-mono text-slate-400">${s.nisn || '-'}</span>
+            </div>
           </td>
-          <td class="px-4 py-3">${statusBadge}</td>
-          <td class="px-4 py-3">
-            <div class="flex items-center gap-2">
-              <button onclick="viewStudent('${s._id}')" class="text-primary hover:text-primary/80 text-sm font-medium flex items-center gap-1" title="Lihat detail">
-                <span class="material-symbols-outlined text-base">visibility</span>
+          <td class="px-6 py-4 text-sm text-slate-600">${s.asalSmpPreRegister || '-'}</td>
+          <td class="px-6 py-4 text-sm font-medium text-slate-500">${s.jalur || '-'}</td>
+          <td class="px-6 py-4">${statusBadge}</td>
+          <td class="px-6 py-4 text-xs text-slate-400">${new Date(s.updatedAt).toLocaleDateString('id-ID')}</td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+              <button onclick="viewStudent('${s._id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all">
+                <span class="material-symbols-outlined text-lg">visibility</span>
               </button>
-              <button onclick="deleteStudent('${s._id}', '${nama.replace(/'/g, "\\'")}')" class="text-error hover:text-error/80 text-sm font-medium flex items-center gap-1" title="Hapus siswa">
-                <span class="material-symbols-outlined text-base">delete</span>
+              <button onclick="deleteStudent('${s._id}', '${name.replace(/'/g, "\\'")}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all">
+                <span class="material-symbols-outlined text-lg">delete</span>
               </button>
             </div>
           </td>
@@ -207,291 +242,94 @@
 
   function getStatusBadge(status) {
     const badges = {
-      not_started: '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Belum Mulai</span>',
-      in_progress: '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">Mengisi</span>',
-      submitted: '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Submitted</span>',
-      verified: '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Terverifikasi</span>',
-      rejected: '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">Ditolak</span>',
+      not_started: '<span class="px-3 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold uppercase rounded-full">Belum Mulai</span>',
+      in_progress: '<span class="px-3 py-1 bg-blue-50 text-blue-500 text-[10px] font-bold uppercase rounded-full">Proses</span>',
+      submitted: '<span class="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold uppercase rounded-full">Submit</span>',
+      verified: '<span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-full">Diterima</span>',
+      rejected: '<span class="px-3 py-1 bg-red-50 text-red-600 text-[10px] font-bold uppercase rounded-full">Ditolak</span>',
     };
-    return badges[status] || `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">${status || '-'}</span>`;
+    return badges[status] || badges.not_started;
   }
 
   function renderPagination() {
-    const start = totalItems === 0 ? 0 : (currentPage - 1) * limit + 1;
-    const end = Math.min(currentPage * limit, totalItems);
-    paginationInfo.textContent = `Menampilkan ${start}-${end} dari ${totalItems} data`;
-
     prevPage.disabled = currentPage <= 1;
     nextPage.disabled = currentPage >= totalPages;
+    paginationInfo.textContent = `Menampilkan ${Math.min(totalItems, (currentPage-1)*limit + 1)}-${Math.min(totalItems, currentPage*limit)} dari ${totalItems} data`;
 
-    // Page numbers
-    let pages = [];
-    const maxVisible = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-    if (endPage - startPage < maxVisible - 1) {
-      startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-
-    for (let p = startPage; p <= endPage; p++) {
-      pages.push(p);
-    }
-
-    pageNumbers.innerHTML = pages
-      .map(
-        (p) => `
-      <button
-        onclick="goToPage(${p})"
-        class="px-3 py-1.5 text-sm rounded-lg transition ${
-          p === currentPage
-            ? 'bg-primary text-on-primary font-medium'
-            : 'border border-outline-variant text-on-surface-variant hover:bg-surface-low'
-        }"
-      >${p}</button>
-    `
-      )
-      .join('');
-  }
-
-  // Global functions for onclick handlers
-  window.goToPage = function (page) {
-    currentPage = page;
-    loadStudents();
-  };
-
-  window.deleteStudent = async function (id, nama) {
-    if (!confirm(`Apakah Anda yakin ingin menghapus data siswa "${nama}"?\n\nData yang sudah dihapus tidak dapat dikembalikan.`)) {
-      return;
-    }
-
-    try {
-      await API.request(`/admin/students/${id}`, { method: 'DELETE' });
-      // Reload table
-      loadStudents();
-      // Show success feedback
-      showToast(`Data siswa "${nama}" berhasil dihapus.`, 'success');
-    } catch (err) {
-      alert('Gagal menghapus: ' + (err.message || 'Terjadi kesalahan'));
-    }
-  };
-
-  // Toast helper
-  function showToast(message, type = 'info') {
-    const existing = document.querySelector('.toast');
-    if (existing) existing.remove();
-
-    const colors = {
-      success: 'bg-tertiary text-white',
-      error: 'bg-error text-white',
-      info: 'bg-primary text-white',
-    };
-
-    const toast = document.createElement('div');
-    toast.className = `toast ${colors[type] || colors.info} px-5 py-3 rounded-lg shadow-lg max-w-sm text-sm font-medium`;
-    toast.textContent = message;
-    toast.setAttribute('role', 'alert');
-    document.body.appendChild(toast);
-    requestAnimationFrame(() => toast.classList.add('show'));
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-
-  window.viewStudent = async function (id) {
-    detailContent.innerHTML = `
-      <div class="flex items-center justify-center py-12">
-        <svg class="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-      </div>
-    `;
-    detailModal.classList.remove('hidden');
-
-    try {
-      const res = await API.request(`/admin/students/${id}`);
-      const student = res.data || res;
-      renderDetail(student);
-    } catch (err) {
-      if (err.status === 404) {
-        detailContent.innerHTML = `
-          <div class="text-center py-8 text-on-surface-variant">
-            <span class="material-symbols-outlined text-4xl mb-2 block text-outline">person_off</span>
-            <p>Data siswa tidak ditemukan.</p>
-          </div>
-        `;
-      } else {
-        detailContent.innerHTML = `
-          <div class="text-center py-8 text-on-surface-variant">
-            <span class="material-symbols-outlined text-4xl mb-2 block text-outline">cloud_off</span>
-            <p>Tidak dapat memuat data. Coba lagi nanti.</p>
-          </div>
-        `;
+    let html = '';
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+        html += `<button onclick="goToPage(${i})" class="w-8 h-8 rounded-lg text-xs font-bold transition-all ${i === currentPage ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-400 hover:bg-slate-100'}">${i}</button>`;
+      } else if (i === currentPage - 2 || i === currentPage + 2) {
+        html += '<span class="px-1 text-slate-300">...</span>';
       }
     }
+    pageNumbers.innerHTML = html;
+  }
+
+  window.goToPage = (p) => { currentPage = p; loadStudents(); };
+
+  window.deleteStudent = async (id, name) => {
+    if (!await UI.confirm('Hapus Siswa?', `Hapus data ${name}? Tindakan ini tidak dapat dibatalkan.`)) return;
+    try {
+      await API.request(`/admin/students/${id}`, { method: 'DELETE' });
+      loadStudents();
+      UI.toast('Data siswa dihapus', 'success');
+    } catch (err) { UI.toast(err.message, 'error'); }
   };
 
-  function renderDetail(student) {
-    // Derive status
-    let status = 'not_started';
-    if (student.isSubmitted && student.verifikasi?.status === 'verified') status = 'verified';
-    else if (student.isSubmitted && student.verifikasi?.status === 'rejected') status = 'rejected';
-    else if (student.isSubmitted) status = 'submitted';
-    else if (student.wizardStep > 1) status = 'in_progress';
-
-    const nama = student.biodata?.namaLengkap || student.namaPreRegister || '-';
-    const bio = student.biodata || {};
-    const alm = student.alamat || {};
-    const kes = student.kesehatan || {};
-    const pend = student.pendidikan || {};
-
-    // Format tanggal lahir
-    let tglLahir = '-';
-    const rawTgl = bio.tanggalLahir || student.tanggalLahirPreRegister;
-    if (rawTgl) {
-      try { tglLahir = new Date(rawTgl).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }); } catch(e) { tglLahir = '-'; }
-    }
-
-    // Build sections
-    const sections = [
-      {
-        title: 'Data Diri',
-        icon: 'person',
-        fields: [
-          { label: 'Nama Lengkap', value: nama },
-          { label: 'NISN', value: student.nisn },
-          { label: 'Jalur', value: student.jalur },
-          { label: 'Asal SMP', value: pend.asalSekolah || student.asalSmpPreRegister },
-          { label: 'Jenis Kelamin', value: bio.jenisKelamin },
-          { label: 'Tempat, Tgl Lahir', value: bio.tempatLahir ? `${bio.tempatLahir}, ${tglLahir}` : tglLahir },
-          { label: 'Agama', value: bio.agama },
-          { label: 'NIK', value: bio.nik },
-        ]
-      },
-      {
-        title: 'Alamat & Kontak',
-        icon: 'home',
-        fields: [
-          { label: 'Alamat', value: alm.alamatLengkap },
-          { label: 'Telepon/HP', value: alm.telepon },
-          { label: 'Email', value: alm.email },
-          { label: 'Tinggal dengan', value: alm.tinggalDengan },
-          { label: 'Transportasi', value: alm.transportasi },
-        ]
-      },
-      {
-        title: 'Orang Tua',
-        icon: 'family_restroom',
-        fields: [
-          { label: 'Nama Ayah', value: student.ayah?.nama },
-          { label: 'Pekerjaan Ayah', value: student.ayah?.pekerjaan },
-          { label: 'Nama Ibu', value: student.ibu?.nama },
-          { label: 'Pekerjaan Ibu', value: student.ibu?.pekerjaan },
-        ]
-      },
-    ];
-
-    // Check if student has filled any biodata
-    const hasBiodata = student.wizardStep > 1;
-
-    detailContent.innerHTML = `
-      <div class="space-y-4">
-        <!-- Header -->
-        <div class="flex items-center gap-4 pb-4 border-b border-outline-variant">
-          <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
-            <span class="material-symbols-outlined text-primary text-3xl">person</span>
-          </div>
-          <div class="flex-1">
-            <h4 class="font-display font-semibold text-lg text-on-surface">${nama}</h4>
-            <p class="text-sm text-on-surface-variant">NISN: ${student.nisn || '-'}</p>
-          </div>
-          <div>${getStatusBadge(status)}</div>
-        </div>
-
-        <!-- Wizard Progress -->
-        <div class="flex items-center gap-2 text-xs text-on-surface-variant bg-surface-container-low rounded-lg px-3 py-2">
-          <span class="material-symbols-outlined" style="font-size:16px">timeline</span>
-          <span>Langkah ${student.wizardStep || 1} dari 5</span>
-          ${student.isSubmitted ? '<span class="ml-auto text-tertiary font-medium">Sudah Submit</span>' : ''}
-        </div>
-
-        ${!hasBiodata ? `
-          <!-- Empty state: belum mengisi -->
-          <div class="text-center py-6 bg-surface-container-low rounded-lg">
-            <span class="material-symbols-outlined text-4xl text-outline mb-2 block">edit_off</span>
-            <p class="text-sm text-on-surface-variant">Siswa belum mengisi biodata</p>
-            <p class="text-xs text-outline mt-1">Data akan muncul setelah siswa melengkapi formulir</p>
-          </div>
-        ` : `
-          <!-- Sections -->
-          ${sections.map(section => `
-            <div>
-              <div class="flex items-center gap-2 mb-2">
-                <span class="material-symbols-outlined text-primary" style="font-size:18px">${section.icon}</span>
-                <h5 class="text-sm font-bold text-on-surface">${section.title}</h5>
+  window.viewStudent = async (id) => {
+    const detailModal = document.getElementById('detailModal');
+    const detailContent = document.getElementById('detailContent');
+    detailContent.innerHTML = '<div class="py-20 text-center text-slate-400">Memuat detail...</div>';
+    detailModal.classList.remove('hidden');
+    
+    try {
+      const res = await API.request(`/admin/students/${id}`);
+      const s = res.data;
+      detailContent.innerHTML = `
+        <div class="space-y-8">
+           <div class="flex items-center gap-6">
+              <div class="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center text-slate-400">
+                 <span class="material-symbols-outlined text-4xl">person</span>
               </div>
-              <div class="grid grid-cols-2 gap-x-4 gap-y-2 bg-surface-container-low rounded-lg p-3">
-                ${section.fields.map(f => `
-                  <div>
-                    <p class="text-xs text-on-surface-variant">${f.label}</p>
-                    <p class="text-sm text-on-surface ${f.value ? 'font-medium' : 'italic text-outline'}">${f.value || 'Belum diisi'}</p>
-                  </div>
-                `).join('')}
+              <div>
+                 <h4 class="text-2xl font-extrabold text-slate-800">${s.namaPreRegister}</h4>
+                 <p class="text-slate-400 font-mono">${s.nisn}</p>
               </div>
-            </div>
-          `).join('')}
-        `}
-
-        <!-- Dokumen -->
-        <div>
-          <div class="flex items-center gap-2 mb-2">
-            <span class="material-symbols-outlined text-primary" style="font-size:18px">folder</span>
-            <h5 class="text-sm font-bold text-on-surface">Dokumen</h5>
-          </div>
-          <div class="space-y-2">
-            ${renderDocItem('Kartu Keluarga', student.dokumen?.kartuKeluarga)}
-            ${renderDocItem('Ijazah / SKL', student.dokumen?.ijazahSkl)}
-            ${renderDocItem('Akta Kelahiran', student.dokumen?.aktaKelahiran)}
-            ${renderDocItem('Pas Foto 4x6', student.dokumen?.foto4x6)}
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderDocItem(label, doc) {
-    if (doc && doc.key) {
-      const publicUrl = doc.key; // Will be full URL if R2_PUBLIC_URL is set
-      return `
-        <div class="flex items-center justify-between p-2.5 bg-tertiary/5 border border-tertiary/20 rounded-lg">
-          <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-tertiary" style="font-size:18px;font-variation-settings:'FILL' 1">check_circle</span>
-            <span class="text-sm text-on-surface">${label}</span>
-          </div>
-          <span class="text-xs text-on-surface-variant">${doc.originalName || 'Uploaded'}</span>
+           </div>
+           <div class="grid grid-cols-2 gap-8">
+              <div class="space-y-4">
+                 <h5 class="text-[10px] font-bold text-slate-300 uppercase tracking-widest border-b pb-2">Informasi Pendaftaran</h5>
+                 <div class="grid grid-cols-1 gap-2">
+                    <p class="text-xs text-slate-400">Jalur: <span class="font-bold text-slate-700">${s.jalur}</span></p>
+                    <p class="text-xs text-slate-400">Asal SMP: <span class="font-bold text-slate-700">${s.asalSmpPreRegister}</span></p>
+                    <p class="text-xs text-slate-400">Status: ${getStatusBadge(s.verifikasi?.status || 'pending')}</p>
+                 </div>
+              </div>
+              <div class="space-y-4">
+                 <h5 class="text-[10px] font-bold text-slate-300 uppercase tracking-widest border-b pb-2">Kelengkapan Form</h5>
+                 <div class="grid grid-cols-1 gap-2">
+                    <p class="text-xs text-slate-400">Step Wizard: <span class="font-bold text-slate-700">${s.wizardStep}/5</span></p>
+                    <p class="text-xs text-slate-400">Sudah Submit: <span class="font-bold ${s.isSubmitted ? 'text-emerald-600' : 'text-red-500'}">${s.isSubmitted ? 'YA' : 'BELUM'}</span></p>
+                 </div>
+              </div>
+           </div>
+           <div class="pt-6 border-t flex justify-end">
+              <a href="/admin/verify/detail?id=${s._id}" class="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all">Halaman Verifikasi Full</a>
+           </div>
         </div>
       `;
-    }
-    return `
-      <div class="flex items-center justify-between p-2.5 bg-surface-container-low rounded-lg">
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-outline" style="font-size:18px">radio_button_unchecked</span>
-          <span class="text-sm text-on-surface-variant">${label}</span>
-        </div>
-        <span class="text-xs text-outline italic">Belum diunggah</span>
-      </div>
-    `;
-  }
-  async function downloadExport() {
-    const jalur = filterJalur.value;
-    const status = filterStatus.value;
-    const params = new URLSearchParams();
-    if (jalur) params.set('jalur', jalur);
-    if (status) params.set('status', status);
+    } catch (err) { UI.toast(err.message, 'error'); }
+  };
 
+  async function downloadExport(jalur = 'all', status = 'all') {
     try {
       const token = API.getToken();
+      const params = new URLSearchParams();
+      if (jalur && jalur !== 'all') params.set('jalur', jalur);
+      if (status && status !== 'all') params.set('status', status);
+
       const response = await fetch(`/api/admin/export?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -500,11 +338,16 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `data-siswa-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.download = `Buku_Induk_${jalur}_${status}_${new Date().toISOString().slice(0, 10)}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Gagal mengexport data: ' + err.message);
+      UI.error('Export Gagal', 'Gagal mengexport data: ' + err.message);
     }
   }
+
+  // Initial load
+  loadStudents();
+  API.populateJalurOptions('filterJalur');
+
 })();

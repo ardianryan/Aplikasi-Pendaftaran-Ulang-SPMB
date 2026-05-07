@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profil Saya - Admin SPMB</title>
+  <script src="/js/settings-loader.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#003f87',
+            'on-primary': '#ffffff',
+            'surface-tint': '#115cb9',
+            tertiary: '#004d10',
+            error: '#ba1a1a',
+            background: '#f9f9fc',
+            'surface-lowest': '#ffffff',
+            'surface-low': '#f3f3f6',
+            'on-surface': '#1a1c1e',
+            'on-surface-variant': '#424752',
+            outline: '#72787f',
+            'outline-variant': '#c2c6d4',
+          },
+          fontFamily: {
+            display: ['Lexend', 'sans-serif'],
+            body: ['Public Sans', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="bg-background font-body text-on-surface min-h-screen flex">
+  <!-- Sidebar -->
+  <nav class="hidden md:flex flex-col fixed top-0 left-0 w-64 h-screen bg-surface-container-lowest border-r border-outline-variant p-6 z-40">
+    <div class="flex items-center gap-3 mb-8">
+      <span class="material-symbols-outlined text-primary" style="font-size:32px">admin_panel_settings</span>
+      <span class="font-display font-bold text-lg text-primary"><span data-setting="app_name">SPMB</span> Admin</span>
+    </div>
+    <ul class="space-y-1 flex-1">
+      <li><a href="/admin/dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">dashboard</span>Dashboard</a></li>
+      <li><a href="/admin/students" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">groups</span>Data Siswa</a></li>
+      <li><a href="/admin/verify" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">verified</span>Verifikasi</a></li>
+      <li><a href="/admin/import" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">upload_file</span>Import Data</a></li>
+      <li><a href="/admin/operators" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">manage_accounts</span>Operator</a></li>
+      <li><a href="/admin/settings" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low transition text-sm"><span class="material-symbols-outlined" style="font-size:20px">settings</span>Pengaturan</a></li>
+      <li><a href="/admin/profile" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary font-medium text-sm"><span class="material-symbols-outlined" style="font-size:20px">account_circle</span>Profil Saya</a></li>
+    </ul>
+    <button onclick="logout()" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-error hover:bg-error-container/30 transition text-sm mt-auto">
+      <span class="material-symbols-outlined" style="font-size:20px">logout</span>Keluar
+    </button>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="flex-1 md:ml-64">
+    <!-- Top Bar -->
+    <header class="sticky top-0 z-30 bg-surface-lowest/80 backdrop-blur-md border-b border-outline-variant">
+      <div class="flex items-center justify-between px-6 py-3">
+        <div>
+          <h2 class="font-display font-semibold text-lg text-on-surface">Profil Saya</h2>
+          <p class="text-sm text-on-surface-variant">Kelola informasi akun dan keamanan</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="p-6 max-w-3xl">
+      <div class="space-y-6">
+        <!-- Profile Info -->
+        <section class="bg-surface-lowest rounded-2xl border border-outline-variant overflow-hidden">
+          <div class="px-6 py-4 border-b border-outline-variant bg-surface-low/50">
+            <h3 class="font-display font-semibold text-on-surface">Informasi Akun</h3>
+          </div>
+          <div class="p-6">
+            <form id="profileForm" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-on-surface-variant mb-1">Username</label>
+                <input type="text" id="username" disabled class="w-full px-4 py-2.5 bg-surface-low border border-outline-variant rounded-xl text-on-surface-variant cursor-not-allowed" />
+                <p class="mt-1 text-xs text-on-surface-variant">Username tidak dapat diubah.</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-on-surface-variant mb-1">Nama Lengkap</label>
+                <input type="text" id="nama" required class="w-full px-4 py-2.5 bg-surface-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition" />
+              </div>
+              <div id="authMethodBadge" class="flex items-center gap-2 mt-2">
+                <!-- Badge will be injected here -->
+              </div>
+              <div class="pt-2">
+                <button type="submit" id="saveProfileBtn" class="px-6 py-2.5 bg-primary text-on-primary rounded-full font-medium text-sm hover:bg-surface-tint transition flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[20px]">save</span>
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- Change Password (Only for local users) -->
+        <section id="passwordSection" class="hidden bg-surface-lowest rounded-2xl border border-outline-variant overflow-hidden">
+          <div class="px-6 py-4 border-b border-outline-variant bg-surface-low/50">
+            <h3 class="font-display font-semibold text-on-surface">Keamanan & Password</h3>
+          </div>
+          <div class="p-6">
+            <form id="passwordForm" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-on-surface-variant mb-1">Password Lama</label>
+                <input type="password" id="oldPassword" required class="w-full px-4 py-2.5 bg-surface-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition" />
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-on-surface-variant mb-1">Password Baru</label>
+                  <input type="password" id="newPassword" required minlength="6" class="w-full px-4 py-2.5 bg-surface-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-on-surface-variant mb-1">Konfirmasi Password Baru</label>
+                  <input type="password" id="confirmPassword" required minlength="6" class="w-full px-4 py-2.5 bg-surface-lowest border border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition" />
+                </div>
+              </div>
+              <p class="text-xs text-on-surface-variant">Minimal 6 karakter. Gunakan kombinasi huruf dan angka.</p>
+              <div class="pt-2">
+                <button type="submit" id="savePasswordBtn" class="px-6 py-2.5 bg-tertiary text-white rounded-full font-medium text-sm hover:opacity-90 transition flex items-center gap-2">
+                  <span class="material-symbols-outlined text-[20px]">lock_reset</span>
+                  Ganti Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- SSO Info (Only for Google users) -->
+        <section id="ssoSection" class="hidden bg-surface-lowest rounded-2xl border border-outline-variant overflow-hidden">
+          <div class="px-6 py-4 border-b border-outline-variant bg-surface-low/50">
+            <h3 class="font-display font-semibold text-on-surface">Akun SSO (ScholarGate)</h3>
+          </div>
+          <div class="p-6 flex items-start gap-4">
+            <img id="googleAvatar" src="/img/default-avatar.png" class="w-16 h-16 rounded-full border border-outline-variant" />
+            <div class="space-y-1">
+              <p id="googleEmail" class="font-medium text-on-surface"></p>
+              <p class="text-sm text-on-surface-variant">Terhubung via Google OAuth ScholarGate</p>
+              <p id="nip" class="text-xs text-on-surface-variant"></p>
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider rounded-full mt-2">
+                <span class="material-symbols-outlined text-[14px]">verified_user</span>
+                Verified SSO Account
+              </div>
+            </div>
+          </div>
+          <div class="px-6 py-4 bg-surface-low/30 border-t border-outline-variant">
+            <p class="text-xs text-on-surface-variant">Akun Anda dikelola melalui SSO. Perubahan password dilakukan melalui akun Google Anda.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/admin/role-guard.js"></script>
+  <script>
+    const profileForm = document.getElementById('profileForm');
+    const passwordForm = document.getElementById('passwordForm');
+    const passwordSection = document.getElementById('passwordSection');
+    const ssoSection = document.getElementById('ssoSection');
+    const authMethodBadge = document.getElementById('authMethodBadge');
+
+    async function loadProfile() {
+      try {
+        const res = await API.request('/admin/profile');
+        if (res.success) {
+          const user = res.data;
+          document.getElementById('username').value = user.username;
+          document.getElementById('nama').value = user.nama;
+
+          if (user.authMethod === 'local') {
+            passwordSection.classList.remove('hidden');
+            authMethodBadge.innerHTML = `
+              <span class="px-2.5 py-1 bg-surface-low border border-outline-variant text-on-surface-variant text-[10px] font-bold uppercase tracking-wider rounded-md">Local Account</span>
+            `;
+          } else {
+            ssoSection.classList.remove('hidden');
+            document.getElementById('googleEmail').textContent = user.googleEmail;
+            document.getElementById('nip').textContent = user.nip ? `NIP: ${user.nip}` : '';
+            if (user.googleAvatar) document.getElementById('googleAvatar').src = user.googleAvatar;
+            authMethodBadge.innerHTML = `
+              <span class="px-2.5 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider rounded-md flex items-center gap-1">
+                <img src="https://www.google.com/favicon.ico" class="w-3 h-3" /> Google Auth
+              </span>
+            `;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load profile:', err);
+        alert('Gagal memuat profil.');
+      }
+    }
+
+    profileForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('saveProfileBtn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Menyimpan...';
+
+      try {
+        const res = await API.request('/admin/profile', {
+          method: 'PUT',
+          body: JSON.stringify({
+            nama: document.getElementById('nama').value
+          })
+        });
+        if (res.success) {
+          alert('Profil berhasil diperbarui.');
+          // Update name in other parts of UI if necessary
+        } else {
+          alert(res.message || 'Gagal memperbarui profil.');
+        }
+      } catch (err) {
+        alert('Terjadi kesalahan.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    };
+
+    passwordForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const oldPassword = document.getElementById('oldPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        alert('Konfirmasi password baru tidak cocok.');
+        return;
+      }
+
+      const btn = document.getElementById('savePasswordBtn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span> Memperbarui...';
+
+      try {
+        const res = await API.request('/admin/profile', {
+          method: 'PUT',
+          body: JSON.stringify({
+            oldPassword,
+            newPassword
+          })
+        });
+        if (res.success) {
+          alert('Password berhasil diubah.');
+          passwordForm.reset();
+        } else {
+          alert(res.message || 'Gagal mengubah password.');
+        }
+      } catch (err) {
+        alert('Terjadi kesalahan.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    };
+
+    function logout() {
+      API.logout();
+      window.location.href = '/admin/login';
+    }
+
+    // Initialize
+    loadProfile();
+  </script>
+</body>
+</html>
