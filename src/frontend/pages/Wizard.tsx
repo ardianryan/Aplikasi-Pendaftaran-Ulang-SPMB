@@ -88,6 +88,50 @@ export const Wizard = (props: any) => {
               </div>
             </section>
 
+            {/* === MODAL: Cek Kelengkapan Dokumen === */}
+            <div id="modal-doc-checklist" className="fixed inset-0 z-[200] hidden items-center justify-center p-4" style={{ background: 'rgba(2,6,23,0.7)', backdropFilter: 'blur(8px)' }}>
+              <div className="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden animate-fade-in">
+                {/* Header */}
+                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-white">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
+                      <span className="material-symbols-outlined text-3xl">checklist_rtl</span>
+                    </div>
+                    <div>
+                      <p className="text-blue-100 text-xs font-bold uppercase tracking-widest">Sebelum melanjutkan</p>
+                      <h2 className="text-2xl font-extrabold">Siapkan Dokumen Anda</h2>
+                    </div>
+                  </div>
+                  <p className="text-blue-100 text-sm leading-relaxed">
+                    Tahap berikutnya adalah pengisian Buku Induk. Pastikan dokumen-dokumen di bawah ini sudah Anda siapkan dalam bentuk file digital (<strong className="text-white">foto/scan</strong>) sebelum melanjutkan.
+                  </p>
+                </div>
+
+                {/* Document List */}
+                <div className="p-6 max-h-72 overflow-y-auto">
+                  <ul id="modal-berkas-list" className="space-y-3">
+                    {/* Populated by wizard.js */}
+                    <li className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl animate-pulse">
+                      <div className="w-8 h-8 bg-slate-200 rounded-xl"></div>
+                      <div className="h-3 bg-slate-200 rounded flex-1"></div>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Actions */}
+                <div className="p-6 pt-0 space-y-3">
+                  <button onclick="Wizard.proceedToStep2()" className="w-full py-4 bg-blue-600 text-white font-extrabold rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-200">
+                    <span className="material-symbols-outlined">check_circle</span>
+                    Dokumen sudah siap, lanjutkan pengisian
+                  </button>
+                  <button onclick="Wizard.closeDocChecklist()" className="w-full py-3.5 border-2 border-slate-200 text-slate-500 font-bold rounded-2xl hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-3">
+                    <span className="material-symbols-outlined text-xl">arrow_back</span>
+                    Kembali, saya akan menyiapkan dulu
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* STEP 2: Biodata Form */}
             <section id="step-2" className="wizard-step hidden">
               <div className="flex flex-col lg:flex-row gap-10">

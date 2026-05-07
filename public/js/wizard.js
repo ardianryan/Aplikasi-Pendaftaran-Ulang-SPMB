@@ -160,12 +160,69 @@ const Wizard = {
     try {
       this.setButtonLoading("btn-confirm", true);
       await API.confirmData();
-      this.goToStep(2);
+      // Show document checklist popup instead of going directly to step 2
+      this.showDocChecklist();
     } catch (err) {
       UI.toast(err.message || "Gagal mengkonfirmasi data.", "error");
     } finally {
       this.setButtonLoading("btn-confirm", false);
     }
+  },
+
+  showDocChecklist() {
+    const modal = document.getElementById("modal-doc-checklist");
+    if (!modal) { this.goToStep(2); return; }
+
+    // Populate berkas list based on student's jalur
+    const studentJalur = this.studentData?.konfirmasi?.jalur || "all";
+    const berkasSettings = window.WizardSettings?.landing_berkas_json || [];
+    const activeBerkas = berkasSettings.filter(b => {
+      if (!b.active) return false;
+      if (!b.jalur || b.jalur === "all" || b.jalur.includes("all")) return true;
+      const jalurList = Array.isArray(b.jalur) ? b.jalur : b.jalur.split(",").map(s => s.trim());
+      return jalurList.includes(studentJalur);
+    });
+
+    const list = document.getElementById("modal-berkas-list");
+    if (list) {
+      if (activeBerkas.length === 0) {
+        list.innerHTML = `<li class="text-center text-sm text-slate-400 py-4">Tidak ada dokumen wajib yang diperlukan.</li>`;
+      } else {
+        list.innerHTML = activeBerkas.map(b => `
+          <li class="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+            <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-xl">${b.icon || 'description'}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-bold text-slate-800 text-sm">${b.title}</p>
+              <div class="flex items-center gap-3 mt-0.5">
+                ${b.desc ? `<p class="text-xs text-slate-400 truncate">${b.desc}</p>` : ''}
+                <span class="text-[10px] font-bold text-slate-300 shrink-0">maks ${b.max_size_mb || 5}MB</span>
+              </div>
+            </div>
+            ${b.required ? `<span class="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-1 rounded-lg uppercase tracking-wider shrink-0">Wajib</span>` : ''}
+          </li>
+        `).join('');
+      }
+    }
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+    document.body.style.overflow = "hidden";
+  },
+
+  closeDocChecklist() {
+    const modal = document.getElementById("modal-doc-checklist");
+    if (modal) {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      document.body.style.overflow = "";
+    }
+  },
+
+  proceedToStep2() {
+    this.closeDocChecklist();
+    this.goToStep(2);
   },
 
   // ============================================
