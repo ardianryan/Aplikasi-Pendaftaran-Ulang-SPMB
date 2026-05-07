@@ -576,10 +576,10 @@ export async function uploadSettingsFile(c: Context) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const ext = file.name.split(".").pop()?.toLowerCase() || "png";
-    const r2Key = `${process.env.R2_PREFIX || "uploads/smansage/akas/"}settings/${key}.${ext}`;
-
     const { PutObjectCommand } = await import("@aws-sdk/client-s3");
-    const { getR2Client, getR2Bucket, getR2PublicUrl } = await import("../config/r2");
+    const { getR2Client, getR2Bucket, getR2PublicUrl, getR2Prefix } = await import("../config/r2");
+
+    const r2Key = `${getR2Prefix()}settings/${key}.${ext}`;
 
     const client = getR2Client();
     await client.send(new PutObjectCommand({

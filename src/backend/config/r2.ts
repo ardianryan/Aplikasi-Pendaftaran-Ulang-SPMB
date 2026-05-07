@@ -53,7 +53,8 @@ export function getR2Bucket(): string {
  * Get the R2 prefix (directory path) for uploads
  */
 export function getR2Prefix(): string {
-  return process.env.R2_PREFIX || "uploads/smansage/akas/";
+  // If undefined, default to 'uploads/'. If user intentionally sets to empty string, use empty string.
+  return process.env.R2_PREFIX !== undefined ? process.env.R2_PREFIX : "uploads/";
 }
 
 /**
