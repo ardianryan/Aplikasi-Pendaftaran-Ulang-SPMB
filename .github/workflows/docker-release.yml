@@ -2,6 +2,8 @@ name: Docker Build and Push
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
@@ -28,7 +30,7 @@ jobs:
           images: ardianryan/registrasi-spmb
           tags: |
             type=semver,pattern={{version}}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/tags/{0}', github.event.repository.default_branch) }}
+            type=raw,value=latest
 
       - name: Build and Push
         uses: docker/build-push-action@v5
