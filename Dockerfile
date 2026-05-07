@@ -28,6 +28,9 @@ FROM base AS release
 COPY --from=install /usr/src/app/node_modules node_modules
 COPY . .
 
+# Create empty favicon.ico placeholder (will be overwritten by admin upload at runtime)
+RUN touch public/favicon.ico
+
 # Expose the port
 EXPOSE 3000
 
