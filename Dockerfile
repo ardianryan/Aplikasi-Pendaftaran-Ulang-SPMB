@@ -39,4 +39,4 @@ EXPOSE 3000
 # I'll update it to use tsx in start for now if they aren't building, 
 # or suggest building.
 # Actually, I'll update package.json's start to use tsx as well for direct .ts execution in container.
-ENTRYPOINT [ "npx", "tsx", "src/index.ts" ]
+ENTRYPOINT [ "npx", "tsx", "src/index.tsx" ]
