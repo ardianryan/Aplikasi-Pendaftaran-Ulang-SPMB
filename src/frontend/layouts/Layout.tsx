@@ -23,7 +23,11 @@ export const Layout = (props: {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{props.title ? `${props.title} - ${appName}` : `${appName} — ${appDescription}`}</title>
         <meta name="description" content={`${appDescription} di ${schoolName}`} />
-        {appIcon && <link rel="icon" href={appIcon} />}
+        {props.settings?.app_icon ? (
+          <link rel="icon" href={props.settings.app_icon} />
+        ) : (
+          <link rel="icon" href="/favicon.ico" />
+        )}
         
         {/* Tailwind CSS via CDN */}
         <script src="https://cdn.tailwindcss.com"></script>

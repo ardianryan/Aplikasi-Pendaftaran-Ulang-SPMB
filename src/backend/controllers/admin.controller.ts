@@ -575,24 +575,35 @@ export async function uploadSettingsFile(c: Context) {
     // Upload to R2
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const ext = file.name.split(".").pop()?.toLowerCase() || "png";
-    const { PutObjectCommand } = await import("@aws-sdk/client-s3");
-    const { getR2Client, getR2Bucket, getR2PublicUrl, getR2Prefix } = await import("../config/r2");
 
-    const r2Key = `${getR2Prefix()}settings/${key}.${ext}`;
+    let publicUrl = "";
 
-    const client = getR2Client();
-    await client.send(new PutObjectCommand({
-      Bucket: getR2Bucket(),
-      Key: r2Key,
-      Body: buffer,
-      ContentType: file.type,
-      CacheControl: "public, max-age=86400",
-    }));
+    if (key === "app_icon") {
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      const faviconPath = path.join(process.cwd(), "public", "favicon.ico");
+      await fs.writeFile(faviconPath, buffer);
+      publicUrl = `/favicon.ico?v=${Date.now()}`;
+    } else {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const { PutObjectCommand } = await import("@aws-sdk/client-s3");
+      const { getR2Client, getR2Bucket, getR2PublicUrl, getR2Prefix } = await import("../config/r2");
 
-    // Build public URL
-    const publicBase = getR2PublicUrl();
-    const publicUrl = publicBase ? `${publicBase.replace(/\/$/, "")}/${r2Key}` : r2Key;
+      const r2Key = `${getR2Prefix()}settings/${key}.${ext}`;
+
+      const client = getR2Client();
+      await client.send(new PutObjectCommand({
+        Bucket: getR2Bucket(),
+        Key: r2Key,
+        Body: buffer,
+        ContentType: file.type,
+        CacheControl: "public, max-age=86400",
+      }));
+
+      // Build public URL
+      const publicBase = getR2PublicUrl();
+      publicUrl = publicBase ? `${publicBase.replace(/\/$/, "")}/${r2Key}` : r2Key;
+    }
 
     // Save URL to settings
     await Setting.updateOne(

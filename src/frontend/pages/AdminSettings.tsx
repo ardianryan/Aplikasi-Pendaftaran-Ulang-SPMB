@@ -61,6 +61,17 @@ export const AdminSettings = (props: any) => {
                   <button onclick="document.getElementById('file-logo').click()" className="text-xs font-bold text-blue-600 hover:underline">Upload Baru</button>
                 </div>
               </div>
+
+              <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-3xl border border-slate-100">
+                <div id="favicon-preview" className="w-14 h-14 bg-white rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
+                   <span className="material-symbols-outlined text-slate-300">image</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Favicon (.ico)</p>
+                  <input type="file" id="file-favicon" accept=".ico,image/x-icon,image/png" className="hidden" onchange="uploadFile('app_icon', this)" />
+                  <button onclick="document.getElementById('file-favicon').click()" className="text-xs font-bold text-blue-600 hover:underline">Upload Baru</button>
+                </div>
+              </div>
             </div>
           </div>
 

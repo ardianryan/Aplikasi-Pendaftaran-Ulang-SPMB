@@ -49,6 +49,9 @@ async function loadSettings() {
     if (settings.kop_logo_right && settings.kop_logo_right.value) {
       setPreview('kop-right-preview', settings.kop_logo_right.value);
     }
+    if (settings.app_icon && settings.app_icon.value) {
+      setPreview('favicon-preview', settings.app_icon.value);
+    }
   } catch (err) {
     UI.toast('Gagal memuat pengaturan.', 'error');
   }
@@ -108,6 +111,7 @@ async function uploadFile(key, input) {
     if (key === 'app_logo') setPreview('logo-preview', res.data.url);
     if (key === 'kop_logo_left') setPreview('kop-left-preview', res.data.url);
     if (key === 'kop_logo_right') setPreview('kop-right-preview', res.data.url);
+    if (key === 'app_icon') setPreview('favicon-preview', res.data.url);
     UI.toast('Berhasil diupload', 'success');
   } catch (err) { UI.toast(err.message, 'error'); }
   input.value = '';
