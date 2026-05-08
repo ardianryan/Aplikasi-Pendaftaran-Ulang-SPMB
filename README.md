@@ -34,7 +34,7 @@ Aplikasi registrasi ulang (daftar ulang) peserta didik baru untuk **SMAN 1 Gedeg
 | **Backend** | [Hono.js](https://hono.dev) (TypeScript) ⚡ |
 | **Database** | MongoDB (Mongoose ODM) 🍃 |
 | **Storage** | Cloudflare R2 (S3-compatible) ☁️ |
-| **Frontend** | Vanilla HTML/JS + Tailwind CSS (CDN) 🎨 |
+| **Frontend** | React (Hono JSX) + Tailwind CSS 🎨 |
 | **PDF Gen** | Puppeteer (HTML → PDF) 📄 |
 | **Auth** | JWT + Google OAuth 🔑 |
 
@@ -127,9 +127,9 @@ Setelah instalasi selesai dan database di-seed (`npm run seed`), Anda dapat masu
 
 ## 📁 Struktur Folder Utama
 
-- `src/` — Logika backend (Hono routes, controllers, models).
-- `public/` — Frontend (Static HTML, JS, CSS).
-- `.github/` — Otomatisasi CI/CD.
+- `src/backend/` — Server-side logic (Hono Routes, Controllers, Models).
+- `src/frontend/` — UI Components & Pages (React / Hono JSX).
+- `public/` — Client-side assets (Images, Global JS, Styles).
 - `docker-setup.sh` — Script instalasi mandiri.
 
 ---
