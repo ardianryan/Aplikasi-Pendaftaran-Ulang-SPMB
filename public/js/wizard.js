@@ -819,8 +819,12 @@ const Wizard = {
     btn.disabled = loading;
     const textEl = btn.querySelector(".btn-text");
     if (textEl) {
-      textEl.textContent = loading ? "Memproses..." : textEl.dataset.original || textEl.textContent;
-      if (!loading && !textEl.dataset.original) textEl.dataset.original = textEl.textContent;
+      if (loading) {
+        if (!textEl.dataset.original) textEl.dataset.original = textEl.textContent;
+        textEl.textContent = "Memproses...";
+      } else {
+        textEl.textContent = textEl.dataset.original || textEl.textContent;
+      }
     }
   },
 };

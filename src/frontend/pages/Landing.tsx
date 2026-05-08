@@ -42,34 +42,46 @@ export const Landing = (props: any) => {
             background-image: linear-gradient(to right, #38BDF8, #F59E0B);
         }
         #main-nav.scrolled {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(0,0,0,0.05);
             padding: 0.75rem 0;
         }
+        #main-nav.scrolled .nav-text {
+            color: #003f87; /* primary */
+        }
+        #main-nav.scrolled .nav-link {
+            color: #475569; /* slate-600 */
+        }
+        #main-nav:not(.scrolled) .nav-text {
+            color: #ffffff;
+        }
+        #main-nav:not(.scrolled) .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+        }
       ` }} />
 
       {/* Navigation */}
-      <nav id="main-nav" className="fixed top-0 z-[100] w-full py-6 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <div className="flex items-center gap-3">
+      <nav id="main-nav" className="fixed top-0 z-[100] w-full py-4 md:py-6 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 flex justify-between items-center">
+          <div className="flex items-center gap-2 md:gap-3">
             {settings.app_logo ? (
-              <img src={settings.app_logo} alt="Logo" className="w-10 h-10 object-contain" />
+              <img src={settings.app_logo} alt="Logo" className="w-8 h-8 md:w-10 md:h-10 object-contain" />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-primary-variant flex items-center justify-center text-white font-display font-bold">
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary-variant flex items-center justify-center text-white font-display font-bold text-xs md:text-base">
                 {settings.app_name?.substring(0, 2) || 'SG'}
               </div>
             )}
-            <div className="text-xl font-display font-bold text-primary">
+            <div className="text-sm md:text-xl font-display font-bold nav-text transition-colors duration-300 line-clamp-1 max-w-[150px] md:max-w-none">
               {settings.school_name || 'SMAN 1 Gedeg'}
             </div>
           </div>
-          <div className="flex items-center gap-6 text-sm">
-            <a className="hidden md:block font-bold text-on-surface-variant hover:text-primary transition-colors" href="#jalur">Jalur</a>
-            <a className="hidden md:block font-bold text-on-surface-variant hover:text-primary transition-colors" href="#jadwal">Jadwal</a>
-            <a className="hidden md:block font-bold text-on-surface-variant hover:text-primary transition-colors" href="#berkas">Berkas</a>
-            <a href="/login" className="bg-primary text-white px-6 py-2.5 rounded-full font-bold hover:bg-primary-variant transition-all flex items-center gap-2 shadow-lg shadow-primary/20 scale-100 hover:scale-105 active:scale-95">
-              <span className="material-symbols-outlined text-[18px]">login</span>
+          <div className="flex items-center gap-3 md:gap-6 text-sm">
+            <a className="hidden md:block font-bold nav-link hover:text-primary transition-colors" href="#jalur">Jalur</a>
+            <a className="hidden md:block font-bold nav-link hover:text-primary transition-colors" href="#jadwal">Jadwal</a>
+            <a className="hidden md:block font-bold nav-link hover:text-primary transition-colors" href="#berkas">Berkas</a>
+            <a href="/login" className="bg-primary text-white px-4 py-2 md:px-6 md:py-2.5 rounded-full font-bold hover:bg-primary-variant transition-all flex items-center gap-2 shadow-lg shadow-primary/20 scale-100 hover:scale-105 active:scale-95 text-xs md:text-sm whitespace-nowrap">
+              <span className="material-symbols-outlined text-[16px] md:text-[18px]">login</span>
               Masuk Portal
             </a>
           </div>
@@ -103,7 +115,7 @@ export const Landing = (props: any) => {
               <span className="material-symbols-outlined text-sm">rocket_launch</span>
               <span className="tracking-widest uppercase text-xs font-bold">Portal Resmi {settings.school_year || '2024/2025'}</span>
             </div>
-            <h1 className="font-display font-extrabold text-6xl md:text-8xl text-white mb-6 leading-tight drop-shadow-2xl translate-y-0 opacity-100 transition-all duration-1000">
+            <h1 className="font-display font-extrabold text-4xl sm:text-6xl md:text-8xl text-white mb-6 leading-tight drop-shadow-2xl translate-y-0 opacity-100 transition-all duration-1000">
               {settings.landing_hero_title || 'Registrasi Ulang'} <br/>
               <span className="text-gradient">{settings.landing_hero_title_accent || `SPMB ${settings.school_year?.split('/')[0] || '2024'}`}</span>
             </h1>

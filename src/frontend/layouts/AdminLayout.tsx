@@ -72,7 +72,7 @@ export const AdminLayout = (props: any) => {
 
               {/* Accordion Group: Manajemen Data */}
               <li className="pt-2">
-                <details className="group" open={['/admin/students', '/admin/verify', '/admin/import'].some(p => currentPath.startsWith(p))}>
+                <details className="group" open={['/admin/students', '/admin/verify', '/admin/import', '/admin/admission-paths'].some(p => currentPath.startsWith(p))}>
                   <summary className="flex items-center justify-between px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] cursor-pointer hover:text-slate-600 transition-colors list-none">
                     <span>Manajemen Data</span>
                     <span className="material-symbols-outlined text-[16px] transition-transform group-open:rotate-180">expand_more</span>
