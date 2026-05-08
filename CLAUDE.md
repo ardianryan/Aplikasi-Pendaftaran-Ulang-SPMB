@@ -10,7 +10,8 @@ This is **SPMB-WA**, a student re-registration (daftar ulang) web application fo
 - **Backend:** Hono.js (TypeScript)
 - **Database:** MongoDB via Mongoose
 - **File Storage:** Cloudflare R2 (S3-compatible SDK)
-- **Frontend:** Vanilla HTML/JS with Tailwind CSS (CDN), no build step
+- **Frontend:** React (Hono JSX) + Tailwind CSS
+- **Routing:** Hono server-side routing for both API and Pages
 - **Auth:** JWT (stateless, stored in localStorage + Authorization header)
 - **Auth (Admin):** Local username/password OR Google OAuth (via ScholarGate SSO + referral code)
 - **PDF:** Puppeteer (HTML template → PDF)
@@ -19,9 +20,9 @@ This is **SPMB-WA**, a student re-registration (daftar ulang) web application fo
 
 ## Key Design Decisions
 
-1. **No frontend framework** — Vanilla JS with a custom Wizard state machine. Target users are 14-15 year old students on mobile phones; minimal JS bundle is critical.
+1. **Server-Side JSX (Hono JSX)** — UI is built using React-style components but rendered on the server for speed and SEO. Standard React-like syntax is used without a complex build step (via `tsx`).
 
-2. **Pretty URLs** — Server-side rewrite in `src/index.ts` maps `/login` → `public/login.html`. No `.html` extensions in links.
+2. **Unified Routing** — `src/index.tsx` handles all routes. Page components are imported from `src/frontend/pages` and rendered using a `renderPage` helper that injects global settings.
 
 3. **Mobile-First for students, Desktop-First for admin** — Student pages use responsive wizard with mobile progress bar. Admin pages use fixed sidebar layout.
 
@@ -29,62 +30,37 @@ This is **SPMB-WA**, a student re-registration (daftar ulang) web application fo
 
 5. **Form locking** — After final submit (`isSubmitted: true`), all write endpoints are blocked by `lockedGuard` middleware.
 
-6. **Configurable branding** — School name, app name (SPMB/PPDB), logo, icon, kop surat are all stored in MongoDB `settings` collection and served via `/api/settings/public`.
+6. **Configurable branding** — School name, app name, logo, favicon, and kop surat are stored in MongoDB and served via context to all pages. Favicon is managed locally at `public/favicon.ico`.
 
-7. **Dynamic jalur/tahap** — Jalur options are not hardcoded; they come from actual imported student data (`Student.distinct("jalur")`).
+7. **Dynamic jalur/tahap** — Landing page jalurs and required files are fully configurable via Admin Dashboard (stored as JSON in settings).
 
-8. **Role-based access** — Operators can only see Dashboard, Data Siswa, Verifikasi. Admin sees all menus. Enforced by `role-guard.js`.
-
-9. **Operator registration** — Requires ScholarGate SSO verification (guru/tendik) + referral code from admin. Flow: Google login → SSO check → referral code → activate.
-
-10. **Date inputs** — Custom DD / Bulan dropdown / YYYY picker (not native `<input type="date">`) for better mobile UX with Indonesian students.
+8. **Role-based access** — Operators have restricted views; Admins see all. Enforced via `adminAuth` middleware and `role-guard.js`.
 
 ## Directory Structure
 
 ```
 src/
-├── index.ts              # App entry, middleware, static serving, pretty URLs
-├── config/
-│   ├── database.ts       # Mongoose connection
-│   ├── r2.ts             # S3Client singleton for Cloudflare R2
-│   └── constants.ts      # All enums, options, upload config
-├── models/
-│   ├── Student.ts        # 72-field schema (nested subdocuments)
-│   ├── Admin.ts          # Admin with bcrypt + Google OAuth fields
-│   ├── Setting.ts        # Key-value settings + DEFAULT_SETTINGS array
-│   └── ReferralCode.ts   # Operator registration codes (prefix + suffix slots)
-├── routes/
-│   ├── index.ts          # Route aggregator + public settings + jalur-options
-│   ├── auth.routes.ts    # Login, Google OAuth, activate-operator
-│   ├── student.routes.ts
-│   ├── upload.routes.ts
-│   └── admin.routes.ts   # CRUD + SSO pull + referrals + operators
-├── controllers/
-│   ├── auth.controller.ts    # Student login, admin login, Google OAuth, activate
-│   ├── student.controller.ts # Wizard steps, biodata, submit, PDF
-│   ├── upload.controller.ts  # File upload to R2
-│   └── admin.controller.ts   # Stats, students, verify, import, export, settings, operators, referrals
-├── middleware/
-│   ├── auth.middleware.ts    # studentAuth, adminAuth (JWT verification)
-│   ├── locked.middleware.ts  # Blocks writes if isSubmitted=true
-│   └── validate.middleware.ts # Generic Zod validator
-├── validators/
-│   ├── auth.schema.ts        # Login validation
-│   └── biodata.schema.ts     # Auto-save (permissive) + complete (strict) schemas
-├── services/
-│   ├── jwt.service.ts    # sign/verify tokens
-│   ├── r2.service.ts     # upload/delete/getPublicUrl
-│   ├── sso.service.ts    # ScholarGate API + Google token verification
-│   ├── excel.service.ts  # import template, parse, export
-│   └── pdf.service.ts    # Puppeteer HTML→PDF with dynamic kop from settings
-├── utils/
-│   ├── response.ts       # Standardized { success, data, message } helpers
-│   └── date.ts           # Indonesian date formatting + Excel date parsing
-├── scripts/
-│   └── seed-admin.ts     # Seeds admin/admin123 + default settings
-└── templates/pdf/
-    └── buku-induk.html   # PDF template with {{placeholder}} + {{#conditional}} syntax
+├── index.tsx             # Main entry (Hono App + Page Routes)
+├── backend/              # Server-side logic
+│   ├── config/           # Database, R2, constants
+│   ├── models/           # Mongoose schemas
+│   ├── routes/           # API route aggregators
+│   ├── controllers/      # Route handlers
+│   ├── middleware/       # Auth guards, lock guards
+│   ├── validators/       # Zod schemas
+│   ├── services/         # PDF, Excel, R2, JWT, SSO
+│   ├── utils/            # Helpers (response, date, settings)
+│   └── scripts/          # Database seeding
+└── frontend/             # UI Components (JSX)
+    ├── layouts/          # Base templates (Layout, AdminLayout)
+    └── pages/            # Page components (Landing, Wizard, etc.)
+
+public/                   # Static assets
+├── js/                   # Global JS (api.js, ui.js) and page logic (wizard.js)
+├── css/                  # Custom styles
+└── favicon.ico           # Dynamic favicon target
 ```
+
 
 ## Database Schema
 
