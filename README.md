@@ -8,6 +8,20 @@
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
 </p>
 
+<p align="center">
+  <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fardianryan%2FAplikasi-Pendaftaran-Ulang-SPMB">
+    <img src="https://vercel.com/button" alt="Deploy with Vercel" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://railway.app/template/deploy?referrerId=ardianryan&template=https%3A%2F%2Fgithub.com%2Fardianryan%2FAplikasi-Pendaftaran-Ulang-SPMB">
+    <img src="https://railway.app/button.svg" alt="Deploy on Railway" />
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://render.com/deploy?repo=https://github.com/ardianryan/Aplikasi-Pendaftaran-Ulang-SPMB">
+    <img src="https://render.com/images/deploy-to-render-button.svg" alt="Deploy to Render" />
+  </a>
+</p>
+
 ---
 
 Aplikasi registrasi ulang (daftar ulang) peserta didik baru untuk **SMAN 1 Gedeg, Kabupaten Mojokerto**. Dibangun dengan pendekatan **Mobile-First**, **Wizard Step-by-Step**, dan standar aksesibilitas **WCAG**.
