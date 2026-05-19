@@ -53,7 +53,20 @@ function render() {
   document.getElementById('side-nisn').textContent = student.nisn;
   document.getElementById('profile-jalur').textContent = student.jalur || '-';
   document.getElementById('profile-smp').textContent = student.pendidikan?.asalSekolah || student.asalSmpPreRegister || '-';
-  document.getElementById('profile-kontak').innerHTML = `${alm.telepon || '-'}<br><span class="text-[10px] font-medium opacity-60">${alm.email || ''}</span>`;
+  const waBtn = alm.telepon ? `
+    <button onclick="sendWaPrompt()" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 active:bg-emerald-200 transition text-xs font-semibold rounded-xl border border-emerald-100">
+      <span class="material-symbols-outlined text-[16px]">chat</span>
+      Kirim WA
+    </button>
+  ` : '';
+
+  document.getElementById('profile-kontak').innerHTML = `
+    <div class="flex flex-col items-start gap-1">
+      <span class="font-mono text-slate-700">${alm.telepon || '-'}</span>
+      ${waBtn}
+    </div>
+    <span class="text-[10px] font-medium opacity-60 mt-1 block">${alm.email || ''}</span>
+  `;
 
   renderStatus();
   renderDocuments();
@@ -356,7 +369,27 @@ function openDocModal(title, url, mime) {
   modal.classList.remove('hidden');
   modal.classList.add('flex');
 }
-function closeModal() { document.getElementById('doc-modal').classList.add('hidden'); }
-
+async function sendWaPrompt() {
+  const message = await UI.prompt('Kirim Pesan WhatsApp', `Tulis pesan kustom untuk dikirim via gateway WA ke ${student.biodata?.namaLengkap || student.namaPreRegister}:`, 'Halo, silakan lengkapi berkas pendaftaran Anda...');
+  if (!message) return;
+  try {
+    UI.toast('Mengirim pesan WhatsApp...', 'info');
+    const res = await API.request('/admin/wa/send', {
+      method: 'POST',
+      body: JSON.stringify({
+        studentId: studentId,
+        message: message,
+        messageType: 'custom'
+      })
+    });
+    if (res.success) {
+      UI.toast('✅ Pesan berhasil terkirim!', 'success');
+    } else {
+      UI.toast('❌ Gagal: ' + (res.message || ''), 'error');
+    }
+  } catch (err) {
+    UI.toast('❌ Gagal mengirim pesan.', 'error');
+  }
+}
 
 init();

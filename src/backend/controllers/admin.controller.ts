@@ -15,6 +15,12 @@ import {
   exportToExcel,
 } from "../services/excel.service";
 import { success, error, paginated } from "../utils/response";
+import {
+  createWhatsAppAdapter,
+  renderTemplate,
+  normalizePhone,
+} from "../services/whatsapp/whatsapp.service";
+import { WALog } from "../models/WALog";
 
 // ============================================
 // GET /admin/stats
@@ -342,11 +348,59 @@ export async function verifyStudent(c: Context) {
       { $set: updateData },
       { new: true }
     )
-      .select("nisn namaPreRegister verifikasi")
+      .select("nisn namaPreRegister namaLengkap biodata.namaLengkap alamat.telepon jalur verifikasi")
       .lean();
 
     if (!student) {
       return error(c, "Data siswa tidak ditemukan.", 404);
+    }
+
+    // Try sending WhatsApp notification (graceful degradation)
+    try {
+      const adapter = await createWhatsAppAdapter();
+      if (adapter && student.alamat?.telepon) {
+        const templateKey = status === "verified" ? "wa_template_verified" : "wa_template_rejected";
+        const tplSetting = await Setting.findOne({ key: templateKey }).lean();
+        const template = tplSetting?.value;
+        
+        if (template) {
+          const schoolSettings = await Setting.find({
+            key: { $in: ["school_name", "school_year", "app_name"] },
+          }).lean();
+          const settingsMap: Record<string, string> = {};
+          for (const s of schoolSettings) settingsMap[s.key] = String(s.value || "");
+          const appUrl = process.env.APP_URL || "http://localhost:3000";
+
+          const studentName = student.biodata?.namaLengkap || student.namaPreRegister || (student as any).namaLengkap || "";
+          const vars: Record<string, string> = {
+            nama: studentName,
+            nisn: student.nisn || "",
+            jalur: student.jalur || "",
+            sekolah: settingsMap.school_name || "",
+            tahun: settingsMap.school_year || "",
+            url: appUrl,
+          };
+
+          const message = renderTemplate(template, vars);
+          const waResult = await adapter.sendMessage(student.alamat.telepon, message);
+
+          // Log the message
+          const adminUsername = c.get("adminUsername") || "admin";
+          await WALog.create({
+            recipientPhone: normalizePhone(student.alamat.telepon),
+            recipientName: studentName,
+            recipientNisn: student.nisn || "",
+            messageType: status === "verified" ? "verified" : "rejected",
+            messageContent: message,
+            status: waResult.success ? "sent" : "failed",
+            messageId: waResult.messageId || "",
+            errorMessage: waResult.error || "",
+            sentBy: adminUsername,
+          });
+        }
+      }
+    } catch (waErr: any) {
+      console.error("[WA-AUTO-NOTIF] Gagal mengirim notifikasi otomatis:", waErr.message);
     }
 
     return success(
