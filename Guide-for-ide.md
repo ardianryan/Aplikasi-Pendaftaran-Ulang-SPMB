@@ -15,18 +15,18 @@ spmb-wa/
 │   ├── index.tsx             # Entrypoint utama aplikasi (Routing Pages & API)
 │   ├── backend/              # Logika Backend (Server-Side)
 │   │   ├── config/           # Database (Mongoose), R2 Storage, Constants (Enums)
-│   │   ├── controllers/      # Handler Logika API
+│   │   ├── controllers/      # Handler Logika API (ditambah wa.controller.ts)
 │   │   ├── middleware/       # Auth guards, locked guards (form locking)
-│   │   ├── models/           # Mongoose Schemas (Student, Admin, Settings, Referral)
+│   │   ├── models/           # Mongoose Schemas (Student, Admin, Settings, WALog)
 │   │   ├── routes/           # Router API endpoints (/api/*)
-│   │   ├── services/         # PDF (Puppeteer), Excel (ExcelJS), R2 Storage, JWT, ScholarGate SSO
+│   │   ├── services/         # PDF (Puppeteer), Excel (ExcelJS), R2 Storage, ScholarGate SSO, WhatsApp (Gowa, Honowa adapters)
 │   │   ├── utils/            # Helpers (Date format, Response standard, Settings Map)
 │   │   └── validators/       # Validasi Zod (Auth, Biodata)
 │   └── frontend/             # Logika Frontend (Server-Side JSX)
 │       ├── layouts/          # Layout Template (Layout.tsx, AdminLayout.tsx)
-│       └── pages/            # Komponen Halaman (Landing.tsx, Wizard.tsx, AdminDashboard.tsx)
+│       └── pages/            # Komponen Halaman (ditambah AdminWhatsApp.tsx, AdminWhatsAppBlast.tsx, AdminWhatsAppLogs.tsx)
 ├── public/                   # Static Assets & Client-side Scripting
-│   ├── js/                   # Vanilla JS untuk interaksi dinamis (wizard.js, api.js, ui.js)
+│   ├── js/                   # Vanilla JS (ditambah js/admin/wa-logic.js, wa-blast-logic.js, wa-logs-logic.js)
 │   ├── css/                  # Styling kustom (Tailwind CDN base kustom)
 │   └── favicon.ico           # Target upload Favicon lokal dinamis
 └── Dockerfile & docker-setup.sh # Konfigurasi deployment & containerization
@@ -90,6 +90,17 @@ Aplikasi ini sangat bergantung pada koleksi `settings` untuk branding dinamis da
 | `kop_line1` s/d `kop_line6` | `string` | Baris teks pada Kop Surat PDF Buku Induk resmi |
 | `url_youtube_tutorial` | `string` | URL video tutorial pengisian di YouTube |
 | `url_download_center` | `string` | URL folder download dokumen (surat pernyataan, dll) |
+| `wa_gateway_enabled` | `boolean` | Master Switch WhatsApp Gateway (aktif/nonaktif) |
+| `wa_gateway_provider` | `string` | Provider WhatsApp Gateway terintegrasi (`gowa` atau `honowa`) |
+| `wa_gateway_url` | `string` | URL Endpoint Server WhatsApp Gateway pihak ketiga |
+| `wa_gateway_auth_user` | `string` | Username Basic Auth untuk provider `gowa` |
+| `wa_gateway_auth_pass` | `string` | Password Basic Auth (`gowa`) / API Token Key (`honowa`) |
+| `wa_gateway_device_id` | `string` | Device ID / Session ID untuk gateway WhatsApp |
+| `wa_log_retention_days`| `number` | Periode penyimpanan log pesan dalam hari (`7`, `14`, `30`) |
+| `wa_template_reminder` | `string` | Template pesan pemberitahuan untuk melakukan daftar ulang |
+| `wa_template_biodata`  | `string` | Template pesan untuk menyelesaikan pengisian Buku Induk / Biodata |
+| `wa_template_verified` | `string` | Template pesan ketika dokumen registrasi diverifikasi oleh admin |
+| `wa_template_rejected` | `string` | Template pesan ketika verifikasi berkas ditolak dengan catatan |
 
 ---
 
@@ -110,6 +121,12 @@ Aplikasi ini sangat bergantung pada koleksi `settings` untuk branding dinamis da
 2.  Semua visualisasi premium wajib menggunakan kombinasi class Tailwind. Hindari warna mentah seperti `bg-red-500` yang terlalu mencolok, gunakan sistem palet yang telah disediakan (seperti `bg-primary`, `bg-secondary`, `bg-slate-50`).
 3.  Pastikan responsivitas mobile selalu dicek. Gunakan prefix responsive Tailwind (`sm:`, `md:`, `lg:`) pada semua komponen tata letak.
 
+### 5.4 Pola WhatsApp Gateway (Adapter & Queue)
+1.  **Dynamic Factory:** `createWhatsAppAdapter()` digunakan untuk memuat adapter dinamis berdasarkan setting di DB. Selalu panggil fungsi ini ketimbang menginstansiasi adapter secara manual.
+2.  **Graceful Auto-Notifications:** Saat memicu pesan otomatis (seperti notifikasi ketika status pendaftaran berubah di `verifyStudent`), jalankan proses di dalam block `try-catch` terpisah. Kegagalan API Gateway WhatsApp pihak ketiga **tidak boleh** membatalkan atau me-rollback transaksi database registrasi utama.
+3.  **Blast Queue & Anti-Ban Delay:** Saat melakukan pengiriman blast secara massal, gunakan delay penundaan minimal **5 detik** antar nomor telepon. Gunakan queue asinkronus agar proses blast tidak memblokir server utama, yang dijalankan di background oleh `processBlastQueue`.
+4.  **Logging Standard:** Setiap pesan yang terkirim (sukses/gagal) wajib dicatat dalam model `WALog` dengan informasi pengirim (`sentBy`), penerima, isi pesan, dan detail error jika ada.
+
 ---
 
 ## ⚠️ 6. Jebakan Umum & Troubleshooting (Gotchas)
@@ -117,3 +134,5 @@ Aplikasi ini sangat bergantung pada koleksi `settings` untuk branding dinamis da
 1.  **Favicon Upload:** Favicon aplikasi (`app_icon`) ditangani secara lokal dan ditulis langsung ke filesystem kontainer (`/public/favicon.ico`) untuk mempercepat rendering browser. R2 Storage hanya digunakan untuk berkas dokumen siswa dan logo sekolah (`app_logo`).
 2.  **State Loading Tombol Wizard:** Di `wizard.js`, saat mengirimkan AJAX, panggil `this.setButtonLoading('id-tombol', true)`. Pastikan untuk mengembalikan state tombol dengan `this.setButtonLoading('id-tombol', false)` di block `finally` agar tombol tidak macet dalam keadaan loading jika proses dihentikan atau modal muncul.
 3.  **Accordion Sidebar Admin:** Sidebar admin menggunakan tag HTML `<details>` asli. Pastikan properti `open` dihitung dengan mencocokkan rute yang aktif menggunakan array rute (`currentPath.startsWith(...)`) agar navigasi tidak tertutup otomatis setelah halaman dimuat ulang.
+4.  **API.request Auto-Prepend Path:** Pada berkas client-side Javascript, wrapper global `API.request(url, ...)` akan **secara otomatis menambahkan prefix `/api`** di depannya. Oleh karena itu, jangan menuliskan `/api/admin/settings` saat memanggil request, tulislah `/admin/settings` agar url request tidak berlipat ganda menjadi `/api/api/admin/settings` (yang mengakibatkan error 404).
+5.  **WhatsApp Integration & Network Host:** Docker Container WhatsApp Gateway (GOWA atau HonoWA) berada di luar kontainer SPMB-WA. Pastikan Host URL yang disimpan di panel konfigurasi admin diakses secara benar via port internal docker network (misal: `http://gowa:3000`) atau via IP publik jika server hosting-nya terpisah.
