@@ -38,6 +38,24 @@ Aplikasi registrasi ulang (daftar ulang) peserta didik baru untuk **SMAN 1 Gedeg
 | **PDF Gen** | Puppeteer (HTML → PDF) 📄 |
 | **Auth** | JWT + Google OAuth 🔑 |
 
+## 📱 Integrasi WhatsApp Gateway
+
+SPMB-WA dilengkapi dengan modul integrasi gateway WhatsApp pihak ketiga yang canggih menggunakan **Adapter Pattern** untuk komunikasi asinkronus ke calon siswa. Modul ini digunakan untuk pengiriman pesan otomatis (notifikasi verifikasi berkas) maupun massal (blast reminder pendaftaran).
+
+### 🔗 Gateway yang Didukung:
+1. **GOWA (Go-WhatsApp)** — [aldinokemal/go-whatsapp-web-multidevice](https://github.com/aldinokemal/go-whatsapp-web-multidevice) 🚀 *(Default & Direkomendasikan)*
+   * Berbasis **Go binary** yang sangat ringan, stabil, dan menggunakan memori sangat kecil.
+   * Mendukung Basic Auth & scoping multi-device (`X-Device-Id`).
+2. **HonoWA (Hono-WhatsApp)** — [elianhardyy/hono-wa-web-multidevice](https://github.com/elianhardyy/hono-wa-web-multidevice) ⚡
+   * Berbasis **Hono.js + Puppeteer** dengan dukungan otentikasi API Key token (`X-API-Key`) dan multi-session yang handal.
+
+### ⚙️ Fitur WhatsApp Admin:
+* **Manajemen Konfigurasi:** Pengaturan konektivitas (Endpoint, Auth Token/Basic Auth, Device ID, Master Switch) disimpan aman di database (MongoDB), bukan berkas `.env`.
+* **Editor Template Pesan:** Kustomisasi pesan notifikasi dengan variabel pintar otomatis: `{{nama}}`, `{{nisn}}`, `{{jalur}}`, `{{sekolah}}`, `{{tahun}}`, dan `{{url}}`.
+* **Antrean Massal (Blast Engine):** Kirim pesan massal dengan penundaan otomatis (delay minimal 5 detik) untuk mencegah blokir/ban nomor.
+* **Log Riwayat Komunikasi:** Paging log pengiriman lengkap dengan retensi cleanup otomatis (7, 14, atau 30 hari).
+* **Auto-Notification & Quick Actions:** Notifikasi otomatis ketika verifikasi berkas disetujui/ditolak, serta tombol manual "Kirim WA" langsung di dashboard detail siswa.
+
 ## 🚀 Quick Start (Development)
 
 1.  **Clone & Masuk Direktori**
