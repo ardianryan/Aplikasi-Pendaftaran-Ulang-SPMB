@@ -124,6 +124,17 @@ export const AdminSettings = (props: any) => {
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Pesan Saat Ditutup</label>
                 <textarea id="registration_closed_message" rows={3} className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm"></textarea>
               </div>
+
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-sm text-slate-800">Wajib Unggah Berkas</p>
+                  <p className="text-[10px] text-slate-400 font-medium">Jika dinonaktifkan, siswa akan melewati langkah upload berkas.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="upload_document_enabled" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -149,6 +160,34 @@ export const AdminSettings = (props: any) => {
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tanggal Berakhir</label>
                   <input type="date" id="registration_end_date" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium" />
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tautan Pendukung */}
+          <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm p-8">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center border border-red-100">
+                <span className="material-symbols-outlined">link</span>
+              </div>
+              <h3 className="font-bold text-slate-800 text-lg">Tautan Pendukung</h3>
+            </div>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Video Tutorial YouTube</label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-4 material-symbols-outlined text-slate-400 text-lg">play_circle</span>
+                  <input type="url" id="url_youtube_tutorial" className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="https://youtube.com/..." />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2 font-medium">Link video panduan pendaftaran untuk siswa</p>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Download Center (Format Surat)</label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-4 material-symbols-outlined text-slate-400 text-lg">download_for_offline</span>
+                  <input type="url" id="url_download_center" className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="https://drive.google.com/..." />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2 font-medium">Link folder unduhan (seperti surat pernyataan)</p>
               </div>
             </div>
           </div>

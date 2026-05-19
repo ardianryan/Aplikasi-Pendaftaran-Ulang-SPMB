@@ -29,6 +29,9 @@ import { AdminLandingJadwal } from "./frontend/pages/AdminLandingJadwal";
 import { AdminLandingBerkas } from "./frontend/pages/AdminLandingBerkas";
 import { AdminAdmissionPaths } from "./frontend/pages/AdminAdmissionPaths";
 import { AdminActivate } from "./frontend/pages/AdminActivate";
+import { AdminWhatsApp } from "./frontend/pages/AdminWhatsApp";
+import { AdminWhatsAppBlast } from "./frontend/pages/AdminWhatsAppBlast";
+import { AdminWhatsAppLogs } from "./frontend/pages/AdminWhatsAppLogs";
 import { StudentProfile } from "./frontend/pages/StudentProfile";
 import { Wizard } from "./frontend/pages/Wizard";
 
@@ -118,6 +121,9 @@ app.get("/admin/landing/jalur", (c) => renderPage(c, AdminLandingJalur, "Daftar 
 app.get("/admin/landing/jadwal", (c) => renderPage(c, AdminLandingJadwal, "Linimasa Jadwal"));
 app.get("/admin/landing/berkas", (c) => renderPage(c, AdminLandingBerkas, "Berkas Wajib"));
 app.get("/admin/activate", (c) => renderPage(c, AdminActivate, "Aktivasi Akun"));
+app.get("/admin/whatsapp", (c) => renderPage(c, AdminWhatsApp, "WhatsApp Gateway"));
+app.get("/admin/whatsapp/blast", (c) => renderPage(c, AdminWhatsAppBlast, "Blast Pesan WhatsApp"));
+app.get("/admin/whatsapp/logs", (c) => renderPage(c, AdminWhatsAppLogs, "Log Pengiriman WhatsApp"));
 
 // ============================================
 // Static File Serving

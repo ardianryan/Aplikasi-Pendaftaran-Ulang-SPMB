@@ -82,6 +82,11 @@ export const DEFAULT_SETTINGS = [
     description: "Apakah akses login siswa dibuka (true = buka, false = tutup)",
   },
   {
+    key: "upload_document_enabled",
+    value: true,
+    description: "Apakah siswa wajib mengunggah berkas persyaratan (true = aktif, false = nonaktif/dilewati)",
+  },
+  {
     key: "registration_closed_message",
     value: "Mohon maaf, periode registrasi ulang telah ditutup. Silakan hubungi panitia untuk informasi lebih lanjut.",
     description: "Pesan yang ditampilkan saat registrasi ditutup",
@@ -217,5 +222,72 @@ export const DEFAULT_SETTINGS = [
       { name: "Perpindahan Tugas", active: true },
     ],
     description: "Master daftar jalur pendaftaran (JSON)",
+  },
+  {
+    key: "url_youtube_tutorial",
+    value: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    description: "URL Video Tutorial Pengisian di YouTube",
+  },
+  {
+    key: "url_download_center",
+    value: "https://docs.google.com/document/d/1example/edit",
+    description: "URL Folder/Dokumen Download Center (surat pernyataan, dll)",
+  },
+
+  // === WhatsApp Gateway ===
+  {
+    key: "wa_gateway_enabled",
+    value: false,
+    description: "Master switch fitur WhatsApp gateway (true = aktif)",
+  },
+  {
+    key: "wa_gateway_provider",
+    value: "gowa",
+    description: "Provider WA gateway aktif: gowa atau honowa",
+  },
+  {
+    key: "wa_gateway_url",
+    value: "",
+    description: "Base URL gateway WA (contoh: http://gowa:3000)",
+  },
+  {
+    key: "wa_gateway_auth_user",
+    value: "",
+    description: "Username untuk Basic Auth GOWA (kosongkan jika tidak ada)",
+  },
+  {
+    key: "wa_gateway_auth_pass",
+    value: "",
+    description: "Password Basic Auth GOWA / API Key HonoWA",
+  },
+  {
+    key: "wa_gateway_device_id",
+    value: "",
+    description: "Device ID (GOWA v8) atau Session ID (HonoWA)",
+  },
+  {
+    key: "wa_log_retention_days",
+    value: 30,
+    description: "Lama penyimpanan log WA dalam hari (7/14/30)",
+  },
+  {
+    key: "wa_template_reminder",
+    value: "Assalamu'alaikum {{nama}} 👋\n\nSelamat! Anda telah dinyatakan LULUS seleksi SPMB {{sekolah}} Tahun Pelajaran {{tahun}} melalui jalur {{jalur}}.\n\n📋 Segera lakukan *Daftar Ulang Online* melalui:\n🔗 {{url}}\n\nNISN Anda: *{{nisn}}*\n\nHarap segera mengisi data sebelum batas waktu yang ditentukan.\n\nTerima kasih 🙏\n_Panitia SPMB {{sekolah}}_",
+    description: "Template pesan reminder daftar ulang",
+  },
+  {
+    key: "wa_template_biodata",
+    value: "Halo {{nama}} 👋\n\nData daftar ulang Anda sudah dikonfirmasi. Namun, *pengisian Buku Induk belum selesai*.\n\nSilakan login kembali dan lengkapi seluruh data:\n🔗 {{url}}\n\nTerima kasih 🙏\n_Panitia SPMB {{sekolah}}_",
+    description: "Template pesan reminder isi buku induk",
+  },
+  {
+    key: "wa_template_verified",
+    value: "Halo {{nama}} 👋\n\n✅ Data daftar ulang Anda di {{sekolah}} telah *DIVERIFIKASI* dan dinyatakan lengkap.\n\nSelamat bergabung!\n\nTerima kasih 🙏\n_Panitia SPMB {{sekolah}}_",
+    description: "Template notifikasi data terverifikasi",
+  },
+  {
+    key: "wa_template_rejected",
+    value: "Halo {{nama}} 👋\n\n❌ Mohon maaf, data daftar ulang Anda di {{sekolah}} *DITOLAK* oleh verifikator.\n\nSilakan periksa kembali data Anda dan perbaiki sesuai catatan:\n🔗 {{url}}\n\nTerima kasih 🙏\n_Panitia SPMB {{sekolah}}_",
+    description: "Template notifikasi data ditolak",
   },
 ];

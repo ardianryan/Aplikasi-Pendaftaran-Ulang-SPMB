@@ -39,7 +39,9 @@ export const Wizard = (props: any) => {
               {[
                 { step: 1, label: 'Konfirmasi Data', icon: 'fact_check' },
                 { step: 2, label: 'Isi Biodata', icon: 'edit_note' },
-                { step: 3, label: 'Upload Berkas', icon: 'upload_file' },
+                ...(props.settings?.upload_document_enabled !== false && props.settings?.upload_document_enabled !== 'false' ? [
+                  { step: 3, label: 'Upload Berkas', icon: 'upload_file' }
+                ] : []),
                 { step: 4, label: 'Review & Kirim', icon: 'preview' },
                 { step: 5, label: 'Selesai', icon: 'check_circle' },
               ].map((s) => (

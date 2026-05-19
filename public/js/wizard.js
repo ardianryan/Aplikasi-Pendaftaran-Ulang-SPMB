@@ -46,6 +46,15 @@ const Wizard = {
   // ============================================
 
   goToStep(step) {
+    const isUploadEnabled = window.WizardSettings?.upload_document_enabled !== false && window.WizardSettings?.upload_document_enabled !== "false";
+    if (step === 3 && !isUploadEnabled) {
+      if (this.currentStep === 4) {
+        step = 2;
+      } else {
+        step = 4;
+      }
+    }
+
     // Save current biodata before leaving step 2
     if (this.currentStep === 2 && this.isDirty) {
       this.saveBiodata(false); // silent save
@@ -83,17 +92,32 @@ const Wizard = {
     }
 
     // Update progress bar
-    const progress = ((this.currentStep - 1) / 4) * 100;
+    const isUploadEnabled = window.WizardSettings?.upload_document_enabled !== false && window.WizardSettings?.upload_document_enabled !== "false";
+    
+    let progress = 0;
+    let displayStep = this.currentStep;
+    let totalSteps = 5;
+    
+    if (isUploadEnabled) {
+      progress = ((this.currentStep - 1) / 4) * 100;
+    } else {
+      totalSteps = 4;
+      let calcStep = this.currentStep;
+      if (calcStep > 3) calcStep = this.currentStep - 1;
+      displayStep = calcStep;
+      progress = ((calcStep - 1) / 3) * 100;
+    }
+    
     const progressBar = document.getElementById("progress-fill");
     const progressText = document.getElementById("progress-text");
     const stepLabel = document.getElementById("step-label");
 
     if (progressBar) {
       progressBar.style.width = `${progress}%`;
-      progressBar.setAttribute("aria-valuenow", this.currentStep);
+      progressBar.setAttribute("aria-valuenow", displayStep);
     }
     if (progressText) {
-      progressText.textContent = `Langkah ${this.currentStep} dari 5`;
+      progressText.textContent = `Langkah ${displayStep} dari ${totalSteps}`;
     }
 
     const labels = ["Konfirmasi", "Biodata", "Berkas", "Review", "Selesai"];
@@ -160,8 +184,14 @@ const Wizard = {
     try {
       this.setButtonLoading("btn-confirm", true);
       await API.confirmData();
-      // Show document checklist popup instead of going directly to step 2
-      this.showDocChecklist();
+      
+      const isUploadEnabled = window.WizardSettings?.upload_document_enabled !== false && window.WizardSettings?.upload_document_enabled !== "false";
+      if (isUploadEnabled) {
+        // Show document checklist popup instead of going directly to step 2
+        this.showDocChecklist();
+      } else {
+        this.goToStep(2);
+      }
     } catch (err) {
       UI.toast(err.message || "Gagal mengkonfirmasi data.", "error");
     } finally {

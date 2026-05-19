@@ -474,6 +474,16 @@ export async function getSettings(c: Context) {
     if (settings.length === 0) {
       await Setting.insertMany(DEFAULT_SETTINGS);
       settings = await Setting.find().lean();
+    } else {
+      // Seed any missing keys to ensure compatibility on update
+      const existingKeys = settings.map((s: any) => s.key);
+      const missingSettings = DEFAULT_SETTINGS.filter(
+        (ds) => !existingKeys.includes(ds.key)
+      );
+      if (missingSettings.length > 0) {
+        await Setting.insertMany(missingSettings);
+        settings = await Setting.find().lean();
+      }
     }
 
     // Convert to key-value object

@@ -39,8 +39,13 @@ export async function uploadDocument(c: Context) {
       const berkasSetting = await Setting.findOne({ key: "landing_berkas_json" }).lean();
       if (berkasSetting?.value && Array.isArray(berkasSetting.value)) {
         const berkas = (berkasSetting.value as any[]).find((b: any) => b.id === docType);
-        if (berkas?.max_size_mb && typeof berkas.max_size_mb === "number") {
-          effectiveMaxSize = berkas.max_size_mb * 1024 * 1024;
+        if (berkas) {
+          if (berkas.active === false || berkas.active === "false") {
+            return error(c, "Dokumen ini sedang dinonaktifkan.", 400);
+          }
+          if (berkas.max_size_mb && typeof berkas.max_size_mb === "number") {
+            effectiveMaxSize = berkas.max_size_mb * 1024 * 1024;
+          }
         }
       }
     } catch {

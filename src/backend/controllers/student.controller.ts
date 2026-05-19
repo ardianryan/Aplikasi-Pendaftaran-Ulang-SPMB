@@ -258,16 +258,24 @@ export async function completeBiodata(c: Context) {
       );
     }
 
-    // Advance to Step 3 (Upload)
+    // Advance to Step 3 (Upload) or Step 4 (Review) depending on upload setting
+    const { Setting } = await import("../models/Setting");
+    const uploadEnabledSetting = await Setting.findOne({ key: "upload_document_enabled" }).lean();
+    const isUploadEnabled = uploadEnabledSetting?.value !== false && uploadEnabledSetting?.value !== "false";
+
+    const nextStep = isUploadEnabled ? WIZARD_STEPS.UPLOAD : WIZARD_STEPS.REVIEW;
+
     await Student.updateOne(
       { nisn },
-      { $set: { wizardStep: WIZARD_STEPS.UPLOAD } }
+      { $set: { wizardStep: nextStep } }
     );
 
     return success(
       c,
-      { wizardStep: WIZARD_STEPS.UPLOAD },
-      "Biodata lengkap. Silakan lanjutkan upload dokumen."
+      { wizardStep: nextStep },
+      isUploadEnabled
+        ? "Biodata lengkap. Silakan lanjutkan upload dokumen."
+        : "Biodata lengkap. Silakan lakukan review akhir."
     );
   } catch (err: any) {
     console.error("[STUDENT] completeBiodata error:", err);
@@ -316,26 +324,31 @@ export async function submitFinal(c: Context) {
 
     // Verify all required documents are uploaded based on settings & jalur
     const { Setting } = await import("../models/Setting");
-    const berkasSetting = await Setting.findOne({ key: "landing_berkas_json" }).lean();
-    const berkasConfig = berkasSetting?.value || [];
-    const studentJalur = student.jalur || "all";
+    const uploadEnabledSetting = await Setting.findOne({ key: "upload_document_enabled" }).lean();
+    const isUploadEnabled = uploadEnabledSetting?.value !== false && uploadEnabledSetting?.value !== "false";
 
-    const requiredDocs = berkasConfig.filter((b: any) => 
-      b.active && 
-      b.required && 
-      (b.jalur.includes("all") || b.jalur.includes(studentJalur))
-    );
+    if (isUploadEnabled) {
+      const berkasSetting = await Setting.findOne({ key: "landing_berkas_json" }).lean();
+      const berkasConfig = berkasSetting?.value || [];
+      const studentJalur = student.jalur || "all";
 
-    const docs = student.dokumen || {};
-    const missingDocs = requiredDocs.filter((rd: any) => !docs[rd.id] || !(docs[rd.id] as any).key);
-
-    if (missingDocs.length > 0) {
-      const missingLabels = missingDocs.map((md: any) => md.title).join(", ");
-      return error(
-        c,
-        `Dokumen wajib belum lengkap: ${missingLabels}`,
-        422
+      const requiredDocs = berkasConfig.filter((b: any) => 
+        b.active && 
+        b.required && 
+        (b.jalur.includes("all") || b.jalur.includes(studentJalur))
       );
+
+      const docs = student.dokumen || {};
+      const missingDocs = requiredDocs.filter((rd: any) => !docs[rd.id] || !(docs[rd.id] as any).key);
+
+      if (missingDocs.length > 0) {
+        const missingLabels = missingDocs.map((md: any) => md.title).join(", ");
+        return error(
+          c,
+          `Dokumen wajib belum lengkap: ${missingLabels}`,
+          422
+        );
+      }
     }
 
     // Verify biodata is complete (wizard step >= 3)

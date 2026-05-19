@@ -34,6 +34,16 @@ import {
   updateProfile,
 } from "../controllers/admin.controller";
 
+import {
+  waStatus,
+  waTest,
+  waSend,
+  waBlastPreview,
+  waBlast,
+  waLogs,
+  waLogsCleanup,
+} from "../controllers/wa.controller";
+
 const adminRoutes = new Hono();
 
 // All admin routes require authentication
@@ -79,5 +89,14 @@ adminRoutes.get("/referrals", getReferrals); // List all referral codes
 adminRoutes.post("/referrals", createReferral); // Create new prefix
 adminRoutes.delete("/referrals/:id", deleteReferral); // Delete referral
 adminRoutes.put("/referrals/:id/toggle", toggleReferral); // Toggle active/inactive
+
+// WhatsApp Gateway
+adminRoutes.get("/wa/status", waStatus);
+adminRoutes.post("/wa/test", waTest);
+adminRoutes.post("/wa/send", waSend);
+adminRoutes.get("/wa/blast/preview", waBlastPreview);
+adminRoutes.post("/wa/blast", waBlast);
+adminRoutes.get("/wa/logs", waLogs);
+adminRoutes.delete("/wa/logs/cleanup", waLogsCleanup);
 
 export { adminRoutes };

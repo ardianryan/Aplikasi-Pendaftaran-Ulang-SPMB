@@ -47,6 +47,7 @@ routes.get("/settings/public", async (c) => {
       "app_logo",
       "app_icon",
       "registration_open",
+      "upload_document_enabled",
       "registration_closed_message",
       "registration_start_date",
       "registration_end_date",
@@ -61,6 +62,8 @@ routes.get("/settings/public", async (c) => {
       "kop_logo_left",
       "kop_logo_right",
       "kop_city",
+      "url_youtube_tutorial",
+      "url_download_center",
     ];
 
     const result: Record<string, any> = {};

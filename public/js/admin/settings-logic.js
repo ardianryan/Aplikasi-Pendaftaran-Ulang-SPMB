@@ -7,7 +7,8 @@ const TEXT_SETTINGS = [
   'registration_start_date', 'registration_end_date',
   'school_year', 'announcement_text',
   'kop_line1', 'kop_line2', 'kop_line3', 'kop_line4', 'kop_line5', 'kop_line6',
-  'kop_city', 'landing_hero_title', 'landing_hero_subtitle'
+  'kop_city', 'landing_hero_title', 'landing_hero_subtitle',
+  'url_youtube_tutorial', 'url_download_center'
 ];
 
 const JSON_SETTINGS = [
@@ -31,6 +32,11 @@ async function loadSettings() {
       const isOpen = settings.registration_open.value === true;
       regOpen.checked = isOpen;
       if (typeof updateStatusUI === 'function') updateStatusUI(isOpen);
+    }
+
+    const uploadEnabled = document.getElementById('upload_document_enabled');
+    if (uploadEnabled && settings.upload_document_enabled) {
+      uploadEnabled.checked = settings.upload_document_enabled.value !== false && settings.upload_document_enabled.value !== 'false';
     }
 
     for (const key of JSON_SETTINGS) {
@@ -87,6 +93,9 @@ async function saveSettings() {
 
     const regOpen = document.getElementById('registration_open');
     data.registration_open = regOpen ? regOpen.checked : true;
+
+    const uploadEnabled = document.getElementById('upload_document_enabled');
+    data.upload_document_enabled = uploadEnabled ? uploadEnabled.checked : true;
 
     await API.request('/admin/settings', { method: 'PUT', body: JSON.stringify(data) });
     sessionStorage.removeItem('spmb_public_settings');

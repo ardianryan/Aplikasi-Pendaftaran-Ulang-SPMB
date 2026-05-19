@@ -82,11 +82,14 @@ Aplikasi ini sangat bergantung pada koleksi `settings` untuk branding dinamis da
 | `app_name` | `string` | Singkatan nama aplikasi (contoh: "SPMB" atau "PPDB") |
 | `school_name` | `string` | Nama sekolah (contoh: "SMAN 1 Gedeg") |
 | `registration_open` | `boolean` | Status gerbang pendaftaran (bisa membuka/menutup seluruh form wizard siswa) |
+| `upload_document_enabled` | `boolean` | Status keaktifan upload berkas pada alur wizard pendaftaran siswa |
 | `app_logo` | `string` | URL logo utama (disimpan di R2) |
 | `app_icon` | `string` | URL favicon aplikasi (diupload ke `/public/favicon.ico` secara lokal) |
 | `landing_jalur_json` | `array` | Jalur pendaftaran yang ditampilkan di Landing Page |
 | `landing_berkas_json` | `array` | Persyaratan berkas beserta ukuran maksimum per file (`max_size_mb`) |
 | `kop_line1` s/d `kop_line6` | `string` | Baris teks pada Kop Surat PDF Buku Induk resmi |
+| `url_youtube_tutorial` | `string` | URL video tutorial pengisian di YouTube |
+| `url_download_center` | `string` | URL folder download dokumen (surat pernyataan, dll) |
 
 ---
 

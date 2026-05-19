@@ -137,10 +137,10 @@ export const Landing = (props: any) => {
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest font-sans">{settings.registration_closed_message || 'Saat ini akses registrasi sedang ditutup'}</p>
                 </div>
               )}
-              <button className="glass-dark text-white border border-white/20 px-10 py-5 rounded-2xl font-display font-medium text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-3">
+              <a href={settings.url_youtube_tutorial || '#'} target="_blank" rel="noopener noreferrer" className="glass-dark text-white border border-white/20 px-10 py-5 rounded-2xl font-display font-medium text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-3">
                 <span className="material-symbols-outlined">play_circle</span>
                 Tonton Panduan
-              </button>
+              </a>
             </div>
           </div>
           
@@ -256,7 +256,7 @@ export const Landing = (props: any) => {
                 <p className="text-blue-100/80 text-lg mb-10 leading-relaxed">
                   Siapkan scan dokumen asli berikut dalam format PDF/JPG (maksimal 1MB). Pastikan dokumen terlihat jelas dan tidak terpotong untuk kelancaran proses verifikasi.
                 </p>
-                <a href="#" className="w-full sm:w-auto glass-dark border border-secondary/50 text-white px-8 py-4 rounded-xl font-display font-bold hover:bg-secondary hover:text-primary transition-all flex items-center justify-center gap-3 group">
+                <a href={settings.url_download_center || '#'} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto glass-dark border border-secondary/50 text-white px-8 py-4 rounded-xl font-display font-bold hover:bg-secondary hover:text-primary transition-all flex items-center justify-center gap-3 group">
                   <span className="material-symbols-outlined group-hover:-translate-y-1 transition-transform">download</span>
                   Unduh Format Surat Pernyataan
                 </a>
