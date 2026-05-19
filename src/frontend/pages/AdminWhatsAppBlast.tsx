@@ -80,8 +80,8 @@ export const AdminWhatsAppBlast = (props: any) => {
                 <input 
                   type="number" 
                   id="blastDelay" 
-                  defaultValue={5} 
-                  min={5} 
+                  value="5" 
+                  min="5" 
                   oninput="updateEstimatedTime()"
                   className="w-16 px-2 py-1 border border-slate-200 rounded-xl text-sm text-center font-bold font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
                 />
