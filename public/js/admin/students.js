@@ -128,6 +128,7 @@
     const nama = document.getElementById('add_name').value.trim();
     const asalSmp = document.getElementById('add_school').value.trim();
     const jalur = document.getElementById('add_jalur').value;
+    const telepon = document.getElementById('add_phone').value.trim();
     const btn = document.getElementById('doAddStudentBtn');
 
     if (!nisn || nisn.length !== 10) { UI.toast('NISN harus 10 digit', 'error'); return; }
@@ -139,10 +140,17 @@
     try {
       await API.request('/admin/students', {
         method: 'POST',
-        body: JSON.stringify({ nisn, nama, asalSmp, jalur })
+        body: JSON.stringify({ nisn, nama, asalSmp, jalur, telepon })
       });
       UI.toast('Siswa berhasil ditambahkan!', 'success');
       addStudentModal.classList.add('hidden');
+      
+      // Clear form inputs
+      document.getElementById('add_nisn').value = '';
+      document.getElementById('add_name').value = '';
+      document.getElementById('add_school').value = '';
+      document.getElementById('add_phone').value = '';
+      
       loadStudents();
     } catch (err) {
       UI.toast(err.message || 'Gagal menambahkan siswa', 'error');

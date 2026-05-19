@@ -10,6 +10,17 @@ import { parseTanggalExcel } from "../utils/date";
 // Jalur options are now dynamic (from imported data), no hardcoded validation
 
 // ============================================
+// Helpers
+// ============================================
+
+export function cleanPhone(phone: string): string {
+  if (!phone) return "";
+  let p = phone.replace(/\D/g, "");
+  if (p.startsWith("0")) p = "62" + p.slice(1);
+  return p;
+}
+
+// ============================================
 // Types
 // ============================================
 
@@ -20,6 +31,7 @@ interface ImportRow {
   asalSmp: string;
   jalur: string;
   noDiterima: string;
+  telepon: string;
 }
 
 interface ImportResult {
@@ -52,6 +64,7 @@ export async function generateImportTemplate(): Promise<Buffer> {
     { header: "Asal SMP", key: "asalSmp", width: 30 },
     { header: "Jalur (Tahap 1/Tahap 2/Tahap 3)", key: "jalur", width: 35 },
     { header: "No. Diterima", key: "noDiterima", width: 15 },
+    { header: "No. Telepon / WA (Format: 08xx)", key: "telepon", width: 25 },
   ];
 
   // Style header row
@@ -74,6 +87,7 @@ export async function generateImportTemplate(): Promise<Buffer> {
     asalSmp: "SMPN 1 Gedeg",
     jalur: "Tahap 1",
     noDiterima: "001",
+    telepon: "085155030300",
   });
 
   // Add data validation for Jalur column
@@ -183,6 +197,7 @@ export async function importFromExcel(buffer: Buffer): Promise<ImportResult> {
     const asalSmp = getCellString(row.getCell(4));
     const jalur = getCellString(row.getCell(5));
     const noDiterima = getCellString(row.getCell(6));
+    const telepon = cleanPhone(getCellString(row.getCell(7)));
 
     // Handle tanggal lahir
     const tanggalLahir = getCellDate(row.getCell(3));
@@ -249,7 +264,7 @@ export async function importFromExcel(buffer: Buffer): Promise<ImportResult> {
       return;
     }
 
-    rows.push({ nisn, nama, tanggalLahir, asalSmp, jalur, noDiterima });
+    rows.push({ nisn, nama, tanggalLahir, asalSmp, jalur, noDiterima, telepon });
   });
 
   // Bulk upsert valid rows (always update with latest data)
@@ -271,6 +286,7 @@ export async function importFromExcel(buffer: Buffer): Promise<ImportResult> {
             asalSmpPreRegister: row.asalSmp,
             jalur: row.jalur,
             noDiterima: row.noDiterima,
+            "alamat.telepon": row.telepon || "",
           },
         },
         { upsert: true }

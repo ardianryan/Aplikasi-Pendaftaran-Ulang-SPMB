@@ -85,6 +85,10 @@ export const AdminStudents = (props: any) => {
                </div>
             </div>
             <div>
+               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">No. Telepon / WA</label>
+               <input type="text" id="add_phone" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none" placeholder="Contoh: 085155030300" />
+            </div>
+            <div>
                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-blue-600">Password Awal (Default: NISN)</label>
                <p className="text-[10px] text-slate-400 mb-2">Siswa dapat mengubah password setelah login pertama kali.</p>
             </div>

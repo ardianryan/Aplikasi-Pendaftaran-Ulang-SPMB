@@ -154,7 +154,7 @@ export async function getStudents(c: Context) {
 export async function addStudent(c: Context) {
   try {
     const body = await c.req.json();
-    const { nisn, nama, asalSmp, jalur } = body;
+    const { nisn, nama, asalSmp, jalur, telepon } = body;
 
     if (!nisn || nisn.length !== 10) {
       return error(c, "NISN harus 10 digit.", 400);
@@ -168,6 +168,15 @@ export async function addStudent(c: Context) {
       return error(c, `Siswa dengan NISN ${nisn} sudah terdaftar.`, 409);
     }
 
+    // Clean and normalize phone number
+    let cleanTelepon = "";
+    if (telepon) {
+      cleanTelepon = telepon.replace(/\D/g, "");
+      if (cleanTelepon.startsWith("0")) {
+        cleanTelepon = "62" + cleanTelepon.slice(1);
+      }
+    }
+
     const student = await Student.create({
       nisn,
       namaPreRegister: nama,
@@ -175,6 +184,9 @@ export async function addStudent(c: Context) {
       jalur: jalur || "Tahap 1",
       wizardStep: 1,
       isSubmitted: false,
+      alamat: {
+        telepon: cleanTelepon,
+      },
     });
 
     return success(c, student, `Siswa ${nama} berhasil ditambahkan manual.`);
