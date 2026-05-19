@@ -73,10 +73,21 @@ export const AdminWhatsAppBlast = (props: any) => {
 
         {/* Send Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-500">Delay antar pesan: <strong>5 detik</strong> (anti-ban)</p>
-              <p className="text-xs text-slate-400" id="estimatedTime"></p>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-semibold text-slate-600">Delay Jeda:</span>
+                <input 
+                  type="number" 
+                  id="blastDelay" 
+                  defaultValue={5} 
+                  min={5} 
+                  oninput="updateEstimatedTime()"
+                  className="w-16 px-2 py-1 border border-slate-200 rounded-xl text-sm text-center font-bold font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-50"
+                />
+                <span className="text-sm text-slate-500">detik (Minimal: 5 detik)</span>
+              </div>
+              <p className="text-xs text-slate-400 font-medium" id="estimatedTime"></p>
             </div>
             <button onclick="sendBlast()" id="btnBlast"
               className="px-6 py-3 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">

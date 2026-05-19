@@ -50,6 +50,28 @@ function loadBlastTemplate() {
   }
 }
 
+// Enforce minimum delay and get current delay value in seconds
+function getDelaySeconds() {
+  const el = document.getElementById('blastDelay');
+  const val = parseInt(el?.value) || 5;
+  return val < 5 ? 5 : val;
+}
+
+// Dynamically update estimated delivery time based on current delay and count
+function updateEstimatedTime() {
+  const countEl = document.getElementById('previewCount');
+  const count = parseInt(countEl?.textContent) || 0;
+  const est = document.getElementById('estimatedTime');
+  const delaySec = getDelaySeconds();
+  
+  if (count > 0) {
+    const minutes = Math.ceil((count * delaySec) / 60);
+    est.textContent = `Estimasi waktu: ~${minutes} menit (dengan jeda ${delaySec}s antar pesan)`;
+  } else {
+    est.textContent = 'Tidak ada pesan untuk dikirim.';
+  }
+}
+
 // Preview recipient count and sample
 async function previewBlast() {
   const filter = document.getElementById('blastFilter').value;
@@ -58,7 +80,6 @@ async function previewBlast() {
   const countEl = document.getElementById('previewCount');
   const sampleEl = document.getElementById('previewSample');
   const btn = document.getElementById('btnBlast');
-  const est = document.getElementById('estimatedTime');
 
   try {
     const res = await API.request(`/admin/wa/blast/preview?filter=${filter}&jalur=${jalur}`);
@@ -68,8 +89,7 @@ async function previewBlast() {
       
       if (res.data.count > 0) {
         btn.disabled = false;
-        const minutes = Math.ceil((res.data.count * 5) / 60);
-        est.textContent = `Estimasi waktu: ~${minutes} menit`;
+        updateEstimatedTime();
         
         let sampleHtml = 'Sampel penerima:<br>';
         res.data.sample.forEach(s => {
@@ -81,7 +101,7 @@ async function previewBlast() {
         sampleEl.innerHTML = sampleHtml;
       } else {
         btn.disabled = true;
-        est.textContent = 'Tidak ada pesan untuk dikirim.';
+        updateEstimatedTime();
         sampleEl.innerHTML = 'Tidak ada siswa yang cocok dengan filter ini.';
       }
     }
@@ -110,6 +130,9 @@ async function sendBlast() {
   btn.disabled = true;
   btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> Memulai...';
 
+  const delaySeconds = getDelaySeconds();
+  const delayMs = delaySeconds * 1000;
+
   try {
     const res = await API.request('/admin/wa/blast', {
       method: 'POST',
@@ -118,7 +141,7 @@ async function sendBlast() {
         jalur,
         templateKey: templateKey || undefined,
         customMessage,
-        delayMs: 5000 // 5 seconds
+        delayMs: delayMs
       })
     });
 
@@ -143,7 +166,7 @@ async function sendBlast() {
           document.getElementById('progressText').textContent = `${count}/${total}`;
           document.getElementById('progressBar').style.width = `${(count/total)*100}%`;
         }
-      }, 5000); // match delayMs
+      }, delayMs); // match delayMs
 
     } else {
       UI.toast(res.message || 'Gagal memulai blast', 'error');
