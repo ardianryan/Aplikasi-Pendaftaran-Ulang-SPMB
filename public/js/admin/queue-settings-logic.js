@@ -33,34 +33,34 @@
       const data = res.data;
 
       // Prefix
-      if (queuePreRegPrefix) queuePreRegPrefix.value = data.queue_pre_reg_prefix || 'A';
-      if (queueReRegPrefix) queueReRegPrefix.value = data.queue_re_reg_prefix || 'B';
+      if (queuePreRegPrefix) queuePreRegPrefix.value = data.queue_pre_reg_prefix?.value || 'A';
+      if (queueReRegPrefix) queueReRegPrefix.value = data.queue_re_reg_prefix?.value || 'B';
       updatePreviews();
 
       // Padding
-      if (queueNumberPadding) queueNumberPadding.value = String(data.queue_number_padding || 3);
+      if (queueNumberPadding) queueNumberPadding.value = String(data.queue_number_padding?.value || 3);
 
       // Loket
-      const count = data.queue_counter_count || 5;
+      const count = data.queue_counter_count?.value || 5;
       if (queueCounterCount) {
         queueCounterCount.value = count;
         if (counterCountDisplay) counterCountDisplay.textContent = count;
       }
 
-      const names = Array.isArray(data.queue_counter_names)
-        ? data.queue_counter_names
+      const names = Array.isArray(data.queue_counter_names?.value)
+        ? data.queue_counter_names.value
         : Array.from({ length: count }, (_, i) => `Loket ${i + 1}`);
       renderCounterNames(count, names);
 
       // Display
-      if (queueDisplayTitle) queueDisplayTitle.value = data.queue_display_title || 'Antrian Verifikasi SPMB';
-      if (queueDisplaySubtitle) queueDisplaySubtitle.value = data.queue_display_subtitle || '';
-      if (queueDisplayShowWaiting) queueDisplayShowWaiting.checked = data.queue_display_show_waiting !== false;
+      if (queueDisplayTitle) queueDisplayTitle.value = data.queue_display_title?.value || 'Antrian Verifikasi SPMB';
+      if (queueDisplaySubtitle) queueDisplaySubtitle.value = data.queue_display_subtitle?.value || '';
+      if (queueDisplayShowWaiting) queueDisplayShowWaiting.checked = data.queue_display_show_waiting?.value !== false;
 
       // Student link
       if (queueStudentLinkEnabled) {
-        queueStudentLinkEnabled.checked = !!data.queue_student_link_enabled;
-        toggleStudentLinkNote(!!data.queue_student_link_enabled);
+        queueStudentLinkEnabled.checked = !!data.queue_student_link_enabled?.value;
+        toggleStudentLinkNote(!!data.queue_student_link_enabled?.value);
       }
 
       // URL display publik

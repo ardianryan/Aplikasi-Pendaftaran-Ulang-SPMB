@@ -38,7 +38,7 @@
   // ============================================
   async function loadSession() {
     try {
-      const res = await API.request('/admin/queue/session');
+      const res = await API.request('/queue/session');
       if (res.success && res.data) {
         renderSessionActive(res.data);
       } else {
@@ -137,7 +137,7 @@
     if (status) params.set('status', status);
 
     try {
-      const res = await API.request(`/admin/queue/tickets?${params.toString()}`);
+      const res = await API.request(`/queue/tickets?${params.toString()}`);
       if (!res.success) {
         ticketTableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-16 text-center text-slate-300 text-sm">Gagal memuat tiket</td></tr>';
         return;
@@ -208,7 +208,7 @@
     if (!confirm(`Mulai sesi antrian mode "${mode === 'pre_registration' ? 'Pra-Pendaftaran' : 'Daftar Ulang'}"?\nSesi aktif sebelumnya (jika ada) akan diakhiri.`)) return;
 
     try {
-      const res = await API.request('/admin/queue/session/start', {
+      const res = await API.request('/queue/session/start', {
         method: 'POST',
         body: JSON.stringify({ mode })
       });
@@ -226,7 +226,7 @@
   async function endSession() {
     if (!confirm('Akhiri sesi antrian? Semua nomor yang belum terlayani akan tertinggal.')) return;
     try {
-      const res = await API.request('/admin/queue/session/end', { method: 'POST' });
+      const res = await API.request('/queue/session/end', { method: 'POST' });
       if (res.success) {
         UI.toast('Sesi diakhiri', 'success');
         loadSession();

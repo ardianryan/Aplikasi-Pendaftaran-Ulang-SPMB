@@ -49,7 +49,7 @@
       const token = API.getToken();
       if (!token) { window.location.href = '/admin/login'; return; }
 
-      const res = await API.request('/admin/queue/session');
+      const res = await API.request('/queue/session');
       if (!res.success || !res.data) {
         showError('Tidak ada sesi antrian aktif. Minta admin untuk memulai sesi.');
         return;
@@ -274,7 +274,7 @@
       if (!selectedCounterId) return;
       setLoading(btnCallNext, true, '→');
       try {
-        const res = await API.request('/admin/queue/call', {
+        const res = await API.request('/queue/call', {
           method: 'POST',
           body: JSON.stringify({ counterId: selectedCounterId })
         });
@@ -298,7 +298,7 @@
       if (!selectedCounterId) return;
       setLoading(btnDone, true, '✅');
       try {
-        const res = await API.request('/admin/queue/done', {
+        const res = await API.request('/queue/done', {
           method: 'POST',
           body: JSON.stringify({ counterId: selectedCounterId })
         });
@@ -324,7 +324,7 @@
       if (!confirm('Lewati nomor ini? Nomor akan ditandai tidak hadir.')) return;
       setLoading(btnSkip, true, '⏭');
       try {
-        const res = await API.request('/admin/queue/skip', {
+        const res = await API.request('/queue/skip', {
           method: 'POST',
           body: JSON.stringify({ counterId: selectedCounterId })
         });
@@ -351,7 +351,7 @@
       if (!selectedCounterId) return;
       setLoading(btnCallSpecific, true, 'Panggil');
       try {
-        const res = await API.request('/admin/queue/call/specific', {
+        const res = await API.request('/queue/call/specific', {
           method: 'POST',
           body: JSON.stringify({ counterId: selectedCounterId, ticketNumber: num })
         });
@@ -377,7 +377,7 @@
       setLoading(btnIssueTicket, true, '+ Terbitkan Nomor');
       try {
         const body = studentLinkEnabled && nisn ? { studentNisn: nisn } : {};
-        const res = await API.request('/admin/queue/ticket', {
+        const res = await API.request('/queue/ticket', {
           method: 'POST',
           body: JSON.stringify(body)
         });
