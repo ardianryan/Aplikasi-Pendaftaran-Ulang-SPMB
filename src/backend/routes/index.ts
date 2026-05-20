@@ -8,6 +8,7 @@ import { authRoutes } from "./auth.routes";
 import { studentRoutes } from "./student.routes";
 import { uploadRoutes } from "./upload.routes";
 import { adminRoutes } from "./admin.routes";
+import { queueRoutes } from "./queue.routes";
 import { Setting, DEFAULT_SETTINGS } from "../models/Setting";
 
 const routes = new Hono();
@@ -23,6 +24,9 @@ routes.route("/upload", uploadRoutes);
 
 // Admin routes: /api/admin/*
 routes.route("/admin", adminRoutes);
+
+// Queue routes: /api/queue/*
+routes.route("/queue", queueRoutes);
 
 // ============================================
 // Public Settings (no auth required)

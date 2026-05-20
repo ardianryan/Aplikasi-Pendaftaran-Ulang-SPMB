@@ -164,6 +164,37 @@ export const AdminLayout = (props: any) => {
                 </details>
               </li>
 
+              {/* Accordion Group: Antrian */}
+              <li className="pt-2">
+                <details className="group" open={currentPath.startsWith('/admin/queue')}>
+                  <summary className="flex items-center justify-between px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] cursor-pointer hover:text-slate-600 transition-colors list-none">
+                    <span>Antrian</span>
+                    <span className="material-symbols-outlined text-[16px] transition-transform group-open:rotate-180">expand_more</span>
+                  </summary>
+                  <ul className="space-y-1 mt-1 pl-2 border-l-2 border-slate-50 ml-4">
+                    {[
+                      { label: 'Manajemen Antrian', icon: 'queue', href: '/admin/queue' },
+                      { label: 'Panel Loket', icon: 'point_of_sale', href: '/admin/queue/counter' },
+                      { label: 'Pengaturan Antrian', icon: 'tune', href: '/admin/queue/settings' },
+                    ].map((item) => (
+                      <li key={item.href}>
+                        <a 
+                          href={item.href} 
+                          className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                            currentPath === item.href 
+                              ? 'bg-violet-50 text-violet-700' 
+                              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>{item.icon}</span>
+                          {item.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              </li>
+
               {/* Accordion Group: Pengaturan */}
               <li className="pt-2">
                 <details className="group" open={['/admin/operators', '/admin/settings', '/admin/profile'].some(p => currentPath.startsWith(p))}>

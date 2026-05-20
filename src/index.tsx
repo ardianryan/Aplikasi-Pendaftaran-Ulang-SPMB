@@ -32,6 +32,10 @@ import { AdminActivate } from "./frontend/pages/AdminActivate";
 import { AdminWhatsApp } from "./frontend/pages/AdminWhatsApp";
 import { AdminWhatsAppBlast } from "./frontend/pages/AdminWhatsAppBlast";
 import { AdminWhatsAppLogs } from "./frontend/pages/AdminWhatsAppLogs";
+import { QueueDisplay } from "./frontend/pages/QueueDisplay";
+import { AdminQueue } from "./frontend/pages/AdminQueue";
+import { AdminQueueCounter } from "./frontend/pages/AdminQueueCounter";
+import { AdminQueueSettings } from "./frontend/pages/AdminQueueSettings";
 import { StudentProfile } from "./frontend/pages/StudentProfile";
 import { Wizard } from "./frontend/pages/Wizard";
 
@@ -124,6 +128,17 @@ app.get("/admin/activate", (c) => renderPage(c, AdminActivate, "Aktivasi Akun"))
 app.get("/admin/whatsapp", (c) => renderPage(c, AdminWhatsApp, "WhatsApp Gateway"));
 app.get("/admin/whatsapp/blast", (c) => renderPage(c, AdminWhatsAppBlast, "Blast Pesan WhatsApp"));
 app.get("/admin/whatsapp/logs", (c) => renderPage(c, AdminWhatsAppLogs, "Log Pengiriman WhatsApp"));
+
+// Antrian — Display publik (tanpa auth check, tanpa registration_open check)
+app.get("/antrian", async (c) => {
+  const settings = await getSettingsMap();
+  return c.html(<QueueDisplay settings={settings} />);
+});
+
+// Antrian — Admin pages
+app.get("/admin/queue", (c) => renderPage(c, AdminQueue, "Manajemen Antrian"));
+app.get("/admin/queue/counter", (c) => renderPage(c, AdminQueueCounter, "Panel Loket"));
+app.get("/admin/queue/settings", (c) => renderPage(c, AdminQueueSettings, "Pengaturan Antrian"));
 
 // ============================================
 // Static File Serving

@@ -290,4 +290,51 @@ export const DEFAULT_SETTINGS = [
     value: "Halo {{nama}} 👋\n\n❌ Mohon maaf, data daftar ulang Anda di {{sekolah}} *DITOLAK* oleh verifikator.\n\nSilakan periksa kembali data Anda dan perbaiki sesuai catatan:\n🔗 {{url}}\n\nTerima kasih 🙏\n_Panitia SPMB {{sekolah}}_",
     description: "Template notifikasi data ditolak",
   },
+
+  // === Antrian ===
+  {
+    key: "queue_pre_reg_prefix",
+    value: "A",
+    description: "Prefix nomor antrian mode Pra-Pendaftaran (misal: A → A001, A002)",
+  },
+  {
+    key: "queue_re_reg_prefix",
+    value: "B",
+    description: "Prefix nomor antrian mode Daftar Ulang (misal: B → B001, B002)",
+  },
+  {
+    key: "queue_counter_count",
+    value: 5,
+    description: "Jumlah loket antrian aktif (1–20, default 5)",
+  },
+  {
+    key: "queue_counter_names",
+    value: ["Loket 1", "Loket 2", "Loket 3", "Loket 4", "Loket 5"],
+    description: "Nama-nama loket antrian (JSON array, panjang harus sama dengan queue_counter_count)",
+  },
+  {
+    key: "queue_student_link_enabled",
+    value: false,
+    description: "Aktifkan link nomor antrian ke data siswa (true = tampilkan nama/NISN siswa di panel loket dan display TV)",
+  },
+  {
+    key: "queue_display_title",
+    value: "Antrian Verifikasi SPMB",
+    description: "Judul utama yang ditampilkan di layar display antrian publik",
+  },
+  {
+    key: "queue_display_subtitle",
+    value: "",
+    description: "Sub-judul opsional di bawah judul display antrian (kosong = tidak tampil)",
+  },
+  {
+    key: "queue_display_show_waiting",
+    value: true,
+    description: "Tampilkan daftar nomor menunggu di sisi kanan display publik",
+  },
+  {
+    key: "queue_number_padding",
+    value: 3,
+    description: "Jumlah digit nomor antrian (3 = A001, 2 = A01, 4 = A0001)",
+  },
 ];
