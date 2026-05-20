@@ -3,15 +3,33 @@ import { jsx } from 'hono/jsx';
 import { AdminLayout } from '../layouts/AdminLayout';
 
 /**
- * AdminQueueSettings — Pengaturan Antrian (halaman terpisah)
+ * AdminQueueSettings — Pengaturan Antrean (halaman terpisah)
  */
 export const AdminQueueSettings = (props: any) => {
   return (
-    <AdminLayout title="Pengaturan Antrian" subtitle="Konfigurasi prefix, loket, display, dan mode antrian" {...props} path="/admin/queue/settings">
+    <AdminLayout title="Pengaturan Antrean" subtitle="Konfigurasi prefix, loket, display, dan mode antrean" {...props} path="/admin/queue/settings">
+      
+      {/* Quill WYSIWYG Editor Stylesheet */}
+      <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+      <style dangerouslySetInnerHTML={{ __html: `
+        /* Kustomisasi Tampilan Quill Editor agar menyatu dengan Tema */
+        .ql-container.ql-snow {
+          border-bottom-left-radius: 1rem;
+          border-bottom-right-radius: 1rem;
+          border-color: #e2e8f0;
+          font-family: inherit;
+        }
+        .ql-toolbar.ql-snow {
+          border-top-left-radius: 1rem;
+          border-top-right-radius: 1rem;
+          border-color: #e2e8f0;
+          background: #f8fafc;
+        }
+      ` }} />
 
       <div className="flex items-center gap-3 mb-8">
         <div className="bg-violet-500 w-1 h-8 rounded-full"></div>
-        <h2 className="text-xl font-bold text-slate-800">Pengaturan Antrian</h2>
+        <h2 className="text-xl font-bold text-slate-800">Pengaturan Antrean</h2>
       </div>
 
       {/* Toast notifikasi */}
@@ -21,9 +39,9 @@ export const AdminQueueSettings = (props: any) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* === NOMOR ANTRIAN === */}
+        {/* === NOMOR ANTREAN === */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-          <h3 className="font-bold text-slate-700 mb-1">Prefix Nomor Antrian</h3>
+          <h3 className="font-bold text-slate-700 mb-1">Prefix Nomor Antrean</h3>
           <p className="text-xs text-slate-400 mb-6">Format: [PREFIX][nomor]. Contoh: A → A001, PRA → PRA001</p>
 
           <div className="space-y-4">
@@ -103,7 +121,7 @@ export const AdminQueueSettings = (props: any) => {
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Judul Display</label>
               <input id="queueDisplayTitle" type="text"
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 text-sm focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 transition-all"
-                placeholder="Antrian Verifikasi SPMB" />
+                placeholder="Antrean Verifikasi SPMB" />
             </div>
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Sub-Judul (opsional)</label>
@@ -114,7 +132,7 @@ export const AdminQueueSettings = (props: any) => {
             <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
               <div>
                 <p className="text-sm font-bold text-slate-700">Tampilkan Daftar Tunggu</p>
-                <p className="text-xs text-slate-400">Nomor antrian yang sedang menunggu di panel kanan display</p>
+                <p className="text-xs text-slate-400">Nomor antrean yang sedang menunggu di panel kanan display</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input id="queueDisplayShowWaiting" type="checkbox" className="sr-only peer" />
@@ -136,9 +154,9 @@ export const AdminQueueSettings = (props: any) => {
                 <div className="flex-1">
                   <p className="text-sm font-bold text-slate-700 mb-1">🔗 Link ke Data Siswa</p>
                   <p className="text-xs text-slate-400">
-                    Saat aktif, tiket antrian terhubung ke database siswa by NISN.
+                    Saat aktif, tiket antrean terhubung ke database siswa by NISN.
                     Panel loket akan menampilkan nama dan data siswa saat dipanggil.
-                    Display TV juga menampilkan nama siswa di bawah nomor antrian.
+                    Display TV juga menampilkan nama siswa di bawah nomor antrean.
                   </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
@@ -148,7 +166,7 @@ export const AdminQueueSettings = (props: any) => {
               </div>
               <div id="studentLinkNote" class="hidden mt-3 p-3 bg-amber-50 rounded-xl border border-amber-100">
                 <p className="text-xs text-amber-700 font-medium">
-                  ⚠️ Mode ini berlaku pada sesi antrian berikutnya. Sesi yang sedang berjalan tidak terpengaruh.
+                  ⚠️ Mode ini berlaku pada sesi antrean berikutnya. Sesi yang sedang berjalan tidak terpengaruh.
                   Pastikan data NISN siswa sudah di-import sebelum menggunakan fitur ini.
                 </p>
               </div>
@@ -157,7 +175,7 @@ export const AdminQueueSettings = (props: any) => {
             {/* Preview link display publik */}
             <div className="bg-violet-50 rounded-2xl p-4 border border-violet-100">
               <p className="text-xs font-bold text-violet-600 uppercase tracking-wider mb-2">Link Display Publik</p>
-              <p className="text-xs text-violet-700 mb-2">Bagikan link ini ke siswa agar bisa pantau antrian dari rumah:</p>
+              <p className="text-xs text-violet-700 mb-2">Bagikan link ini ke siswa agar bisa pantau antrean dari rumah:</p>
               <div className="flex items-center gap-2">
                 <code id="publicDisplayUrl" className="flex-1 text-xs bg-white px-3 py-2 rounded-lg border border-violet-200 font-mono text-violet-800 truncate">
                   {/* Diisi JS */}
@@ -167,6 +185,62 @@ export const AdminQueueSettings = (props: any) => {
                   Copy
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* === PENGUMUMAN & MEDIA DISPLAY TV === */}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 lg:col-span-2">
+          <h3 className="font-bold text-slate-700 mb-1">Pengumuman & Media Display TV</h3>
+          <p className="text-xs text-slate-400 mb-6">Kelola konten media informasi yang ditayangkan di layar TV display antrean</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Tipe Media Pengumuman</label>
+                <select id="queueDisplayAnnouncementType"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-600 font-medium text-sm focus:outline-none focus:ring-4 focus:ring-violet-500/10 transition-all">
+                  <option value="none">None (Tanpa Pengumuman - Tampilan Nomor Penuh)</option>
+                  <option value="html">📝 Kustom Text Editor (Visual WYSIWYG HTML)</option>
+                  <option value="youtube">📺 Putar Video YouTube (Autoplay, Loop, Mute)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Tema Display TV</label>
+                <select id="queueDisplayTheme"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-600 font-medium text-sm focus:outline-none focus:ring-4 focus:ring-violet-500/10 transition-all">
+                  <option value="dark">🌙 Dark Mode (Tema Gelap Premium)</option>
+                  <option value="light">☀️ Light Mode (Tema Terang Bersih)</option>
+                </select>
+                <p className="text-[10px] text-slate-400 mt-1">Mengatur tema warna awal bawaan ketika TV display di-load.</p>
+              </div>
+
+              {/* YouTube Section */}
+              <div id="announcementYtSection" class="hidden">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">ID Video YouTube</label>
+                <input id="queueDisplayAnnouncementYtId" type="text"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 font-mono text-sm focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 transition-all"
+                  placeholder="dQw4w9WgXcQ" />
+                <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
+                  Masukkan ID video unik saja (11 karakter).<br />
+                  Contoh untuk <code>https://www.youtube.com/watch?v=<b>dQw4w9WgXcQ</b></code><br />
+                  maka ID-nya adalah: <span className="font-mono font-bold text-slate-600 bg-slate-100 px-1 py-0.5 rounded">dQw4w9WgXcQ</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Quill HTML Editor Section */}
+            <div id="announcementHtmlSection" class="hidden flex flex-col">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                Konten Teks Pengumuman (Visual WYSIWYG)
+              </label>
+              <div className="flex-1 flex flex-col min-h-[220px]">
+                <div id="editor-container" className="flex-1 bg-white"></div>
+              </div>
+              <p className="text-[10px] text-slate-400 mt-2">
+                Gunakan toolbar editor di atas untuk memformat teks, membuat checklist/bullet persyaratan berkas, atau mewarnai teks secara visual.
+              </p>
             </div>
           </div>
         </div>
@@ -181,6 +255,8 @@ export const AdminQueueSettings = (props: any) => {
         </button>
       </div>
 
+      {/* Load Quill.js Core & Snow Theme via CDN */}
+      <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
       <script src="/js/admin/queue-settings-logic.js"></script>
     </AdminLayout>
   );

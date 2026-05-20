@@ -1,6 +1,6 @@
 /**
  * queue-settings-logic.js
- * Logic untuk halaman Pengaturan Antrian (/admin/queue/settings)
+ * Logic untuk halaman Pengaturan Antrean (/admin/queue/settings)
  */
 
 (function () {
@@ -22,6 +22,51 @@
   const btnCopyUrl              = document.getElementById('btnCopyUrl');
   const btnSaveSettings         = document.getElementById('btnSaveSettings');
   const toast                   = document.getElementById('toast');
+
+  // Announcement DOM refs
+  const queueDisplayAnnouncementType = document.getElementById('queueDisplayAnnouncementType');
+  const queueDisplayTheme            = document.getElementById('queueDisplayTheme');
+  const queueDisplayAnnouncementYtId = document.getElementById('queueDisplayAnnouncementYtId');
+  const announcementYtSection        = document.getElementById('announcementYtSection');
+  const announcementHtmlSection      = document.getElementById('announcementHtmlSection');
+
+  // ============================================
+  // INISIALISASI QUILL WYSIWYG EDITOR
+  // ============================================
+  let quill = null;
+  if (document.getElementById('editor-container')) {
+    quill = new Quill('#editor-container', {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'color': [] }, { 'background': [] }],
+          ['clean']
+        ]
+      }
+    });
+  }
+
+  // ============================================
+  // TOGGLE VISIBILITAS SEKSI MEDIA
+  // ============================================
+  function toggleAnnouncementSections(type) {
+    if (announcementYtSection) announcementYtSection.classList.add('hidden');
+    if (announcementHtmlSection) announcementHtmlSection.classList.add('hidden');
+
+    if (type === 'html') {
+      if (announcementHtmlSection) announcementHtmlSection.classList.remove('hidden');
+    } else if (type === 'youtube') {
+      if (announcementYtSection) announcementYtSection.classList.remove('hidden');
+    }
+  }
+
+  if (queueDisplayAnnouncementType) {
+    queueDisplayAnnouncementType.addEventListener('change', (e) => {
+      toggleAnnouncementSections(e.target.value);
+    });
+  }
 
   // ============================================
   // MUAT SETTINGS DARI API
@@ -53,7 +98,7 @@
       renderCounterNames(count, names);
 
       // Display
-      if (queueDisplayTitle) queueDisplayTitle.value = data.queue_display_title?.value || 'Antrian Verifikasi SPMB';
+      if (queueDisplayTitle) queueDisplayTitle.value = data.queue_display_title?.value || 'Antrean Verifikasi SPMB';
       if (queueDisplaySubtitle) queueDisplaySubtitle.value = data.queue_display_subtitle?.value || '';
       if (queueDisplayShowWaiting) queueDisplayShowWaiting.checked = data.queue_display_show_waiting?.value !== false;
 
@@ -63,12 +108,34 @@
         toggleStudentLinkNote(!!data.queue_student_link_enabled?.value);
       }
 
+      // 4 Setting Media Baru
+      const annType = data.queue_display_announcement_type?.value || 'none';
+      if (queueDisplayAnnouncementType) {
+        queueDisplayAnnouncementType.value = annType;
+        toggleAnnouncementSections(annType);
+      }
+
+      const displayTheme = data.queue_display_theme?.value || 'dark';
+      if (queueDisplayTheme) {
+        queueDisplayTheme.value = displayTheme;
+      }
+
+      const ytId = data.queue_display_announcement_yt_id?.value || '';
+      if (queueDisplayAnnouncementYtId) {
+        queueDisplayAnnouncementYtId.value = ytId;
+      }
+
+      const annHtml = data.queue_display_announcement_html?.value || '';
+      if (quill) {
+        quill.root.innerHTML = annHtml;
+      }
+
       // URL display publik
       if (publicDisplayUrl) {
-        publicDisplayUrl.textContent = `${window.location.origin}/antrian`;
+        publicDisplayUrl.textContent = `${window.location.origin}/antrean`;
       }
     } catch (err) {
-      console.error('Gagal memuat pengaturan antrian', err);
+      console.error('Gagal memuat pengaturan antrean', err);
     }
   }
 
@@ -98,7 +165,7 @@
   }
 
   // ============================================
-  // PREVIEW NOMOR ANTRIAN
+  // PREVIEW NOMOR ANTREAN
   // ============================================
   function updatePreviews() {
     const padding = parseInt(queueNumberPadding?.value || '3');
@@ -134,10 +201,16 @@
       queue_number_padding: parseInt(queueNumberPadding?.value || '3'),
       queue_counter_count: count,
       queue_counter_names: names,
-      queue_display_title: queueDisplayTitle?.value?.trim() || 'Antrian Verifikasi SPMB',
+      queue_display_title: queueDisplayTitle?.value?.trim() || 'Antrean Verifikasi SPMB',
       queue_display_subtitle: queueDisplaySubtitle?.value?.trim() || '',
       queue_display_show_waiting: queueDisplayShowWaiting?.checked !== false,
       queue_student_link_enabled: queueStudentLinkEnabled?.checked || false,
+
+      // 4 Setting Media Baru
+      queue_display_announcement_type: queueDisplayAnnouncementType?.value || 'none',
+      queue_display_theme: queueDisplayTheme?.value || 'dark',
+      queue_display_announcement_yt_id: queueDisplayAnnouncementYtId?.value?.trim() || '',
+      queue_display_announcement_html: quill ? quill.root.innerHTML : ''
     };
 
     // Validasi
@@ -161,7 +234,7 @@
         body: JSON.stringify(payload)
       });
       if (res.success) {
-        showToast('Pengaturan antrian berhasil disimpan ✓', 'success');
+        showToast('Pengaturan antrean berhasil disimpan ✓', 'success');
       } else {
         showToast(res.message || 'Gagal menyimpan', 'error');
       }
@@ -230,7 +303,7 @@
 
   if (btnCopyUrl) {
     btnCopyUrl.addEventListener('click', () => {
-      const url = `${window.location.origin}/antrian`;
+      const url = `${window.location.origin}/antrean`;
       navigator.clipboard.writeText(url).then(() => {
         btnCopyUrl.textContent = 'Copied!';
         setTimeout(() => { btnCopyUrl.textContent = 'Copy'; }, 2000);
@@ -248,7 +321,7 @@
   function init() {
     loadSettings();
     if (publicDisplayUrl) {
-      publicDisplayUrl.textContent = `${window.location.origin}/antrian`;
+      publicDisplayUrl.textContent = `${window.location.origin}/antrean`;
     }
   }
 

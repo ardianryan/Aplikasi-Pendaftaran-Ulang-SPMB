@@ -88,7 +88,7 @@
       sessionStatusText.textContent = 'TIDAK ADA SESI AKTIF';
       sessionStatusText.style.color = '#94a3b8';
     }
-    if (sessionMeta) sessionMeta.textContent = 'Mulai sesi baru untuk mengaktifkan antrian';
+    if (sessionMeta) sessionMeta.textContent = 'Mulai sesi baru untuk mengaktifkan antrean';
     if (sessionStats) sessionStats.classList.add('hidden');
     if (counterSection) counterSection.classList.add('hidden');
     if (btnStartPreReg) btnStartPreReg.disabled = false;
@@ -205,7 +205,7 @@
   // KONTROL SESI
   // ============================================
   async function startSession(mode) {
-    if (!confirm(`Mulai sesi antrian mode "${mode === 'pre_registration' ? 'Pra-Pendaftaran' : 'Daftar Ulang'}"?\nSesi aktif sebelumnya (jika ada) akan diakhiri.`)) return;
+    if (!confirm(`Mulai sesi antrean mode "${mode === 'pre_registration' ? 'Pra-Pendaftaran' : 'Daftar Ulang'}"?\nSesi aktif sebelumnya (jika ada) akan diakhiri.`)) return;
 
     try {
       const res = await API.request('/queue/session/start', {
@@ -213,7 +213,7 @@
         body: JSON.stringify({ mode })
       });
       if (res.success) {
-        UI.toast('Sesi antrian dimulai', 'success');
+        UI.toast('Sesi antrean dimulai', 'success');
         loadSession();
       } else {
         UI.toast(res.message || 'Gagal memulai sesi', 'error');
@@ -224,7 +224,7 @@
   }
 
   async function endSession() {
-    if (!confirm('Akhiri sesi antrian? Semua nomor yang belum terlayani akan tertinggal.')) return;
+    if (!confirm('Akhiri sesi antrean? Semua nomor yang belum terlayani akan tertinggal.')) return;
     try {
       const res = await API.request('/queue/session/end', { method: 'POST' });
       if (res.success) {

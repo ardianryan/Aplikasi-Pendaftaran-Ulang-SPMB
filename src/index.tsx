@@ -10,6 +10,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import { connectDatabase } from "@backend/config/database";
 import { routes as apiRoutes } from "@backend/routes";
 import { getSettingsMap } from "@backend/utils/settings";
+import { extractToken, verifyToken } from "@backend/services/jwt.service";
 
 // Frontend Pages
 import { Landing } from "./frontend/pages/Landing";
@@ -101,7 +102,18 @@ app.route("/api", apiRoutes);
 app.get("/", (c) => renderPage(c, Landing));
 
 // Login Page
-app.get("/login", (c) => renderPage(c, Login, "Login"));
+app.get("/login", (c) => {
+  try {
+    const token = extractToken(c.req.header("Authorization"), c.req.header("Cookie"));
+    if (token) {
+      const payload = verifyToken(token);
+      if (payload && payload.type === "student") {
+        return c.redirect("/profile");
+      }
+    }
+  } catch (err) { /* ignore */ }
+  return renderPage(c, Login, "Login");
+});
 
 // Wizard (Registration)
 app.get("/wizard", (c) => renderPage(c, Wizard, "Registrasi Ulang"));
@@ -110,7 +122,18 @@ app.get("/wizard", (c) => renderPage(c, Wizard, "Registrasi Ulang"));
 app.get("/profile", (c) => renderPage(c, StudentProfile, "Profil Saya"));
 
 // Admin Routes
-app.get("/admin/login", (c) => renderPage(c, AdminLogin, "Admin Login"));
+app.get("/admin/login", (c) => {
+  try {
+    const token = extractToken(c.req.header("Authorization"), c.req.header("Cookie"));
+    if (token) {
+      const payload = verifyToken(token);
+      if (payload && payload.type === "admin") {
+        return c.redirect("/admin/dashboard");
+      }
+    }
+  } catch (err) { /* ignore */ }
+  return renderPage(c, AdminLogin, "Admin Login");
+});
 app.get("/admin/dashboard", (c) => renderPage(c, AdminDashboard, "Dashboard Admin"));
 app.get("/admin/profile", (c) => renderPage(c, AdminProfile, "Profil Saya"));
 app.get("/admin/students", (c) => renderPage(c, AdminStudents, "Data Siswa"));
@@ -129,16 +152,17 @@ app.get("/admin/whatsapp", (c) => renderPage(c, AdminWhatsApp, "WhatsApp Gateway
 app.get("/admin/whatsapp/blast", (c) => renderPage(c, AdminWhatsAppBlast, "Blast Pesan WhatsApp"));
 app.get("/admin/whatsapp/logs", (c) => renderPage(c, AdminWhatsAppLogs, "Log Pengiriman WhatsApp"));
 
-// Antrian — Display publik (tanpa auth check, tanpa registration_open check)
-app.get("/antrian", async (c) => {
+// Antrean — Display publik (tanpa auth check, tanpa registration_open check)
+app.get("/antrian", (c) => c.redirect("/antrean", 301));
+app.get("/antrean", async (c) => {
   const settings = await getSettingsMap();
   return c.html(<QueueDisplay settings={settings} />);
 });
 
-// Antrian — Admin pages
-app.get("/admin/queue", (c) => renderPage(c, AdminQueue, "Manajemen Antrian"));
+// Antrean — Admin pages
+app.get("/admin/queue", (c) => renderPage(c, AdminQueue, "Manajemen Antrean"));
 app.get("/admin/queue/counter", (c) => renderPage(c, AdminQueueCounter, "Panel Loket"));
-app.get("/admin/queue/settings", (c) => renderPage(c, AdminQueueSettings, "Pengaturan Antrian"));
+app.get("/admin/queue/settings", (c) => renderPage(c, AdminQueueSettings, "Pengaturan Antrean"));
 
 // ============================================
 // Static File Serving

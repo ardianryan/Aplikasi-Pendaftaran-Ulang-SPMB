@@ -37,6 +37,7 @@ Aplikasi registrasi ulang (daftar ulang) peserta didik baru untuk **SMAN 1 Gedeg
 | **Frontend** | React (Hono JSX) + Tailwind CSS 🎨 |
 | **PDF Gen** | Puppeteer (HTML → PDF) 📄 |
 | **Auth** | JWT + Google OAuth 🔑 |
+| **Realtime** | Server-Sent Events (SSE) 📡 |
 
 ## 📱 Integrasi WhatsApp Gateway
 
@@ -55,6 +56,17 @@ SPMB-WA dilengkapi dengan modul integrasi gateway WhatsApp pihak ketiga yang can
 * **Antrean Massal (Blast Engine):** Kirim pesan massal dengan penundaan otomatis (delay minimal 5 detik) untuk mencegah blokir/ban nomor.
 * **Log Riwayat Komunikasi:** Paging log pengiriman lengkap dengan retensi cleanup otomatis (7, 14, atau 30 hari).
 * **Auto-Notification & Quick Actions:** Notifikasi otomatis ketika verifikasi berkas disetujui/ditolak, serta tombol manual "Kirim WA" langsung di dashboard detail siswa.
+
+## 📺 Sistem Antrean Digital (Public TV Display)
+
+Dilengkapi dengan modul display antrean mandiri (route `/antrean`) yang dirancang khusus untuk ditampilkan pada Smart TV sekolah saat masa daftar ulang tatap muka.
+
+### ✨ Fitur Antrean Utama:
+* **Real-time Updates (SSE):** Menggunakan Server-Sent Events untuk sinkronisasi seketika (pemanggilan nomor, update status loket) tanpa membebani server, dilengkapi fallback polling otomatis jika koneksi terputus.
+* **Premium & Aesthetic UI:** Antarmuka responsif dengan animasi transisi halus, mendukung **Light Mode / Dark Mode** secara dinamis, serta desain berbasis tata letak split-screen proporsional.
+* **Text-to-Speech & Chime:** Pemanggilan otomatis menggunakan *Web Speech API* dalam Bahasa Indonesia yang jernih, didahului dengan bunyi bel (chime) "Ting-Tung" hasil sintesis *AudioContext* langsung di browser.
+* **Pengumuman Split-Screen:** Layar terbagi cerdas yang dapat menayangkan teks pengumuman interaktif (HTML/Quill Editor) atau pemutaran video (YouTube iframe) secara berdampingan dengan panggilan nomor antrean.
+* **Manajemen Loket Admin:** Petugas verifikasi dapat membuka/menutup sesi, memanggil antrean (`next`), melewati (`skip`), hingga memanggil ulang (`recall`) langsung dari dashboard admin.
 
 ## 🚀 Quick Start (Development)
 

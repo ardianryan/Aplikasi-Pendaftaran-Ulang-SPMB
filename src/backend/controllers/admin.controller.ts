@@ -21,6 +21,7 @@ import {
   normalizePhone,
 } from "../services/whatsapp/whatsapp.service";
 import { WALog } from "../models/WALog";
+import { broadcastQueueStatusUpdate } from "./queue.controller";
 
 // ============================================
 // GET /admin/stats
@@ -590,6 +591,12 @@ export async function updateSettings(c: Context) {
         { $set: { value, updatedAt: new Date() } },
         { upsert: true }
       );
+    }
+
+    // Picu broadcast status realtime jika ada perubahan setting antrean
+    const hasQueueUpdate = updates.some(([key]) => key.startsWith("queue_"));
+    if (hasQueueUpdate) {
+      await broadcastQueueStatusUpdate();
     }
 
     return success(c, null, "Pengaturan berhasil diperbarui.");

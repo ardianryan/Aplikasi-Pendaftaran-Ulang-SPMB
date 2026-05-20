@@ -31,7 +31,7 @@ function formatTicketNumber(prefix: string, num: number, padding: number): strin
   return `${prefix}${String(num).padStart(padding, "0")}`;
 }
 
-/** Ambil setting antrian dari DB */
+/** Ambil setting antrean dari DB */
 async function getQueueSettings() {
   const keys = [
     "queue_pre_reg_prefix",
@@ -43,6 +43,10 @@ async function getQueueSettings() {
     "queue_display_subtitle",
     "queue_display_show_waiting",
     "queue_number_padding",
+    "queue_display_announcement_type",
+    "queue_display_announcement_html",
+    "queue_display_announcement_yt_id",
+    "queue_display_theme",
   ];
   const settings = await Setting.find({ key: { $in: keys } }).lean();
   const map: Record<string, any> = {};
@@ -53,11 +57,79 @@ async function getQueueSettings() {
     counterCount: map.queue_counter_count ?? 5,
     counterNames: map.queue_counter_names ?? Array.from({ length: 5 }, (_, i) => `Loket ${i + 1}`),
     studentLinkEnabled: map.queue_student_link_enabled ?? false,
-    displayTitle: map.queue_display_title ?? "Antrian Verifikasi SPMB",
+    displayTitle: map.queue_display_title ?? "Antrean Verifikasi SPMB",
     displaySubtitle: map.queue_display_subtitle ?? "",
     showWaiting: map.queue_display_show_waiting ?? true,
     padding: map.queue_number_padding ?? 3,
+    announcementType: map.queue_display_announcement_type ?? "none",
+    announcementHtml: map.queue_display_announcement_html ?? "",
+    announcementYtId: map.queue_display_announcement_yt_id ?? "",
+    displayTheme: map.queue_display_theme ?? "dark",
   };
+}
+
+// ============================================
+// helper: broadcast status update penuh ke semua display
+// ============================================
+
+/** Broadcast status antrean terbaru ke semua display yang terhubung */
+export async function broadcastQueueStatusUpdate() {
+  try {
+    const session = await getActiveSessionDoc();
+    const settings = await getQueueSettings();
+
+    if (session) {
+      const waiting = await QueueTicket.find({
+        sessionId: session.sessionId,
+        status: "waiting",
+      })
+        .sort({ sequenceNumber: 1 })
+        .limit(20)
+        .select("ticketNumber sequenceNumber studentName")
+        .lean();
+
+      await broadcastQueueEvent({
+        type: "status_update",
+        data: {
+          active: true,
+          sessionId: session.sessionId,
+          mode: session.mode,
+          prefix: session.prefix,
+          studentLinkEnabled: session.studentLinkEnabled,
+          currentServing: session.currentServing,
+          waiting: waiting.map((t) => ({
+            ticketNumber: t.ticketNumber,
+            sequenceNumber: t.sequenceNumber,
+            studentName: t.studentName,
+          })),
+          displayTitle: settings.displayTitle,
+          displaySubtitle: settings.displaySubtitle,
+          showWaiting: settings.showWaiting,
+          announcementType: settings.announcementType,
+          announcementHtml: settings.announcementHtml,
+          announcementYtId: settings.announcementYtId,
+          displayTheme: settings.displayTheme,
+        },
+      });
+    } else {
+      await broadcastQueueEvent({
+        type: "status_update",
+        data: {
+          active: false,
+          currentServing: [],
+          waiting: [],
+          announcementType: settings.announcementType,
+          announcementHtml: settings.announcementHtml,
+          announcementYtId: settings.announcementYtId,
+          displayTheme: settings.displayTheme,
+          displayTitle: settings.displayTitle,
+          displaySubtitle: settings.displaySubtitle,
+        },
+      });
+    }
+  } catch (err) {
+    console.error("[SSE] Gagal menyiarkan status antrean terbaru:", err);
+  }
 }
 
 // ============================================
@@ -68,14 +140,24 @@ async function getQueueSettings() {
 export const getQueueStatus = async (c: Context) => {
   try {
     const session = await getActiveSessionDoc();
+    const settings = await getQueueSettings();
+
     if (!session) {
       return c.json({
         success: true,
-        data: { active: false, currentServing: [], waiting: [] },
+        data: {
+          active: false,
+          currentServing: [],
+          waiting: [],
+          announcementType: settings.announcementType,
+          announcementHtml: settings.announcementHtml,
+          announcementYtId: settings.announcementYtId,
+          displayTheme: settings.displayTheme,
+          displayTitle: settings.displayTitle,
+          displaySubtitle: settings.displaySubtitle,
+        },
       });
     }
-
-    const settings = await getQueueSettings();
 
     // Ambil tiket yang sedang menunggu (max 20 untuk display)
     const waiting = await QueueTicket.find({
@@ -107,10 +189,14 @@ export const getQueueStatus = async (c: Context) => {
           studentName: t.studentName,
         })),
         lastIssuedNumber: session.lastIssuedNumber,
+        announcementType: settings.announcementType,
+        announcementHtml: settings.announcementHtml,
+        announcementYtId: settings.announcementYtId,
+        displayTheme: settings.displayTheme,
       },
     });
   } catch (err: any) {
-    return c.json({ success: false, message: "Gagal memuat status antrian" }, 500);
+    return c.json({ success: false, message: "Gagal memuat status antrean" }, 500);
   }
 };
 
@@ -141,6 +227,8 @@ export const getSSEStream = async (c: Context) => {
     // Kirim status awal saat connect
     try {
       const session = await getActiveSessionDoc();
+      const settings = await getQueueSettings();
+
       if (session) {
         const waiting = await QueueTicket.find({
           sessionId: session.sessionId,
@@ -161,13 +249,28 @@ export const getSSEStream = async (c: Context) => {
             studentLinkEnabled: session.studentLinkEnabled,
             currentServing: session.currentServing,
             waiting: waiting,
+            displayTitle: settings.displayTitle,
+            displaySubtitle: settings.displaySubtitle,
+            showWaiting: settings.showWaiting,
+            announcementType: settings.announcementType,
+            announcementHtml: settings.announcementHtml,
+            announcementYtId: settings.announcementYtId,
+            displayTheme: settings.displayTheme,
           }),
           id: uuidv4(),
         });
       } else {
         await stream.writeSSE({
           event: "status_update",
-          data: JSON.stringify({ active: false }),
+          data: JSON.stringify({
+            active: false,
+            announcementType: settings.announcementType,
+            announcementHtml: settings.announcementHtml,
+            announcementYtId: settings.announcementYtId,
+            displayTheme: settings.displayTheme,
+            displayTitle: settings.displayTitle,
+            displaySubtitle: settings.displaySubtitle,
+          }),
           id: uuidv4(),
         });
       }
@@ -278,6 +381,8 @@ export const startSession = async (c: Context) => {
       },
     });
 
+    await broadcastQueueStatusUpdate();
+
     return c.json({ success: true, data: session });
   } catch (err: any) {
     return c.json({ success: false, message: err.message }, 500);
@@ -304,6 +409,8 @@ export const endSession = async (c: Context) => {
       type: "session_end",
       data: { sessionId: session.sessionId },
     });
+
+    await broadcastQueueStatusUpdate();
 
     return c.json({ success: true, message: "Sesi antrian diakhiri" });
   } catch (err: any) {
@@ -368,16 +475,8 @@ export const issueTicket = async (c: Context) => {
       studentNisn,
     });
 
-    // Broadcast update daftar tunggu
-    await broadcastQueueEvent({
-      type: "status_update",
-      data: {
-        action: "new_ticket",
-        ticketNumber,
-        sequenceNumber: num,
-        studentName,
-      },
-    });
+    // Broadcast update status lengkap ke semua display
+    await broadcastQueueStatusUpdate();
 
     return c.json({
       success: true,
@@ -458,6 +557,8 @@ export const callNext = async (c: Context) => {
         calledAt: now.toISOString(),
       },
     });
+
+    await broadcastQueueStatusUpdate();
 
     return c.json({
       success: true,
@@ -542,6 +643,8 @@ export const callSpecific = async (c: Context) => {
       },
     });
 
+    await broadcastQueueStatusUpdate();
+
     return c.json({
       success: true,
       data: {
@@ -607,6 +710,8 @@ export const markDone = async (c: Context) => {
       },
     });
 
+    await broadcastQueueStatusUpdate();
+
     return c.json({ success: true, message: "Tiket ditandai selesai" });
   } catch (err: any) {
     return c.json({ success: false, message: err.message }, 500);
@@ -657,6 +762,8 @@ export const skipTicket = async (c: Context) => {
         counterName: counterInfo.counterName,
       },
     });
+
+    await broadcastQueueStatusUpdate();
 
     return c.json({ success: true, message: "Tiket dilewati" });
   } catch (err: any) {

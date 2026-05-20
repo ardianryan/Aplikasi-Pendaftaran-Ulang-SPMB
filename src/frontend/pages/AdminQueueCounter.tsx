@@ -4,11 +4,11 @@ import { AdminLayout } from '../layouts/AdminLayout';
 
 /**
  * AdminQueueCounter — Panel Loket Operator
- * Digunakan petugas di tiap loket untuk memanggil antrian
+ * Digunakan petugas di tiap loket untuk memanggil antrean
  */
 export const AdminQueueCounter = (props: any) => {
   return (
-    <AdminLayout title="Panel Loket" subtitle="Panel petugas untuk memanggil nomor antrian" {...props} path="/admin/queue/counter">
+    <AdminLayout title="Panel Loket" subtitle="Panel petugas untuk memanggil nomor antrean" {...props} path="/admin/queue/counter">
 
       {/* Modal Pilih Loket */}
       <div id="counterSelectModal"
@@ -21,7 +21,7 @@ export const AdminQueueCounter = (props: any) => {
             {/* Diisi JS */}
             <div className="col-span-3 text-center text-slate-400 text-sm py-4">Memuat loket...</div>
           </div>
-          <p id="counterSelectError" className="text-xs text-red-500 text-center hidden mb-4">Tidak ada sesi antrian aktif</p>
+          <p id="counterSelectError" className="text-xs text-red-500 text-center hidden mb-4">Tidak ada sesi antrean aktif</p>
         </div>
       </div>
 
@@ -135,14 +135,14 @@ export const AdminQueueCounter = (props: any) => {
             </div>
           </div>
 
-          {/* === KANAN: DAFTAR ANTRIAN MENUNGGU === */}
+          {/* === KANAN: DAFTAR ANTREAN MENUNGGU === */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Menunggu</p>
               <span id="waitingBadge" className="text-xs font-bold text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full border border-violet-100">0</span>
             </div>
             <div id="waitingList" className="space-y-2 overflow-y-auto" style={{ maxHeight: '400px' }}>
-              <p className="text-xs text-slate-300 text-center py-4">Tidak ada antrian</p>
+              <p className="text-xs text-slate-300 text-center py-4">Tidak ada antrean</p>
             </div>
             <div className="mt-4 pt-4 border-t border-slate-100">
               <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">↑ Berikutnya dipanggil</p>

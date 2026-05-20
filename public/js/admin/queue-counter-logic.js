@@ -12,6 +12,7 @@
   let statDone = 0;
   let statSkipped = 0;
   let currentSessionId = null;
+  let sessionData = null;
 
   // DOM refs
   const counterSelectModal = document.getElementById('counterSelectModal');
@@ -51,11 +52,12 @@
 
       const res = await API.request('/queue/session');
       if (!res.success || !res.data) {
-        showError('Tidak ada sesi antrian aktif. Minta admin untuk memulai sesi.');
+        showError('Tidak ada sesi antrean aktif. Minta admin untuk memulai sesi.');
         return;
       }
 
       const session = res.data;
+      sessionData = session;
       currentSessionId = session.sessionId;
       sessionActive = session.isActive;
       studentLinkEnabled = session.studentLinkEnabled || false;
@@ -115,7 +117,36 @@
     loadWaitingList();
     // Muat statistik loket ini
     loadCounterStats();
+    // Muat tiket yang sedang dilayani saat ini di loket ini
+    syncServingTicket();
   };
+
+  // ============================================
+  // Sinkronisasi nomor yang sedang dilayani dari DB
+  // ============================================
+  async function syncServingTicket() {
+    if (!selectedCounterId) return;
+    try {
+      const res = await API.request('/queue/tickets?status=serving');
+      if (res.success && Array.isArray(res.data)) {
+        const servingTicket = res.data.find(t => t.counterId === selectedCounterId);
+        if (servingTicket) {
+          updateServingDisplay(
+            servingTicket.ticketNumber,
+            servingTicket.studentName,
+            servingTicket.studentNisn,
+            servingTicket.calledAt
+          );
+        } else {
+          clearServingDisplay();
+        }
+      } else {
+        clearServingDisplay();
+      }
+    } catch (err) {
+      clearServingDisplay();
+    }
+  }
 
   // ============================================
   // SSE untuk update waiting list
@@ -189,7 +220,7 @@
     if (waitingBadge) waitingBadge.textContent = waiting.length;
 
     if (waiting.length === 0) {
-      waitingList.innerHTML = '<p class="text-xs text-slate-300 text-center py-4">Tidak ada antrian</p>';
+      waitingList.innerHTML = '<p class="text-xs text-slate-300 text-center py-4">Tidak ada antrean</p>';
       updateButtonStates(false);
       return;
     }
@@ -282,10 +313,10 @@
           updateServingDisplay(res.data.ticketNumber, res.data.studentName, null, new Date().toISOString());
           loadWaitingList();
         } else {
-          alert(res.message || 'Tidak ada antrian menunggu');
+          alert(res.message || 'Tidak ada antrean menunggu');
         }
       } catch(err) {
-        alert('Gagal memanggil antrian');
+        alert('Gagal memanggil antrean');
       } finally {
         setLoading(btnCallNext, false, '→');
       }
@@ -307,10 +338,22 @@
           loadCounterStats();
           loadWaitingList();
         } else {
-          alert(res.message || 'Gagal menandai selesai');
+          if (res.message && res.message.includes('Tidak ada tiket aktif')) {
+            clearServingDisplay();
+            loadCounterStats();
+            loadWaitingList();
+          } else {
+            alert(res.message || 'Gagal menandai selesai');
+          }
         }
       } catch(err) {
-        alert('Gagal menandai selesai');
+        if (err.message && err.message.includes('Tidak ada tiket aktif')) {
+          clearServingDisplay();
+          loadCounterStats();
+          loadWaitingList();
+        } else {
+          alert('Gagal menandai selesai');
+        }
       } finally {
         setLoading(btnDone, false, '✅');
       }
@@ -333,10 +376,22 @@
           loadCounterStats();
           loadWaitingList();
         } else {
-          alert(res.message || 'Gagal melewati nomor');
+          if (res.message && res.message.includes('Tidak ada tiket aktif')) {
+            clearServingDisplay();
+            loadCounterStats();
+            loadWaitingList();
+          } else {
+            alert(res.message || 'Gagal melewati nomor');
+          }
         }
       } catch(err) {
-        alert('Gagal melewati nomor');
+        if (err.message && err.message.includes('Tidak ada tiket aktif')) {
+          clearServingDisplay();
+          loadCounterStats();
+          loadWaitingList();
+        } else {
+          alert('Gagal melewati nomor');
+        }
       } finally {
         setLoading(btnSkip, false, '⏭');
       }

@@ -3,21 +3,21 @@ import { jsx } from 'hono/jsx';
 import { AdminLayout } from '../layouts/AdminLayout';
 
 /**
- * AdminQueue — Panel Manajemen Antrian (Admin)
+ * AdminQueue — Panel Manajemen Antrean (Admin)
  * Kontrol sesi, monitoring status loket, daftar tiket
  */
 export const AdminQueue = (props: any) => {
   return (
-    <AdminLayout title="Manajemen Antrian" subtitle="Kontrol sesi antrian, monitoring loket, dan daftar tiket" {...props} path="/admin/queue">
+    <AdminLayout title="Manajemen Antrean" subtitle="Kontrol sesi antrean, monitoring loket, dan daftar tiket" {...props} path="/admin/queue">
 
       {/* Header + Tombol Display Publik */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
           <div className="bg-violet-500 w-1 h-8 rounded-full"></div>
-          <h2 className="text-xl font-bold text-slate-800">Manajemen Antrian</h2>
+          <h2 className="text-xl font-bold text-slate-800">Manajemen Antrean</h2>
         </div>
         <div className="flex items-center gap-3">
-          <a href="/antrian" target="_blank"
+          <a href="/antrean" target="_blank"
             className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white text-sm font-semibold rounded-2xl hover:bg-slate-700 transition-all">
             <span className="text-base">📺</span>
             Buka Display TV

@@ -291,41 +291,41 @@ export const DEFAULT_SETTINGS = [
     description: "Template notifikasi data ditolak",
   },
 
-  // === Antrian ===
+  // === Antrean ===
   {
     key: "queue_pre_reg_prefix",
     value: "A",
-    description: "Prefix nomor antrian mode Pra-Pendaftaran (misal: A → A001, A002)",
+    description: "Prefix nomor antrean mode Pra-Pendaftaran (misal: A → A001, A002)",
   },
   {
     key: "queue_re_reg_prefix",
     value: "B",
-    description: "Prefix nomor antrian mode Daftar Ulang (misal: B → B001, B002)",
+    description: "Prefix nomor antrean mode Daftar Ulang (misal: B → B001, B002)",
   },
   {
     key: "queue_counter_count",
     value: 5,
-    description: "Jumlah loket antrian aktif (1–20, default 5)",
+    description: "Jumlah loket antrean aktif (1–20, default 5)",
   },
   {
     key: "queue_counter_names",
     value: ["Loket 1", "Loket 2", "Loket 3", "Loket 4", "Loket 5"],
-    description: "Nama-nama loket antrian (JSON array, panjang harus sama dengan queue_counter_count)",
+    description: "Nama-nama loket antrean (JSON array, panjang harus sama dengan queue_counter_count)",
   },
   {
     key: "queue_student_link_enabled",
     value: false,
-    description: "Aktifkan link nomor antrian ke data siswa (true = tampilkan nama/NISN siswa di panel loket dan display TV)",
+    description: "Aktifkan link nomor antrean ke data siswa (true = tampilkan nama/NISN siswa di panel loket dan display TV)",
   },
   {
     key: "queue_display_title",
-    value: "Antrian Verifikasi SPMB",
-    description: "Judul utama yang ditampilkan di layar display antrian publik",
+    value: "Antrean Verifikasi SPMB",
+    description: "Judul utama yang ditampilkan di layar display antrean publik",
   },
   {
     key: "queue_display_subtitle",
     value: "",
-    description: "Sub-judul opsional di bawah judul display antrian (kosong = tidak tampil)",
+    description: "Sub-judul opsional di bawah judul display antrean (kosong = tidak tampil)",
   },
   {
     key: "queue_display_show_waiting",
@@ -335,6 +335,26 @@ export const DEFAULT_SETTINGS = [
   {
     key: "queue_number_padding",
     value: 3,
-    description: "Jumlah digit nomor antrian (3 = A001, 2 = A01, 4 = A0001)",
+    description: "Jumlah digit nomor antrean (3 = A001, 2 = A01, 4 = A0001)",
+  },
+  {
+    key: "queue_display_announcement_type",
+    value: "none",
+    description: "Jenis pengumuman display TV antrean (none = tidak tampil, html = kustom visual editor, youtube = video youtube)",
+  },
+  {
+    key: "queue_display_announcement_html",
+    value: `<h3 class="font-bold text-lg text-blue-400 mb-2">📢 Alur & Persyaratan Verifikasi Berkas</h3>\n<p class="text-xs text-slate-300 mb-3">Mohon persiapkan dokumen fisik berikut sebelum menuju ke loket panggilan:</p>\n<ul class="text-xs text-slate-300 space-y-1.5 list-none pl-0">\n  <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Bukti Pendaftaran Online (dicetak dari portal)</li>\n  <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Fotokopi Akta Kelahiran & Kartu Keluarga asli</li>\n  <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Surat Keterangan Lulus (SKL) asli dari SMP</li>\n  <li class="flex items-center gap-2"><span class="text-emerald-400 font-bold">✓</span> Pas foto hitam-putih / berwarna ukuran 3x4 (2 lembar)</li>\n</ul>`,
+    description: "Teks pengumuman berformat HTML kustom untuk display publik antrean",
+  },
+  {
+    key: "queue_display_announcement_yt_id",
+    value: "dQw4w9WgXcQ",
+    description: "ID video YouTube untuk diputar di display publik antrean (misal: dQw4w9WgXcQ)",
+  },
+  {
+    key: "queue_display_theme",
+    value: "dark",
+    description: "Tema bawaan awal display publik antrean (dark = gelap, light = terang)",
   },
 ];

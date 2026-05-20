@@ -15,18 +15,18 @@ spmb-wa/
 │   ├── index.tsx             # Entrypoint utama aplikasi (Routing Pages & API)
 │   ├── backend/              # Logika Backend (Server-Side)
 │   │   ├── config/           # Database (Mongoose), R2 Storage, Constants (Enums)
-│   │   ├── controllers/      # Handler Logika API (ditambah wa.controller.ts)
+│   │   ├── controllers/      # Handler Logika API (ditambah wa.controller.ts, queue.controller.ts)
 │   │   ├── middleware/       # Auth guards, locked guards (form locking)
 │   │   ├── models/           # Mongoose Schemas (Student, Admin, Settings, WALog)
 │   │   ├── routes/           # Router API endpoints (/api/*)
-│   │   ├── services/         # PDF (Puppeteer), Excel (ExcelJS), R2 Storage, ScholarGate SSO, WhatsApp (Gowa, Honowa adapters)
+│   │   ├── services/         # PDF (Puppeteer), Excel, R2 Storage, SSO, WhatsApp, Queue (queue.service.ts, queue.sse.ts)
 │   │   ├── utils/            # Helpers (Date format, Response standard, Settings Map)
 │   │   └── validators/       # Validasi Zod (Auth, Biodata)
 │   └── frontend/             # Logika Frontend (Server-Side JSX)
 │       ├── layouts/          # Layout Template (Layout.tsx, AdminLayout.tsx)
-│       └── pages/            # Komponen Halaman (ditambah AdminWhatsApp.tsx, AdminWhatsAppBlast.tsx, AdminWhatsAppLogs.tsx)
+│       └── pages/            # Komponen Halaman (termasuk QueueDisplay.tsx, AdminQueue*.tsx, AdminWhatsApp*.tsx)
 ├── public/                   # Static Assets & Client-side Scripting
-│   ├── js/                   # Vanilla JS (ditambah js/admin/wa-logic.js, wa-blast-logic.js, wa-logs-logic.js)
+│   ├── js/                   # Vanilla JS (termasuk antrean: queue-display.js, queue-logic.js)
 │   ├── css/                  # Styling kustom (Tailwind CDN base kustom)
 │   └── favicon.ico           # Target upload Favicon lokal dinamis
 └── Dockerfile & docker-setup.sh # Konfigurasi deployment & containerization
@@ -101,6 +101,11 @@ Aplikasi ini sangat bergantung pada koleksi `settings` untuk branding dinamis da
 | `wa_template_biodata`  | `string` | Template pesan untuk menyelesaikan pengisian Buku Induk / Biodata |
 | `wa_template_verified` | `string` | Template pesan ketika dokumen registrasi diverifikasi oleh admin |
 | `wa_template_rejected` | `string` | Template pesan ketika verifikasi berkas ditolak dengan catatan |
+| `queue_display_title`  | `string` | Judul pada layar display antrean publik (TV) |
+| `queue_display_footer` | `string` | Teks berjalan (marquee) di bagian bawah layar antrean |
+| `queue_media_type`     | `string` | Tipe media pengumuman (`none`, `html`, `youtube`) |
+| `queue_media_html`     | `string` | Konten pengumuman berbasis HTML (Quill Editor) |
+| `queue_media_youtube_id`| `string`| ID Video YouTube untuk diputar otomatis di display antrean |
 
 ---
 
@@ -126,6 +131,13 @@ Aplikasi ini sangat bergantung pada koleksi `settings` untuk branding dinamis da
 2.  **Graceful Auto-Notifications:** Saat memicu pesan otomatis (seperti notifikasi ketika status pendaftaran berubah di `verifyStudent`), jalankan proses di dalam block `try-catch` terpisah. Kegagalan API Gateway WhatsApp pihak ketiga **tidak boleh** membatalkan atau me-rollback transaksi database registrasi utama.
 3.  **Blast Queue & Anti-Ban Delay:** Saat melakukan pengiriman blast secara massal, gunakan delay penundaan minimal **5 detik** antar nomor telepon. Gunakan queue asinkronus agar proses blast tidak memblokir server utama, yang dijalankan di background oleh `processBlastQueue`.
 4.  **Logging Standard:** Setiap pesan yang terkirim (sukses/gagal) wajib dicatat dalam model `WALog` dengan informasi pengirim (`sentBy`), penerima, isi pesan, dan detail error jika ada.
+
+### 5.5 Arsitektur Antrean (Server-Sent Events)
+1.  **State Management:** Status antrean dan loket disimpan *in-memory* di `queue.service.ts` agar performa seketika. DB hanya menyimpan settings tampilan.
+2.  **Broadcast Realtime:** Saat admin mengubah state loket (memanggil, melewati, mereset), controller akan memanggil `broadcastQueueUpdate()` di `queue.sse.ts`.
+3.  **SSE Endpoint:** Frontend layar TV (`/antrean`) mem-buka koneksi `EventSource` ke `GET /api/queue/stream`. Hono menggunakan *streaming response* untuk menjaga koneksi ini tetap terbuka dan terus mendorong state terbaru (`data: {...}`).
+4.  **Audio Context Chime:** Terdapat bel unik yang dijalankan sepenuhnya di browser client via *AudioContext API* murni (tanpa file mp3 eksternal) sebelum sistem Text-to-Speech browser membaca nomor urut dan nomor loket.
+
 
 ---
 

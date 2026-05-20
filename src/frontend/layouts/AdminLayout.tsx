@@ -164,18 +164,18 @@ export const AdminLayout = (props: any) => {
                 </details>
               </li>
 
-              {/* Accordion Group: Antrian */}
+              {/* Accordion Group: Antrean */}
               <li className="pt-2">
                 <details className="group" open={currentPath.startsWith('/admin/queue')}>
                   <summary className="flex items-center justify-between px-4 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] cursor-pointer hover:text-slate-600 transition-colors list-none">
-                    <span>Antrian</span>
+                    <span>Antrean</span>
                     <span className="material-symbols-outlined text-[16px] transition-transform group-open:rotate-180">expand_more</span>
                   </summary>
                   <ul className="space-y-1 mt-1 pl-2 border-l-2 border-slate-50 ml-4">
                     {[
-                      { label: 'Manajemen Antrian', icon: 'queue', href: '/admin/queue' },
+                      { label: 'Manajemen Antrean', icon: 'queue', href: '/admin/queue' },
                       { label: 'Panel Loket', icon: 'point_of_sale', href: '/admin/queue/counter' },
-                      { label: 'Pengaturan Antrian', icon: 'tune', href: '/admin/queue/settings' },
+                      { label: 'Pengaturan Antrean', icon: 'tune', href: '/admin/queue/settings' },
                     ].map((item) => (
                       <li key={item.href}>
                         <a 

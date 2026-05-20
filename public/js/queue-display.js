@@ -1,6 +1,6 @@
 /**
  * queue-display.js
- * Logic untuk halaman display antrian publik (/antrian)
+ * Logic untuk halaman display antrean publik (/antrean)
  * SSE client + animasi flash + beep + jam digital + fallback polling
  */
 
@@ -21,7 +21,7 @@
   // ============================================
   const mainBody         = document.getElementById('mainBody');
   const offlineState     = document.getElementById('offlineState');
-  const activeState      = document.getElementById('activeState');
+  const rightSection     = document.getElementById('rightSection');
   const ticketNumber     = document.getElementById('ticketNumber');
   const counterNameEl    = document.getElementById('counterName');
   const counterGrid      = document.getElementById('counterGrid');
@@ -35,6 +35,48 @@
   const clockTime        = document.getElementById('clockTime');
   const clockDate        = document.getElementById('clockDate');
   const mainDisplay      = document.getElementById('mainDisplay');
+
+  // Announcement DOM References
+  const announcementContainer = document.getElementById('announcementContainer');
+  const announcementHtmlView  = document.getElementById('announcementHtmlView');
+  const announcementYtView    = document.getElementById('announcementYtView');
+  const announcementYtIframe  = document.getElementById('announcementYtIframe');
+  const themeToggleBtn        = document.getElementById('themeToggleBtn');
+
+  // ============================================
+  // THEME CONTROL (Light/Dark Mode)
+  // ============================================
+  let userInteractedWithTheme = localStorage.getItem('queue_theme_interacted') === 'true';
+
+  function setTheme(theme, isUserAction = false) {
+    if (isUserAction) {
+      userInteractedWithTheme = true;
+      localStorage.setItem('queue_theme_interacted', 'true');
+    }
+
+    if (theme === 'light') {
+      document.body.classList.add('light-mode');
+      if (themeToggleBtn) themeToggleBtn.textContent = '🌙'; // Klik untuk ganti ke gelap
+      localStorage.setItem('queue_theme', 'light');
+    } else {
+      document.body.classList.remove('light-mode');
+      if (themeToggleBtn) themeToggleBtn.textContent = '☀️'; // Klik untuk ganti ke terang
+      localStorage.setItem('queue_theme', 'dark');
+    }
+  }
+
+  // Init theme from localStorage
+  const localTheme = localStorage.getItem('queue_theme');
+  if (localTheme) {
+    setTheme(localTheme);
+  }
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
+      const isLight = document.body.classList.contains('light-mode');
+      setTheme(isLight ? 'dark' : 'light', true);
+    });
+  }
 
   // ============================================
   // JAM DIGITAL
@@ -56,24 +98,136 @@
   updateClock();
 
   // ============================================
-  // BEEP — Web Audio API (tanpa file MP3)
+  // AUDIO & SUARA ANTREAN (Bel + Text-To-Speech)
   // ============================================
-  function playBeep() {
+  let audioContext = null;
+  let audioUnlocked = false;
+
+  window.initAudio = function () {
+    if (audioUnlocked) return;
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.6);
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      audioUnlocked = true;
+      
+      const overlay = document.getElementById('audioOverlay');
+      if (overlay) {
+        overlay.classList.add('hidden');
+      }
+      
+      playChime();
     } catch (e) {
-      // Ignore jika AudioContext tidak tersedia
+      console.error("Gagal mengaktifkan AudioContext:", e);
     }
+  };
+
+  function playChime() {
+    if (!audioContext) return;
+    try {
+      const now = audioContext.currentTime;
+      
+      // Nada Pertama (Ting - C#5)
+      const osc1 = audioContext.createOscillator();
+      const gain1 = audioContext.createGain();
+      osc1.connect(gain1);
+      gain1.connect(audioContext.destination);
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(554.37, now);
+      gain1.gain.setValueAtTime(0.25, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      osc1.start(now);
+      osc1.stop(now + 0.5);
+
+      // Nada Kedua (Tung - A4)
+      const osc2 = audioContext.createOscillator();
+      const gain2 = audioContext.createGain();
+      osc2.connect(gain2);
+      gain2.connect(audioContext.destination);
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(440.00, now + 0.35);
+      gain2.gain.setValueAtTime(0.25, now + 0.35);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35 + 0.8);
+      osc2.start(now + 0.35);
+      osc2.stop(now + 0.35 + 0.8);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function speakAnnouncement(ticket, counterName) {
+    if (!('speechSynthesis' in window)) return;
+    
+    // Batalkan panggilan suara sebelumnya agar suara terbaru langsung diputar
+    window.speechSynthesis.cancel();
+
+    // Eja nomor tiket (misal A002 -> A kosong kosong dua)
+    let spokenTicket = '';
+    for (let char of ticket) {
+      if (char === '0') {
+        spokenTicket += ' kosong ';
+      } else if (char === '1') {
+        spokenTicket += ' satu ';
+      } else if (char === '2') {
+        spokenTicket += ' dua ';
+      } else if (char === '3') {
+        spokenTicket += ' tiga ';
+      } else if (char === '4') {
+        spokenTicket += ' empat ';
+      } else if (char === '5') {
+        spokenTicket += ' lima ';
+      } else if (char === '6') {
+        spokenTicket += ' enam ';
+      } else if (char === '7') {
+        spokenTicket += ' tujuh ';
+      } else if (char === '8') {
+        spokenTicket += ' delapan ';
+      } else if (char === '9') {
+        spokenTicket += ' sembilan ';
+      } else {
+        spokenTicket += ' ' + char + ' ';
+      }
+    }
+
+    // Terjemahkan nama loket agar dilafalkan dengan benar dalam Bahasa Indonesia
+    let spokenCounter = counterName || '';
+    spokenCounter = spokenCounter.replace(/\b1\b/g, 'satu')
+                                 .replace(/\b2\b/g, 'dua')
+                                 .replace(/\b3\b/g, 'tiga')
+                                 .replace(/\b4\b/g, 'empat')
+                                 .replace(/\b5\b/g, 'lima')
+                                 .replace(/\b6\b/g, 'enam')
+                                 .replace(/\b7\b/g, 'tujuh')
+                                 .replace(/\b8\b/g, 'delapan')
+                                 .replace(/\b9\b/g, 'sembilan');
+
+    const textToSpeak = `Nomor antrean ${spokenTicket.trim()}, silakan menuju ke ${spokenCounter.trim()}.`;
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = 'id-ID';
+    utterance.rate = 0.85; // Sedikit lebih lambat agar terdengar sangat jelas dan premium
+    utterance.pitch = 1.0;
+
+    // Gunakan suara Bahasa Indonesia terbaik jika tersedia
+    const voices = window.speechSynthesis.getVoices();
+    const idVoice = voices.find(v => v.lang.startsWith('id') || v.name.toLowerCase().includes('indonesia'));
+    if (idVoice) {
+      utterance.voice = idVoice;
+    }
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function playNotification(ticket, counterName) {
+    if (!ticket) return;
+
+    // 1. Bunyikan bel "ting-tung"
+    if (audioUnlocked) {
+      playChime();
+    }
+
+    // 2. Lafalkan suara panggilan setelah bel selesai berbunyi
+    setTimeout(() => {
+      speakAnnouncement(ticket, counterName);
+    }, 1200);
   }
 
   // ============================================
@@ -108,7 +262,7 @@
     }
 
     flashAnimation();
-    playBeep();
+    playNotification(ticket, counterName);
   }
 
   // ============================================
@@ -164,12 +318,55 @@
   }
 
   // ============================================
+  // RENDER PENGUMUMAN & MEDIA (Realtime & Dynamic)
+  // ============================================
+  function renderMediaAnnouncement(type, htmlContent, ytId) {
+    if (!announcementContainer) return;
+
+    if (!type || type === 'none') {
+      announcementContainer.classList.add('hidden');
+      return;
+    }
+
+    announcementContainer.classList.remove('hidden');
+
+    if (type === 'html') {
+      if (announcementYtView) announcementYtView.classList.add('hidden');
+      if (announcementHtmlView) {
+        announcementHtmlView.classList.remove('hidden');
+        announcementHtmlView.innerHTML = htmlContent || '';
+      }
+      // Bersihkan Youtube Iframe agar tidak memakan memori di latar belakang
+      if (announcementYtIframe) {
+        announcementYtIframe.src = '';
+        announcementYtIframe.removeAttribute('data-yt-id');
+      }
+    } else if (type === 'youtube') {
+      if (announcementHtmlView) announcementHtmlView.classList.add('hidden');
+      if (announcementYtView) announcementYtView.classList.remove('hidden');
+
+      if (announcementYtIframe && ytId) {
+        const expectedSrc = `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}`;
+        // HANYA update iframe src jika ID video berubah untuk menghindari kedipan/reset dari awal
+        if (announcementYtIframe.getAttribute('data-yt-id') !== ytId) {
+          announcementYtIframe.src = expectedSrc;
+          announcementYtIframe.setAttribute('data-yt-id', ytId);
+        }
+      }
+    }
+  }
+
+  // ============================================
   // TAMPILKAN STATE SESI
   // ============================================
   function showActiveSession(data) {
     sessionActive = true;
     if (offlineState) offlineState.classList.add('hidden');
-    if (activeState) activeState.classList.remove('hidden');
+    if (mainDisplay) mainDisplay.classList.remove('hidden');
+    if (rightSection) {
+      rightSection.classList.remove('hidden');
+      rightSection.classList.add('flex');
+    }
 
     renderCounterGrid(data.currentServing || []);
     renderWaitingList(data.waiting || [], data.showWaiting !== false);
@@ -177,8 +374,12 @@
 
   function showOfflineSession() {
     sessionActive = false;
-    if (activeState) activeState.classList.add('hidden');
+    if (mainDisplay) mainDisplay.classList.add('hidden');
     if (offlineState) offlineState.classList.remove('hidden');
+    if (rightSection) {
+      rightSection.classList.add('hidden');
+      rightSection.classList.remove('flex');
+    }
     if (ticketNumber) ticketNumber.textContent = '—';
     if (counterNameEl) counterNameEl.textContent = '—';
   }
@@ -209,10 +410,6 @@
   function handleCallEvent(data) {
     // Update display nomor dipanggil
     updateMainDisplay(data.ticketNumber, data.counterName, data.studentName);
-
-    // Update grid loket — tandai loket yang baru memanggil
-    const grids = counterGrid?.querySelectorAll('.counter-row');
-    // Full refresh akan datang dari status_update berikutnya
   }
 
   function handleDoneEvent(data) {
@@ -220,6 +417,14 @@
   }
 
   function handleStatusUpdate(data) {
+    // Terapkan Tema Default Database jika user belum pernah interaksi manual
+    if (data.displayTheme && !userInteractedWithTheme) {
+      setTheme(data.displayTheme);
+    }
+
+    // Render Pengumuman & Media Realtime
+    renderMediaAnnouncement(data.announcementType, data.announcementHtml, data.announcementYtId);
+
     if (data.active === false) {
       showOfflineSession();
     } else {
