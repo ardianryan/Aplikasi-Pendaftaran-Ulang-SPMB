@@ -8,6 +8,7 @@ import { Student } from "../models/Student";
 import { Admin } from "../models/Admin";
 import { ReferralCode } from "../models/ReferralCode";
 import { Setting, DEFAULT_SETTINGS } from "../models/Setting";
+import { QueueTicket } from "../models/QueueTicket";
 import { uploadToR2, deleteFromR2 } from "../services/r2.service";
 import {
   generateImportTemplate,
@@ -302,22 +303,49 @@ export async function deleteStudent(c: Context) {
       return error(c, "Data siswa tidak ditemukan.", 404);
     }
 
-    // Delete uploaded documents from R2 if any
+    // 1. Delete all uploaded documents from R2/Local dynamic storage
     const docs = student.dokumen;
-    if (docs) {
-      const docKeys = [docs.kartuKeluarga, docs.ijazahSkl, docs.aktaKelahiran, docs.foto4x6]
-        .filter((d) => d && d.key)
-        .map((d) => d!.key);
+    if (docs && typeof docs === "object") {
+      const docKeys: string[] = [];
+      for (const k of Object.keys(docs)) {
+        const docVal = (docs as any)[k];
+        if (docVal && typeof docVal === "object" && typeof docVal.key === "string") {
+          docKeys.push(docVal.key);
+        }
+      }
 
       for (const key of docKeys) {
         try {
           await deleteFromR2(key);
         } catch {
-          // Non-critical: continue even if R2 delete fails
+          // Non-critical: continue even if storage delete fails
         }
       }
     }
 
+    // 2. Clean up local uploads directory for this student if it exists
+    if (student.nisn) {
+      try {
+        const fs = await import("fs/promises");
+        const path = await import("path");
+        const localDir = path.join(process.cwd(), "public", "uploads", student.nisn);
+        await fs.rm(localDir, { recursive: true, force: true });
+      } catch {
+        // Non-critical
+      }
+    }
+
+    // 3. Delete all queue tickets associated with this student
+    await QueueTicket.deleteMany({ studentId: id });
+
+    // 4. Broadcast queue updates to update SSE clients (real-time queue dashboard)
+    try {
+      await broadcastQueueStatusUpdate();
+    } catch (broadcastErr) {
+      console.warn("[ADMIN] Failed to broadcast queue status update after student deletion:", broadcastErr);
+    }
+
+    // 5. Delete the Student record itself
     await Student.findByIdAndDelete(id);
 
     return success(c, { id }, `Data siswa ${student.namaPreRegister} berhasil dihapus.`);
