@@ -352,6 +352,8 @@ async function verifyDoc(key) {
       method: 'PUT',
       body: JSON.stringify({ dokumenStatus: { [key]: { status: 'valid', catatan: '' } } }),
     });
+    if (!student.verifikasi) student.verifikasi = {};
+    if (!student.verifikasi.dokumenStatus) student.verifikasi.dokumenStatus = {};
     student.verifikasi.dokumenStatus[key] = { status: 'valid' };
     renderDocuments();
     UI.toast('Berhasil diterima', 'success');
@@ -366,6 +368,8 @@ async function rejectDoc(key) {
       method: 'PUT',
       body: JSON.stringify({ dokumenStatus: { [key]: { status: 'rejected', catatan } } }),
     });
+    if (!student.verifikasi) student.verifikasi = {};
+    if (!student.verifikasi.dokumenStatus) student.verifikasi.dokumenStatus = {};
     student.verifikasi.dokumenStatus[key] = { status: 'rejected', catatan };
     renderDocuments();
     UI.toast('Berhasil ditolak', 'info');
