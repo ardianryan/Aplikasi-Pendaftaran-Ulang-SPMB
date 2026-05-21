@@ -8,6 +8,8 @@
   // ============================================
   // State
   // ============================================
+  let appTimezone = 'WIB';
+  const tzMapping = { 'WIB': 'Asia/Jakarta', 'WITA': 'Asia/Makassar', 'WIT': 'Asia/Jayapura' };
   let currentTicket = null;
   let currentCounterName = null;
   let sseSource = null;
@@ -83,16 +85,39 @@
   // ============================================
   function updateClock() {
     const now = new Date();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
-    const ss = String(now.getSeconds()).padStart(2, '0');
-    if (clockTime) clockTime.textContent = `${hh}:${mm}:${ss}`;
-
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-    if (clockDate) {
-      clockDate.textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    const tz = tzMapping[appTimezone] || 'Asia/Jakarta';
+    
+    let timeStr = '00:00:00';
+    let dateStr = '';
+    
+    try {
+      timeStr = now.toLocaleTimeString('id-ID', {
+        timeZone: tz,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      dateStr = now.toLocaleDateString('id-ID', {
+        timeZone: tz,
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    } catch (e) {
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      timeStr = `${hh}:${mm}:${ss}`;
+      
+      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+      dateStr = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
     }
+    
+    if (clockTime) clockTime.textContent = timeStr;
+    if (clockDate) clockDate.textContent = dateStr;
   }
   setInterval(updateClock, 1000);
   updateClock();
@@ -437,6 +462,10 @@
   }
 
   function handleStatusUpdate(data) {
+    if (data.appTimezone) {
+      appTimezone = data.appTimezone;
+    }
+
     // Terapkan Tema Default Database jika user belum pernah interaksi manual
     if (data.displayTheme && !userInteractedWithTheme) {
       setTheme(data.displayTheme);

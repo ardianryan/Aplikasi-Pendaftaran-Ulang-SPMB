@@ -4,6 +4,8 @@
  */
 
 (function () {
+  let appTimezone = 'WIB';
+  const tzMapping = { 'WIB': 'Asia/Jakarta', 'WITA': 'Asia/Makassar', 'WIT': 'Asia/Jayapura' };
   let selectedCounterId = null;
   let selectedCounterName = null;
   let sseSource = null;
@@ -297,6 +299,7 @@
     sseSource.addEventListener('status_update', (e) => {
       try {
         const data = JSON.parse(e.data);
+        if (data.appTimezone) appTimezone = data.appTimezone;
         if (data.waiting) renderWaitingList(data.waiting);
         if (selectedCounterId && data.currentServing) {
           const myCounter = data.currentServing.find(cs => cs.counterId === selectedCounterId);
@@ -320,8 +323,11 @@
     try {
       const res = await fetch('/api/queue/status');
       const json = await res.json();
-      if (json.success && json.data && json.data.waiting) {
-        renderWaitingList(json.data.waiting);
+      if (json.success && json.data) {
+        if (json.data.appTimezone) appTimezone = json.data.appTimezone;
+        if (json.data.waiting) {
+          renderWaitingList(json.data.waiting);
+        }
       }
     } catch(err) {}
   }
@@ -363,7 +369,19 @@
     }
     if (servingSince && calledAt) {
       const t = new Date(calledAt);
-      servingSince.textContent = `Dipanggil ${t.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}`;
+      const tz = tzMapping[appTimezone] || 'Asia/Jakarta';
+      let formattedTime = '';
+      try {
+        formattedTime = t.toLocaleTimeString('id-ID', {
+          timeZone: tz,
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      } catch (e) {
+        formattedTime = t.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      }
+      servingSince.textContent = `Dipanggil ${formattedTime}`;
     }
 
     // Student link info
@@ -463,7 +481,7 @@
           });
           if (res.success) {
             recallCount = 0;
-            updateServingDisplay(res.data.ticketNumber, res.data.studentName, null, new Date().toISOString());
+            updateServingDisplay(res.data.ticketNumber, res.data.studentName, res.data.studentNisn, new Date().toISOString());
             loadWaitingList();
           } else {
             alert(res.message || 'Tidak ada antrean menunggu');
@@ -567,7 +585,7 @@
           body: JSON.stringify({ counterId: selectedCounterId, ticketNumber: num })
         });
         if (res.success) {
-          updateServingDisplay(res.data.ticketNumber, null, null, new Date().toISOString());
+          updateServingDisplay(res.data.ticketNumber, res.data.studentName, res.data.studentNisn, new Date().toISOString());
           if (specificTicketInput) specificTicketInput.value = '';
           loadWaitingList();
         } else {

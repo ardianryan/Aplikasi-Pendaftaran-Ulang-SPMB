@@ -10,6 +10,8 @@
   let totalItems = 0;
   let sseSource = null;
   let refreshTimer = null;
+  let appTimezone = 'WIB';
+  const tzMapping = { 'WIB': 'Asia/Jakarta', 'WITA': 'Asia/Makassar', 'WIT': 'Asia/Jayapura' };
 
   // DOM refs
   const sessionStatusDot    = document.getElementById('sessionStatusDot');
@@ -39,8 +41,14 @@
   async function loadSession() {
     try {
       const res = await API.request('/queue/session');
-      if (res.success && res.data) {
-        renderSessionActive(res.data);
+      if (res.success) {
+        if (res.appTimezone) appTimezone = res.appTimezone;
+        if (res.data) {
+          if (res.data.appTimezone) appTimezone = res.data.appTimezone;
+          renderSessionActive(res.data);
+        } else {
+          renderSessionInactive();
+        }
       } else {
         renderSessionInactive();
       }
@@ -57,9 +65,10 @@
     }
 
     const modeLabel = session.mode === 'pre_registration' ? 'Pra-Pendaftaran' : 'Daftar Ulang';
-    const startTime = session.startedAt ? new Date(session.startedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '—';
+    const tz = tzMapping[appTimezone] || 'Asia/Jakarta';
+    const startTime = session.startedAt ? new Date(session.startedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: tz }) : '—';
     if (sessionMeta) {
-      sessionMeta.textContent = `Mode: ${modeLabel} | Prefix: ${session.prefix} | Loket: ${session.counterCount} | Mulai: ${startTime}`;
+      sessionMeta.textContent = `Mode: ${modeLabel} | Prefix: ${session.prefix} | Loket: ${session.counterCount} | Mulai: ${startTime} ${appTimezone}`;
     }
 
     // Statistik
@@ -211,7 +220,8 @@
       skipped:  '<span class="px-2 py-0.5 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-lg border border-slate-200">Dilewati</span>',
     };
 
-    const fmt = (iso) => iso ? new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—';
+    const tz = tzMapping[appTimezone] || 'Asia/Jakarta';
+    const fmt = (iso) => iso ? new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: tz }) : '—';
 
     ticketTableBody.innerHTML = tickets.map(t => `
       <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
@@ -385,6 +395,15 @@
     sseSource.addEventListener('skip', () => loadSession());
     sseSource.addEventListener('session_start', () => loadSession());
     sseSource.addEventListener('session_end', () => renderSessionInactive());
+    sseSource.addEventListener('status_update', (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.appTimezone) {
+          appTimezone = data.appTimezone;
+        }
+        loadSession();
+      } catch (err) {}
+    });
     sseSource.onerror = () => {
       // Polling setiap 15 detik sebagai fallback
       if (!refreshTimer) {

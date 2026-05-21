@@ -113,6 +113,11 @@ export const DEFAULT_SETTINGS = [
     value: "2025-07-15",
     description: "Batas akhir verifikasi oleh admin",
   },
+  {
+    key: "app_timezone",
+    value: "WIB",
+    description: "Zona waktu aktif aplikasi (WIB, WITA, WIT)",
+  },
 
   // === Tampilan ===
   {

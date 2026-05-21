@@ -301,11 +301,12 @@ export async function getReview(c: Context) {
     }
 
     // Load active session and settings
-    let queueConfig = {
+    let queueConfig: Record<string, any> = {
       isActive: false,
       studentLinkEnabled: false,
       averageServiceTime: 15,
-      operationalHours: "Senin - Jumat, 08:00 - 14:00 WIB"
+      operationalHours: "Senin - Jumat, 08:00 - 14:00 WIB",
+      appTimezone: "WIB"
     };
 
     let activeSession = null;
@@ -318,12 +319,20 @@ export async function getReview(c: Context) {
       
       const timeSetting = await Setting.findOne({ key: "queue_average_service_time" }).lean();
       const hoursSetting = await Setting.findOne({ key: "queue_operational_hours" }).lean();
+      const tzSetting = await Setting.findOne({ key: "app_timezone" }).lean();
       
+      const appTimezone = tzSetting ? String(tzSetting.value) : "WIB";
+      let operationalHours = hoursSetting ? String(hoursSetting.value) : "Senin - Jumat, 08:00 - 14:00 WIB";
+      
+      // Ganti suffix WIB/WITA/WIT di operationalHours agar sesuai appTimezone dinamis
+      operationalHours = operationalHours.replace(/\b(WIB|WITA|WIT)\b/g, appTimezone);
+
       queueConfig = {
         isActive: !!activeSession,
         studentLinkEnabled: activeSession ? !!activeSession.studentLinkEnabled : false,
         averageServiceTime: timeSetting ? Number(timeSetting.value) : 15,
-        operationalHours: hoursSetting ? String(hoursSetting.value) : "Senin - Jumat, 08:00 - 14:00 WIB"
+        operationalHours,
+        appTimezone
       };
     } catch (err) {
       console.error("[STUDENT] Failed to load queue session or settings:", err);
@@ -366,10 +375,27 @@ export async function getReview(c: Context) {
             const endTime = new Date(centerTime.getTime() + 10 * 60 * 1000);
             const adjustedStartTime = startTime.getTime() < now.getTime() ? now : startTime;
 
-            const formatTime = (d: Date) => {
-              return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+            const tzMapping: Record<string, string> = {
+              WIB: "Asia/Jakarta",
+              WITA: "Asia/Makassar",
+              WIT: "Asia/Jayapura",
             };
-            recommendedTimeWindow = `${formatTime(adjustedStartTime)} - ${formatTime(endTime)} WIB`;
+            const appTimezone = queueConfig.appTimezone || "WIB";
+            const tz = tzMapping[appTimezone] || "Asia/Jakarta";
+
+            const formatTime = (d: Date) => {
+              try {
+                return d.toLocaleTimeString("id-ID", {
+                  timeZone: tz,
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false
+                });
+              } catch (e) {
+                return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+              }
+            };
+            recommendedTimeWindow = `${formatTime(adjustedStartTime)} - ${formatTime(endTime)} ${appTimezone}`;
           }
 
           queueTicket = {

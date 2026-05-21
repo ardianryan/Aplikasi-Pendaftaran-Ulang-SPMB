@@ -10,7 +10,7 @@ const TEXT_SETTINGS = [
   'kop_city', 'landing_hero_title', 'landing_hero_subtitle',
   'url_youtube_tutorial', 'url_download_center',
   'r2_endpoint', 'r2_bucket', 'r2_region', 'r2_access_key_id', 'r2_secret_access_key', 'r2_prefix', 'r2_public_url', 'sso_base_url', 'sso_api_key', 'google_client_id',
-  'queue_average_service_time', 'queue_operational_hours'
+  'queue_average_service_time', 'queue_operational_hours', 'app_timezone'
 ];
 
 const JSON_SETTINGS = [

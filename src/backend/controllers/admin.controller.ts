@@ -636,8 +636,8 @@ export async function updateSettings(c: Context) {
       );
     }
 
-    // Picu broadcast status realtime jika ada perubahan setting antrean
-    const hasQueueUpdate = updates.some(([key]) => key.startsWith("queue_"));
+    // Picu broadcast status realtime jika ada perubahan setting antrean atau zona waktu
+    const hasQueueUpdate = updates.some(([key]) => key.startsWith("queue_") || key === "app_timezone");
     if (hasQueueUpdate) {
       await broadcastQueueStatusUpdate();
     }

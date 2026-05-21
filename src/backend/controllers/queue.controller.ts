@@ -98,6 +98,7 @@ export async function getQueueSettings() {
     "queue_display_announcement_html",
     "queue_display_announcement_yt_id",
     "queue_display_theme",
+    "app_timezone",
   ];
   const settings = await Setting.find({ key: { $in: keys } }).lean();
   const map: Record<string, any> = {};
@@ -116,6 +117,7 @@ export async function getQueueSettings() {
     announcementHtml: map.queue_display_announcement_html ?? "",
     announcementYtId: map.queue_display_announcement_yt_id ?? "",
     displayTheme: map.queue_display_theme ?? "dark",
+    appTimezone: map.app_timezone ?? "WIB",
   };
 }
 
@@ -160,6 +162,7 @@ export async function broadcastQueueStatusUpdate() {
           announcementHtml: settings.announcementHtml,
           announcementYtId: settings.announcementYtId,
           displayTheme: settings.displayTheme,
+          appTimezone: settings.appTimezone,
         },
       });
     } else {
@@ -175,6 +178,7 @@ export async function broadcastQueueStatusUpdate() {
           displayTheme: settings.displayTheme,
           displayTitle: settings.displayTitle,
           displaySubtitle: settings.displaySubtitle,
+          appTimezone: settings.appTimezone,
         },
       });
     }
@@ -206,6 +210,7 @@ export const getQueueStatus = async (c: Context) => {
           displayTheme: settings.displayTheme,
           displayTitle: settings.displayTitle,
           displaySubtitle: settings.displaySubtitle,
+          appTimezone: settings.appTimezone,
         },
       });
     }
@@ -244,6 +249,7 @@ export const getQueueStatus = async (c: Context) => {
         announcementHtml: settings.announcementHtml,
         announcementYtId: settings.announcementYtId,
         displayTheme: settings.displayTheme,
+        appTimezone: settings.appTimezone,
       },
     });
   } catch (err: any) {
@@ -307,6 +313,7 @@ export const getSSEStream = async (c: Context) => {
             announcementHtml: settings.announcementHtml,
             announcementYtId: settings.announcementYtId,
             displayTheme: settings.displayTheme,
+            appTimezone: settings.appTimezone,
           }),
           id: uuidv4(),
         });
@@ -321,6 +328,7 @@ export const getSSEStream = async (c: Context) => {
             displayTheme: settings.displayTheme,
             displayTitle: settings.displayTitle,
             displaySubtitle: settings.displaySubtitle,
+            appTimezone: settings.appTimezone,
           }),
           id: uuidv4(),
         });
@@ -342,8 +350,9 @@ export const getSSEStream = async (c: Context) => {
 export const getActiveSession = async (c: Context): Promise<Response> => {
   try {
     const session = await getActiveSessionDoc();
+    const settings = await getQueueSettings();
     if (!session) {
-      return c.json({ success: true, data: null });
+      return c.json({ success: true, data: null, appTimezone: settings.appTimezone });
     }
 
     const stats = await QueueTicket.aggregate<{ _id: string; count: number }>([
@@ -363,6 +372,7 @@ export const getActiveSession = async (c: Context): Promise<Response> => {
       success: true,
       data: {
         ...session.toObject(),
+        appTimezone: settings.appTimezone,
         stats: {
           waiting: statMap.waiting ?? 0,
           serving: statMap.serving ?? 0,
@@ -371,6 +381,7 @@ export const getActiveSession = async (c: Context): Promise<Response> => {
           total: Object.values(statMap).reduce((a, b) => a + b, 0),
         },
       },
+      appTimezone: settings.appTimezone,
     });
   } catch (err: any) {
     return c.json({ success: false, message: "Gagal memuat sesi antrian" }, 500);
@@ -665,6 +676,7 @@ export const callNext = async (c: Context) => {
         counterId,
         counterName: counterInfo.counterName,
         studentName: nextTicket.studentName,
+        studentNisn: nextTicket.studentNisn,
       },
     });
   } catch (err: any) {
@@ -750,6 +762,8 @@ export const callSpecific = async (c: Context) => {
         ticketNumber: ticket.ticketNumber,
         counterId,
         counterName: counterInfo.counterName,
+        studentName: ticket.studentName,
+        studentNisn: ticket.studentNisn,
       },
     });
   } catch (err: any) {

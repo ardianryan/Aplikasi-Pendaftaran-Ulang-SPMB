@@ -161,6 +161,15 @@ export const AdminSettings = (props: any) => {
                   <input type="date" id="registration_end_date" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-medium" />
                 </div>
               </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Zona Waktu Aplikasi</label>
+                <select id="app_timezone" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium">
+                  <option value="WIB">WIB (Waktu Indonesia Barat - UTC+7)</option>
+                  <option value="WITA">WITA (Waktu Indonesia Tengah - UTC+8)</option>
+                  <option value="WIT">WIT (Waktu Indonesia Timur - UTC+9)</option>
+                </select>
+                <p className="text-[10px] text-slate-400 mt-2 font-medium">Zona waktu yang digunakan pada jam display antrean dan operasional.</p>
+              </div>
             </div>
           </div>
 

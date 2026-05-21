@@ -251,6 +251,21 @@ export const AdminLayout = (props: any) => {
                   <p className="text-xs text-slate-500 font-medium">{props.subtitle || 'Selamat datang kembali'}</p>
                 </div>
               </div>
+              
+              {/* Running Clock Day & Date */}
+              <div className="hidden lg:flex items-center gap-4 px-5 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl shadow-sm select-none">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-slate-400 text-lg">schedule</span>
+                  <div id="navClockTime" className="font-mono text-base font-bold text-slate-800 tabular-nums leading-none">00:00:00</div>
+                </div>
+                <div className="h-4 w-px bg-slate-300"></div>
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-slate-400 text-lg">calendar_month</span>
+                  <div id="navClockDate" className="text-xs text-slate-600 font-semibold leading-none">Kamis, 1 Januari 2026</div>
+                </div>
+                <div id="navClockTz" className="px-2 py-0.5 rounded-md text-[9px] font-black bg-blue-50 text-blue-600 border border-blue-200 uppercase tracking-widest">{props.settings?.app_timezone || 'WIB'}</div>
+              </div>
+
               <div className="flex items-center gap-4">
                 <button className="p-2 text-slate-400 hover:bg-slate-100 rounded-xl transition">
                   <span className="material-symbols-outlined">notifications</span>
@@ -280,6 +295,47 @@ export const AdminLayout = (props: any) => {
         </div>
 
         <script dangerouslySetInnerHTML={{ __html: `
+          // Realtime topbar clock
+          const tzMapping = { 'WIB': 'Asia/Jakarta', 'WITA': 'Asia/Makassar', 'WIT': 'Asia/Jayapura' };
+          const appTimezone = '${props.settings?.app_timezone || 'WIB'}';
+          const tz = tzMapping[appTimezone] || 'Asia/Jakarta';
+
+          function updateTopbarClock() {
+            const now = new Date();
+            const clockTimeEl = document.getElementById('navClockTime');
+            const clockDateEl = document.getElementById('navClockDate');
+            
+            try {
+              if (clockTimeEl) {
+                clockTimeEl.textContent = now.toLocaleTimeString('id-ID', {
+                  timeZone: tz,
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: false
+                });
+              }
+              if (clockDateEl) {
+                clockDateEl.textContent = now.toLocaleDateString('id-ID', {
+                  timeZone: tz,
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                });
+              }
+            } catch (e) {
+              if (clockTimeEl) {
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mm = String(now.getMinutes()).padStart(2, '0');
+                const ss = String(now.getSeconds()).padStart(2, '0');
+                clockTimeEl.textContent = hh + ':' + mm + ':' + ss;
+              }
+            }
+          }
+          setInterval(updateTopbarClock, 1000);
+          updateTopbarClock();
+
           function toggleSidebar() {
             const sidebar = document.getElementById('adminSidebar');
             const overlay = document.getElementById('sidebarOverlay');
