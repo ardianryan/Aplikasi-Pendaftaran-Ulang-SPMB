@@ -14,7 +14,7 @@ export const AdminQueueCounter = (props: any) => {
       <div id="counterSelectModal"
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
         style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-        <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm flex flex-col">
           <h2 className="text-xl font-black text-slate-800 mb-2">Pilih Loket</h2>
           <p className="text-sm text-slate-500 mb-6">Pilih nomor loket yang Anda layani</p>
           <div id="counterSelectList" className="grid grid-cols-3 gap-3 mb-6">
@@ -22,6 +22,11 @@ export const AdminQueueCounter = (props: any) => {
             <div className="col-span-3 text-center text-slate-400 text-sm py-4">Memuat loket...</div>
           </div>
           <p id="counterSelectError" className="text-xs text-red-500 text-center hidden mb-4">Tidak ada sesi antrean aktif</p>
+          
+          <a href="/admin/dashboard"
+            className="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-center text-sm transition-all block">
+            Batal
+          </a>
         </div>
       </div>
 
