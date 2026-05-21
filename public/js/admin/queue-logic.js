@@ -271,21 +271,39 @@
       startModalTitle.textContent = mode === 'pre_registration' ? 'Mulai Pra-Pendaftaran' : 'Mulai Daftar Ulang';
     }
     
-    // Periksa status portal untuk Daftar Ulang
+    let isStudentLinkEnabled = false;
+    let isOpen = true;
+
+    try {
+      const settingsRes = await API.request('/settings/public');
+      if (settingsRes.success && settingsRes.data) {
+        isStudentLinkEnabled = settingsRes.data.queue_student_link_enabled === 'true' || settingsRes.data.queue_student_link_enabled === true;
+        isOpen = settingsRes.data.registration_open === 'true' || settingsRes.data.registration_open === true;
+      }
+    } catch (e) {}
+
+    const batchSizeContainer = document.getElementById('batchSizeContainer');
+
     if (mode === 're_registration') {
-      try {
-        const settingsRes = await API.request('/settings/public');
-        const isOpen = settingsRes.success && (settingsRes.data?.registration_open === 'true' || settingsRes.data?.registration_open === true);
-        if (!isOpen && startModalSubtitle) {
-          startModalSubtitle.innerHTML = `<span class="text-amber-500 font-bold">⚠️ Peringatan:</span> Portal pendaftaran siswa saat ini ditutup. Sesi antrean tetap bisa berjalan, namun disarankan untuk mengaktifkannya di Pengaturan.`;
-        } else if (startModalSubtitle) {
-          startModalSubtitle.textContent = 'Masukkan konfigurasi awal sesi antrean Daftar Ulang';
+      if (isStudentLinkEnabled) {
+        if (batchSizeContainer) batchSizeContainer.classList.add('hidden');
+        if (startModalSubtitle) {
+          startModalSubtitle.innerHTML = `<span class="text-indigo-600 font-bold">✨ Mandiri Aktif:</span> Sesi antrean akan berjalan secara online & dinamis. Siswa dapat mengambil tiket sendiri di dashboard.`;
         }
-      } catch (e) {
-        if (startModalSubtitle) startModalSubtitle.textContent = 'Masukkan konfigurasi awal sesi antrean';
+      } else {
+        if (batchSizeContainer) batchSizeContainer.classList.remove('hidden');
+        if (!isOpen && startModalSubtitle) {
+          startModalSubtitle.innerHTML = `<span class="text-amber-500 font-bold">⚠️ Peringatan:</span> Portal pendaftaran siswa ditutup dan link antrean mandiri nonaktif. Batch tiket awal akan dibuat otomatis.`;
+        } else if (startModalSubtitle) {
+          startModalSubtitle.textContent = 'Masukkan konfigurasi awal sesi antrean Daftar Ulang (Batch massal)';
+        }
       }
     } else {
-      if (startModalSubtitle) startModalSubtitle.textContent = 'Masukkan konfigurasi awal sesi antrean Pra-Pendaftaran';
+      // Pra-pendaftaran selalu batch massal
+      if (batchSizeContainer) batchSizeContainer.classList.remove('hidden');
+      if (startModalSubtitle) {
+        startModalSubtitle.textContent = 'Masukkan konfigurasi awal sesi antrean Pra-Pendaftaran (Batch massal)';
+      }
     }
 
     if (startSessionBatchSize) startSessionBatchSize.value = "50";

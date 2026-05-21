@@ -157,7 +157,7 @@ export const AdminQueue = (props: any) => {
           <p className="text-sm text-slate-500 mb-6" id="startModalSubtitle">Masukkan konfigurasi awal sesi antrean</p>
           
           <div className="space-y-4 mb-6">
-            <div>
+            <div id="batchSizeContainer">
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Jumlah Tiket Awal</label>
               <input
                 id="startSessionBatchSize"
