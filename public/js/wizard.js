@@ -221,12 +221,12 @@ const Wizard = {
         list.innerHTML = activeBerkas.map(b => `
           <li class="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100">
             <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
-              <span class="material-symbols-outlined text-xl">${b.icon || 'description'}</span>
+              <span class="material-symbols-outlined text-xl">${UI.escapeHTML(b.icon || 'description')}</span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="font-bold text-slate-800 text-sm">${b.title}</p>
+              <p class="font-bold text-slate-800 text-sm">${UI.escapeHTML(b.title)}</p>
               <div class="flex items-center gap-3 mt-0.5">
-                ${b.desc ? `<p class="text-xs text-slate-400 truncate">${b.desc}</p>` : ''}
+                ${b.desc ? `<p class="text-xs text-slate-400 truncate">${UI.escapeHTML(b.desc)}</p>` : ''}
                 <span class="text-[10px] font-bold text-slate-300 shrink-0">maks ${b.max_size_mb || 5}MB</span>
               </div>
             </div>
@@ -676,7 +676,7 @@ const Wizard = {
           col.className = "bg-white p-6 rounded-3xl border border-slate-200 shadow-sm";
           col.innerHTML = `
             <div class="flex items-center justify-between mb-4">
-              <h3 class="font-bold text-slate-800">${doc.title}</h3>
+              <h3 class="font-bold text-slate-800">${UI.escapeHTML(doc.title)}</h3>
               ${doc.required ? '<span class="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg uppercase tracking-wider">Wajib</span>' : ""}
             </div>
             <div id="${zoneId}" class="min-h-[160px] border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center p-6 hover:border-blue-400 transition-colors cursor-pointer">
@@ -700,13 +700,14 @@ const Wizard = {
   setUploadSuccess(docId, filename) {
     const zone = document.getElementById(`upload-${docId}`);
     if (!zone) return;
+    const escapedFilename = UI.escapeHTML(filename);
     zone.innerHTML = `
       <div class="flex items-center gap-4 p-4 w-full">
         <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
           <span class="material-symbols-outlined text-2xl">check_circle</span>
         </div>
         <div class="flex-1 min-w-0 text-left">
-          <p class="text-sm font-bold text-slate-800 truncate">${filename}</p>
+          <p class="text-sm font-bold text-slate-800 truncate">${escapedFilename}</p>
           <p class="text-xs text-emerald-600 font-medium">Berhasil diunggah</p>
         </div>
         <button onclick="Wizard.removeFile('${docId}')" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
@@ -729,13 +730,14 @@ const Wizard = {
        label = doc ? doc.title : docId;
     }
     const maxMB = doc?.max_size_mb || 5;
+    const escapedLabel = UI.escapeHTML(label);
 
     zone.innerHTML = `
       <div class="flex flex-col items-center justify-center p-6 text-center w-full">
         <div class="w-12 h-12 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
           <span class="material-symbols-outlined text-2xl">cloud_upload</span>
         </div>
-        <p class="text-sm font-bold text-slate-700">${label}</p>
+        <p class="text-sm font-bold text-slate-700">${escapedLabel}</p>
         <p class="text-xs text-slate-400 mt-1">PDF, JPG, PNG (maks ${maxMB}MB)</p>
       </div>
       <input type="file" id="file-${docId}" class="hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="Wizard.handleFileSelect('${docId}', this)">
@@ -756,10 +758,11 @@ const Wizard = {
       return;
     }
     const zone = document.getElementById(`upload-${docId}`);
+    const escapedFilename = UI.escapeHTML(file.name);
     zone.innerHTML = `
       <div class="flex flex-col items-center justify-center p-6 text-center w-full">
         <div class="w-10 h-10 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin mb-3"></div>
-        <p class="text-xs font-bold text-slate-500">Mengunggah ${file.name}...</p>
+        <p class="text-xs font-bold text-slate-500">Mengunggah ${escapedFilename}...</p>
       </div>
     `;
     try {
@@ -817,6 +820,8 @@ const Wizard = {
       }
     };
 
+    const esc = (val) => UI.escapeHTML(val || "-");
+
     const b = d.biodata || {};
     const a = d.alamat || {};
     const k = d.kesehatan || {};
@@ -834,14 +839,14 @@ const Wizard = {
             <span class="material-symbols-outlined text-lg">supervisor_account</span> Data Wali (Opsional)
           </h4>
           <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div><dt class="text-slate-400 font-medium">Nama Wali</dt><dd class="font-bold text-slate-700">${wali.nama || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Status Hidup</dt><dd class="font-medium text-slate-700">${wali.status || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${wali.tempatLahir || "-"}, ${formatDate(wali.tanggalLahir)}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${wali.agama || "-"} / ${wali.kewarganegaraan || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Pendidikan & Pekerjaan</dt><dd class="font-medium text-slate-700">${wali.pendidikan || "-"} / ${wali.pekerjaan || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Penghasilan Bulanan</dt><dd class="font-medium text-slate-700">${wali.penghasilan || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">No. Telepon & Email</dt><dd class="font-medium text-slate-700">${wali.telepon || "-"} / ${wali.email || "-"}</dd></div>
-            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat</dt><dd class="font-medium text-slate-700">${wali.alamat || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Nama Wali</dt><dd class="font-bold text-slate-700">${esc(wali.nama)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Status Hidup</dt><dd class="font-medium text-slate-700">${esc(wali.status)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${esc(wali.tempatLahir)}, ${formatDate(wali.tanggalLahir)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${esc(wali.agama)} / ${esc(wali.kewarganegaraan)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Pendidikan & Pekerjaan</dt><dd class="font-medium text-slate-700">${esc(wali.pendidikan)} / ${esc(wali.pekerjaan)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Penghasilan Bulanan</dt><dd class="font-medium text-slate-700">${esc(wali.penghasilan)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">No. Telepon & Email</dt><dd class="font-medium text-slate-700">${esc(wali.telepon)} / ${esc(wali.email)}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat</dt><dd class="font-medium text-slate-700">${esc(wali.alamat)}</dd></div>
           </dl>
         </div>
       `;
@@ -855,16 +860,16 @@ const Wizard = {
             <span class="material-symbols-outlined text-lg">person</span> Data Diri Peserta Didik
           </h4>
           <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div><dt class="text-slate-400 font-medium">Nama Lengkap</dt><dd class="font-bold text-slate-700">${b.namaLengkap || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Nama Panggilan</dt><dd class="font-medium text-slate-700">${b.namaPanggilan || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">NIK</dt><dd class="font-medium text-slate-700">${b.nik || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Jenis Kelamin</dt><dd class="font-medium text-slate-700">${b.jenisKelamin || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${b.tempatLahir || "-"}, ${formatDate(b.tanggalLahir)}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${b.agama || "-"} / ${b.kewarganegaraan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Nama Lengkap</dt><dd class="font-bold text-slate-700">${esc(b.namaLengkap)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Nama Panggilan</dt><dd class="font-medium text-slate-700">${esc(b.namaPanggilan)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">NIK</dt><dd class="font-medium text-slate-700">${esc(b.nik)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Jenis Kelamin</dt><dd class="font-medium text-slate-700">${esc(b.jenisKelamin)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${esc(b.tempatLahir)}, ${formatDate(b.tanggalLahir)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${esc(b.agama)} / ${esc(b.kewarganegaraan)}</dd></div>
             <div><dt class="text-slate-400 font-medium">Anak Ke / Jumlah Saudara</dt><dd class="font-medium text-slate-700">Anak ke-${b.anakKe || "-"} dari ${b.jumlahSaudara || "-"} bersaudara</dd></div>
-            <div><dt class="text-slate-400 font-medium">Saudara Kandung/Tiri/Angkat</dt><dd class="font-medium text-slate-700">Kandung: ${b.saudaraKandung || "0"}, Tiri: ${b.saudaraTiri || "0"}, Angkat: ${b.saudaraAngkat || "0"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Status Yatim / Piatu</dt><dd class="font-medium text-slate-700">${b.statusYatim || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Bahasa Sehari-hari</dt><dd class="font-medium text-slate-700">${b.bahasaSehari || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Saudara Kandung/Tiri/Angkat</dt><dd class="font-medium text-slate-700">Kandung: ${esc(b.saudaraKandung || "0")}, Tiri: ${esc(b.saudaraTiri || "0")}, Angkat: ${esc(b.saudaraAngkat || "0")}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Status Yatim / Piatu</dt><dd class="font-medium text-slate-700">${esc(b.statusYatim)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Bahasa Sehari-hari</dt><dd class="font-medium text-slate-700">${esc(b.bahasaSehari)}</dd></div>
           </dl>
         </div>
 
@@ -874,11 +879,11 @@ const Wizard = {
             <span class="material-symbols-outlined text-lg">home</span> Tempat Tinggal & Kontak
           </h4>
           <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat Lengkap</dt><dd class="font-medium text-slate-700">${a.alamatLengkap || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">No. Telepon / HP</dt><dd class="font-medium text-slate-700">${a.telepon || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Email</dt><dd class="font-medium text-slate-700">${a.email || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Tinggal Dengan</dt><dd class="font-medium text-slate-700">${a.tinggalDengan || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Jarak ke Sekolah / Transportasi</dt><dd class="font-medium text-slate-700">${a.jarakSekolah || "-"} / ${a.transportasi || "-"}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat Lengkap</dt><dd class="font-medium text-slate-700">${esc(a.alamatLengkap)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">No. Telepon / HP</dt><dd class="font-medium text-slate-700">${esc(a.telepon)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Email</dt><dd class="font-medium text-slate-700">${esc(a.email)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tinggal Dengan</dt><dd class="font-medium text-slate-700">${esc(a.tinggalDengan)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Jarak ke Sekolah / Transportasi</dt><dd class="font-medium text-slate-700">${esc(a.jarakSekolah)} / ${esc(a.transportasi)}</dd></div>
           </dl>
         </div>
 
@@ -888,10 +893,10 @@ const Wizard = {
             <span class="material-symbols-outlined text-lg">medical_services</span> Kesehatan
           </h4>
           <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div><dt class="text-slate-400 font-medium">Golongan Darah</dt><dd class="font-medium text-slate-700">${k.golonganDarah || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Tinggi / Berat Badan</dt><dd class="font-medium text-slate-700">${k.tinggiBadan || "-"} cm / ${k.beratBadan || "-"} kg</dd></div>
-            <div><dt class="text-slate-400 font-medium">Penyakit Pernah Diderita</dt><dd class="font-medium text-slate-700">${k.penyakit || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Kelainan Jasmani</dt><dd class="font-medium text-slate-700">${k.kelainanJasmani || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Golongan Darah</dt><dd class="font-medium text-slate-700">${esc(k.golonganDarah)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tinggi / Berat Badan</dt><dd class="font-medium text-slate-700">${esc(k.tinggiBadan)} cm / ${esc(k.beratBadan)} kg</dd></div>
+            <div><dt class="text-slate-400 font-medium">Penyakit Pernah Diderita</dt><dd class="font-medium text-slate-700">${esc(k.penyakit)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Kelainan Jasmani</dt><dd class="font-medium text-slate-700">${esc(k.kelainanJasmani)}</dd></div>
           </dl>
         </div>
 
@@ -901,10 +906,10 @@ const Wizard = {
             <span class="material-symbols-outlined text-lg">school</span> Pendidikan Sebelumnya
           </h4>
           <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div><dt class="text-slate-400 font-medium">Asal Sekolah (SMP)</dt><dd class="font-bold text-slate-700">${p.asalSekolah || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Nomor Ijazah</dt><dd class="font-medium text-slate-700">${p.nomorIjazah || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Lama Belajar</dt><dd class="font-medium text-slate-700">${p.lamaBelajar || "-"} tahun</dd></div>
-            <div><dt class="text-slate-400 font-medium">Kelas</dt><dd class="font-medium text-slate-700">${p.kelas || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Asal Sekolah (SMP)</dt><dd class="font-bold text-slate-700">${esc(p.asalSekolah)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Nomor Ijazah</dt><dd class="font-medium text-slate-700">${esc(p.nomorIjazah)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Lama Belajar</dt><dd class="font-medium text-slate-700">${esc(p.lamaBelajar)} tahun</dd></div>
+            <div><dt class="text-slate-400 font-medium">Kelas</dt><dd class="font-medium text-slate-700">${esc(p.kelas)}</dd></div>
           </dl>
         </div>
 
@@ -914,14 +919,14 @@ const Wizard = {
             <span class="material-symbols-outlined text-lg">person</span> Data Ayah Kandung
           </h4>
           <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div><dt class="text-slate-400 font-medium">Nama Ayah</dt><dd class="font-bold text-slate-700">${ayah.nama || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Status Hidup</dt><dd class="font-medium text-slate-700">${ayah.status || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${ayah.tempatLahir || "-"}, ${formatDate(ayah.tanggalLahir)}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${ayah.agama || "-"} / ${ayah.kewarganegaraan || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Pendidikan & Pekerjaan</dt><dd class="font-medium text-slate-700">${ayah.pendidikan || "-"} / ${ayah.pekerjaan || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Penghasilan Bulanan</dt><dd class="font-medium text-slate-700">${ayah.penghasilan || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">No. Telepon & Email</dt><dd class="font-medium text-slate-700">${ayah.telepon || "-"} / ${ayah.email || "-"}</dd></div>
-            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat</dt><dd class="font-medium text-slate-700">${ayah.alamat || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Nama Ayah</dt><dd class="font-bold text-slate-700">${esc(ayah.nama)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Status Hidup</dt><dd class="font-medium text-slate-700">${esc(ayah.status)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${esc(ayah.tempatLahir)}, ${formatDate(ayah.tanggalLahir)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${esc(ayah.agama)} / ${esc(ayah.kewarganegaraan)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Pendidikan & Pekerjaan</dt><dd class="font-medium text-slate-700">${esc(ayah.pendidikan)} / ${esc(ayah.pekerjaan)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Penghasilan Bulanan</dt><dd class="font-medium text-slate-700">${esc(ayah.penghasilan)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">No. Telepon & Email</dt><dd class="font-medium text-slate-700">${esc(ayah.telepon)} / ${esc(ayah.email)}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat</dt><dd class="font-medium text-slate-700">${esc(ayah.alamat)}</dd></div>
           </dl>
         </div>
 
@@ -931,14 +936,14 @@ const Wizard = {
             <span class="material-symbols-outlined text-lg">person</span> Data Ibu Kandung
           </h4>
           <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div><dt class="text-slate-400 font-medium">Nama Ibu</dt><dd class="font-bold text-slate-700">${ibu.nama || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Status Hidup</dt><dd class="font-medium text-slate-700">${ibu.status || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${ibu.tempatLahir || "-"}, ${formatDate(ibu.tanggalLahir)}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${ibu.agama || "-"} / ${ibu.kewarganegaraan || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Pendidikan & Pekerjaan</dt><dd class="font-medium text-slate-700">${ibu.pendidikan || "-"} / ${ibu.pekerjaan || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Penghasilan Bulanan</dt><dd class="font-medium text-slate-700">${ibu.penghasilan || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">No. Telepon & Email</dt><dd class="font-medium text-slate-700">${ibu.telepon || "-"} / ${ibu.email || "-"}</dd></div>
-            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat</dt><dd class="font-medium text-slate-700">${ibu.alamat || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Nama Ibu</dt><dd class="font-bold text-slate-700">${esc(ibu.nama)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Status Hidup</dt><dd class="font-medium text-slate-700">${esc(ibu.status)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${esc(ibu.tempatLahir)}, ${formatDate(ibu.tanggalLahir)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${esc(ibu.agama)} / ${esc(ibu.kewarganegaraan)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Pendidikan & Pekerjaan</dt><dd class="font-medium text-slate-700">${esc(ibu.pendidikan)} / ${esc(ibu.pekerjaan)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Penghasilan Bulanan</dt><dd class="font-medium text-slate-700">${esc(ibu.penghasilan)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">No. Telepon & Email</dt><dd class="font-medium text-slate-700">${esc(ibu.telepon)} / ${esc(ibu.email)}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat</dt><dd class="font-medium text-slate-700">${esc(ibu.alamat)}</dd></div>
           </dl>
         </div>
 
@@ -951,10 +956,10 @@ const Wizard = {
             <span class="material-symbols-outlined text-lg">interests</span> Kegemaran & Bakat
           </h4>
           <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div><dt class="text-slate-400 font-medium">Kesenian</dt><dd class="font-medium text-slate-700">${h.kesenian || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Olahraga</dt><dd class="font-medium text-slate-700">${h.olahraga || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Organisasi</dt><dd class="font-medium text-slate-700">${h.organisasi || "-"}</dd></div>
-            <div><dt class="text-slate-400 font-medium">Lain-lain</dt><dd class="font-medium text-slate-700">${h.lainLain || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Kesenian</dt><dd class="font-medium text-slate-700">${esc(h.kesenian)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Olahraga</dt><dd class="font-medium text-slate-700">${esc(h.olahraga)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Organisasi</dt><dd class="font-medium text-slate-700">${esc(h.organisasi)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Lain-lain</dt><dd class="font-medium text-slate-700">${esc(h.lainLain)}</dd></div>
           </dl>
         </div>
       </div>
@@ -1019,6 +1024,11 @@ const Wizard = {
     if (!ticketEl) return;
 
     if (ticket) {
+      const escapedTicketNumber = UI.escapeHTML(ticket.ticketNumber);
+      const escapedEstimatedWaitMinutes = UI.escapeHTML(ticket.estimatedWaitMinutes);
+      const escapedWaitingAhead = UI.escapeHTML(ticket.waitingAhead);
+      const escapedRecommendedTimeWindow = UI.escapeHTML(ticket.recommendedTimeWindow || '-');
+
       // Kondisi 3: Siswa memiliki tiket antrean aktif
       ticketEl.innerHTML = `
         <div class="mt-6 mb-8 p-8 bg-gradient-to-br from-indigo-50/80 via-blue-50/50 to-white border border-blue-100 rounded-3xl max-w-md mx-auto text-center shadow-md relative overflow-hidden">
@@ -1029,7 +1039,7 @@ const Wizard = {
           </div>
           
           <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest block mb-1">Nomor Antrean Anda</span>
-          <span class="text-5xl font-extrabold text-blue-700 tracking-tight block">${ticket.ticketNumber}</span>
+          <span class="text-5xl font-extrabold text-blue-700 tracking-tight block">${escapedTicketNumber}</span>
           
           <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-100 rounded-full text-xs font-bold text-slate-600 shadow-sm mt-3 mb-6">
             <span class="w-2 h-2 rounded-full ${ticket.status === 'serving' ? 'bg-emerald-500 animate-ping' : 'bg-blue-400'}"></span>
@@ -1044,12 +1054,12 @@ const Wizard = {
             <div class="grid grid-cols-2 gap-4 border-t border-b border-blue-100/60 py-4 mb-4">
               <div class="text-center border-r border-blue-100/40">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Estimasi Tunggu</span>
-                <span class="text-base font-extrabold text-blue-700">~${ticket.estimatedWaitMinutes} Menit</span>
-                <span class="text-[9px] font-semibold text-slate-400 block mt-0.5">${ticket.waitingAhead} siswa di depan</span>
+                <span class="text-base font-extrabold text-blue-700">~${escapedEstimatedWaitMinutes} Menit</span>
+                <span class="text-[9px] font-semibold text-slate-400 block mt-0.5">${escapedWaitingAhead} siswa di depan</span>
               </div>
               <div class="text-center">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Jam Kehadiran</span>
-                <span class="text-base font-extrabold text-indigo-700">${ticket.recommendedTimeWindow || '-'}</span>
+                <span class="text-base font-extrabold text-indigo-700">${escapedRecommendedTimeWindow}</span>
                 <span class="text-[9px] font-semibold text-slate-400 block mt-0.5">Rekomendasi Hadir</span>
               </div>
             </div>
@@ -1116,6 +1126,7 @@ const Wizard = {
       ticketEl.classList.remove("hidden");
       this.initQueueSSE();
     } else {
+      const escapedHours = UI.escapeHTML(queueConfig?.operationalHours || 'Senin - Jumat, 08:00 - 14:00 WIB');
       // Kondisi 1: Sesi nonaktif / link dinonaktifkan
       ticketEl.innerHTML = `
         <div class="mt-6 mb-8 p-8 bg-slate-50 border border-slate-200 rounded-3xl max-w-md mx-auto text-center shadow-sm">
@@ -1133,7 +1144,7 @@ const Wizard = {
               <span class="material-symbols-outlined text-slate-400 text-xl">calendar_month</span>
               <div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Jam Operasional Loket</span>
-                <span class="text-xs font-extrabold text-slate-700 block">${queueConfig?.operationalHours || 'Senin - Jumat, 08:00 - 14:00 WIB'}</span>
+                <span class="text-xs font-extrabold text-slate-700 block">${escapedHours}</span>
               </div>
             </div>
           </div>

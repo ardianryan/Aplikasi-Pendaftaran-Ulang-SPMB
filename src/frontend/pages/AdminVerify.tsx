@@ -148,6 +148,9 @@ export const AdminVerify = (props: any) => {
 
           const startNum = (currentPage - 1) * limit;
           tableBody.innerHTML = students.map((s, i) => {
+            const escapedName = UI.escapeHTML(s.namaPreRegister || '-');
+            const escapedJalur = UI.escapeHTML(s.jalur || '-');
+            
             const statusBadges = {
               pending: '<span class="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-amber-100">Menunggu</span>',
               verified: '<span class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-emerald-100">Verified</span>',
@@ -160,10 +163,10 @@ export const AdminVerify = (props: any) => {
               <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
                 <td class="px-6 py-4 text-xs font-bold text-slate-400">\${startNum + i + 1}</td>
                 <td class="px-6 py-4">
-                  <p class="font-bold text-slate-800">\${s.namaPreRegister || '-'}</p>
+                  <p class="font-bold text-slate-800">\${escapedName}</p>
                   <p class="text-[10px] font-mono text-slate-400">\${s.nisn || '-'}</p>
                 </td>
-                <td class="px-6 py-4 text-sm font-medium text-slate-600">\${s.jalur || '-'}</td>
+                <td class="px-6 py-4 text-sm font-medium text-slate-600">\${escapedJalur}</td>
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-1">
                     <span class="text-xs font-bold text-slate-700">\${uploaded}/4</span>

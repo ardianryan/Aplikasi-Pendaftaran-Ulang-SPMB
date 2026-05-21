@@ -14,7 +14,7 @@ services:
       - NODE_ENV=production
       - APP_URL=${APP_URL:-http://localhost:3000}
       - JWT_SECRET=${JWT_SECRET:-spmb-wa-secret-key-123}
-      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-24h}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-8h}
       - MONGODB_URI=mongodb://root:password@mongodb:27017/spmbwa?authSource=admin
       - R2_ENDPOINT=${R2_ENDPOINT}
       - R2_BUCKET=${R2_BUCKET}

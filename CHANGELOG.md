@@ -4,6 +4,19 @@ Semua perubahan penting pada proyek **SPMB-WA** akan didokumentasikan di file in
 
 Format ini didasarkan pada [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), dan proyek ini mengikuti [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-05-21
+
+### 🛡️ Security Audit & Hardening
+- **DOM XSS & Quote-Breaking Fixes**: Membuat utilitas global `UI.escapeHTML(str)` di frontend untuk melakukan HTML Entity Encoding terhadap data sensitif. Fitur ini diterapkan di seluruh tabel data siswa, verifikasi antrean admin, formulir detail verifikasi, dan konfirmasi Buku Induk wizard. Nama siswa yang mengandung karakter petik satu seperti *Faishal Nafi'* kini dapat dirender dengan mulus tanpa memicu error sintaks JavaScript.
+- **Sanitasi Input Backend Otomatis (Global Middleware)**: Mengimplementasikan middleware global `sanitizeBody` yang secara transparan meng-override `c.req.json()` di Hono. Middleware ini secara rekursif memindai payload input dan menghapus semua kunci (keys) yang diawali dengan tanda `$` atau mengandung titik `.` (mencegah NoSQL Injection pada MongoDB) serta membersihkan nilai string dari tag HTML berbahaya (mencegah Stored XSS).
+- **Pengerasan HTTP Secure Headers & CSRF**: Mengaktifkan middleware Hono `secureHeaders` untuk melindungi dari Clickjacking (`X-Frame-Options: SAMEORIGIN`) dan MIME Sniffing (`X-Content-Type-Options: nosniff`). Mengaktifkan middleware Hono `csrf` untuk memblokir serangan Cross-Site Request Forgery di seluruh rute mutasi API.
+- **CORS Same-Origin (Self-Origin) Terbatas**: Memperketat kebijakan CORS di index server secara dinamis agar hanya menerima request dari host aplikasi itu sendiri (`Self-Origin`), menolak eksploitasi lintas-asal oleh domain luar demi menyesuaikan instalasi Docker satu service.
+
+### 🧹 Cleanup & Maintenance
+- **Pembersihan Berkas Tidak Penting**: Menghapus direktori `scratch/` beserta seluruh script uji coba di dalamnya, serta menghapus file panduan kosong `API-ScholarGate.md`.
+- **Konsistensi Konfigurasi Docker**: Menyesuaikan default fallback parameter `JWT_EXPIRES_IN` dari 24 jam menjadi **8 jam** di `docker-compose.yml` agar selaras dengan ketetapan durasi sesi kerja dinas operator di panduan developer.
+- **Pembaruan Panduan Pengembang**: Memperbarui berkas `README.md`, `CLAUDE.md`, dan `Guide-for-ide.md` untuk memuat informasi arsitektur pengamanan baru same-origin CORS dan standardisasi sanitasi input.
+
 ---
 
 ## [0.2.0-alpha] - 2026-05-07

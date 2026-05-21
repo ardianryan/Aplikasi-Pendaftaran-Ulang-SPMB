@@ -74,10 +74,10 @@ function render() {
 
   document.getElementById('profile-kontak').innerHTML = `
     <div class="flex flex-col items-start gap-1">
-      <span class="font-mono text-slate-700">${alm.telepon || '-'}</span>
+      <span class="font-mono text-slate-700">${UI.escapeHTML(alm.telepon || '-')}</span>
       ${waBtn}
     </div>
-    <span class="text-[10px] font-medium opacity-60 mt-1 block">${alm.email || ''}</span>
+    <span class="text-[10px] font-medium opacity-60 mt-1 block">${UI.escapeHTML(alm.email || '')}</span>
   `;
 
   const canVerify = getPermission('operator_can_verify', true);
@@ -118,7 +118,7 @@ function renderStatus() {
       ${st.label}
     </div>
     ${student.submittedAt ? `<p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center mt-2">Dikirim: ${new Date(student.submittedAt).toLocaleDateString()}</p>` : ''}
-    ${student.verifikasi?.catatan ? `<div class="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-medium border border-red-100">Catatan: ${student.verifikasi.catatan}</div>` : ''}
+    ${student.verifikasi?.catatan ? `<div class="p-4 bg-red-50 text-red-600 rounded-2xl text-xs font-medium border border-red-100">Catatan: ${UI.escapeHTML(student.verifikasi.catatan)}</div>` : ''}
   `;
 }
 
@@ -135,12 +135,17 @@ function renderDocuments() {
     const isValid = docStatus === 'valid';
     const isRejected = docStatus === 'rejected';
 
+    const escapedLabel = UI.escapeHTML(dt.label);
+    const escapedDesc = UI.escapeHTML(dt.desc);
+    const escapedUrl = UI.escapeHTML(url);
+    const escapedMime = UI.escapeHTML(doc ? doc.mimeType : '');
+
     return `
       <div class="bg-white rounded-[2rem] border ${isValid ? 'border-emerald-200 bg-emerald-50/10' : isRejected ? 'border-red-200 bg-red-50/10' : 'border-slate-100'} p-8 flex flex-wrap md:flex-nowrap gap-8 items-center">
         <div class="w-full md:w-40 h-40 bg-slate-50 rounded-3xl border border-slate-100 flex flex-col items-center justify-center group overflow-hidden relative shadow-inner">
           ${hasFile ? `
-            <span class="material-symbols-outlined text-4xl text-slate-300">${doc.mimeType?.startsWith('image/') ? 'image' : 'description'}</span>
-            <button onclick="openDocModal('${dt.label}', '${url}', '${doc.mimeType}')" class="absolute inset-0 bg-blue-600/90 text-white opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-4xl text-slate-300">${escapedMime.startsWith('image/') ? 'image' : 'description'}</span>
+            <button onclick="openDocModal('${escapedLabel}', '${escapedUrl}', '${escapedMime}')" class="absolute inset-0 bg-blue-600/90 text-white opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center gap-2">
               <span class="material-symbols-outlined">visibility</span>
               <span class="text-[10px] font-bold uppercase tracking-widest">Lihat</span>
             </button>
@@ -151,14 +156,14 @@ function renderDocuments() {
         </div>
         <div class="flex-1 space-y-4">
           <div class="flex items-center justify-between">
-            <h4 class="font-bold text-slate-800">${dt.label}</h4>
+            <h4 class="font-bold text-slate-800">${escapedLabel}</h4>
             <div class="flex gap-2">
                ${dt.required ? '<span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-lg">Wajib</span>' : ''}
                ${isValid ? '<span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-100 px-2 py-1 rounded-lg">Valid</span>' : ''}
                ${isRejected ? '<span class="text-[10px] font-bold text-red-600 uppercase tracking-widest bg-red-100 px-2 py-1 rounded-lg">Ditolak</span>' : ''}
             </div>
           </div>
-          <p class="text-xs text-slate-400 font-medium leading-relaxed">${dt.desc}</p>
+          <p class="text-xs text-slate-400 font-medium leading-relaxed">${escapedDesc}</p>
           
           <div class="flex gap-3">
             ${hasFile && !isValid && canVerify ? `
@@ -190,13 +195,18 @@ const OPTIONS = {
 };
 
 function selectHtml(id, options, value, label) {
-  return `<div class="space-y-2"><label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">${label}</label><select id="${id}" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-medium focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all"><option value="">-- Pilih --</option>${options.map(o => `<option value="${o}" ${o === value ? 'selected' : ''}>${o}</option>`).join('')}</select></div>`;
+  const escapedValue = UI.escapeHTML(value);
+  return `<div class="space-y-2"><label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">${label}</label><select id="${id}" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-medium focus:bg-white focus:ring-4 focus:ring-blue-500/10 transition-all"><option value="">-- Pilih --</option>${options.map(o => {
+    const escapedO = UI.escapeHTML(o);
+    return `<option value="${escapedO}" ${o === value ? 'selected' : ''}>${escapedO}</option>`;
+  }).join('')}</select></div>`;
 }
 function inputHtml(id, value, label, opts = {}) {
   const ro = opts.readonly ? 'readonly' : '';
   const cls = opts.readonly ? 'opacity-50 cursor-not-allowed' : 'focus:bg-white focus:ring-4 focus:ring-blue-500/10';
   const type = opts.type || 'text';
-  return `<div class="space-y-2"><label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">${label}</label><input type="${type}" id="${id}" value="${value || ''}" ${ro} class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-medium ${cls} transition-all"></div>`;
+  const escapedValue = UI.escapeHTML(value);
+  return `<div class="space-y-2"><label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">${label}</label><input type="${type}" id="${id}" value="${escapedValue}" ${ro} class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-medium ${cls} transition-all"></div>`;
 }
 
 function renderBiodata() {
@@ -403,8 +413,9 @@ async function downloadPdf() {
 function openDocModal(title, url, mime) {
   const modal = document.getElementById('doc-modal');
   document.getElementById('modal-title').textContent = title;
-  const isImage = mime?.startsWith('image/') || url.match(/\\.(jpg|jpeg|png)$/i);
-  document.getElementById('modal-content').innerHTML = isImage ? `<img src="${url}" class="max-w-full max-h-[70vh] rounded-3xl shadow-2xl">` : `<iframe src="${url}" class="w-full h-[60vh] rounded-3xl"></iframe>`;
+  const isImage = mime?.startsWith('image/') || url.match(/\.(jpg|jpeg|png)$/i);
+  const escapedUrl = UI.escapeHTML(url);
+  document.getElementById('modal-content').innerHTML = isImage ? `<img src="${escapedUrl}" class="max-w-full max-h-[70vh] rounded-3xl shadow-2xl">` : `<iframe src="${escapedUrl}" class="w-full h-[60vh] rounded-3xl"></iframe>`;
   modal.classList.remove('hidden');
   modal.classList.add('flex');
 }

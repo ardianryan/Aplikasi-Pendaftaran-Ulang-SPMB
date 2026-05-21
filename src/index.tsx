@@ -3,6 +3,8 @@ import { Hono } from "hono";
 import { jsx } from "hono/jsx";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { csrf } from "hono/csrf";
+import { secureHeaders } from "hono/secure-headers";
 import { serve } from "@hono/node-server";
 import { serveStatic } from "@hono/node-server/serve-static";
 
@@ -11,6 +13,7 @@ import { connectDatabase } from "@backend/config/database";
 import { routes as apiRoutes } from "@backend/routes";
 import { getSettingsMap } from "@backend/utils/settings";
 import { extractToken, verifyToken } from "@backend/services/jwt.service";
+import { sanitizeBody } from "@backend/middleware/sanitize.middleware";
 
 // Frontend Pages
 import { Landing } from "./frontend/pages/Landing";
@@ -73,14 +76,35 @@ const renderPage = async (c: any, Component: any, title?: string) => {
 // Global Middleware
 // ============================================
 
+// Mount recursive request body sanitization globally
+app.use("*", sanitizeBody);
+
+// Mount secure HTTP headers globally
+app.use("*", secureHeaders());
+
+// Mount CSRF protection globally
+app.use("*", csrf());
+
 // Request logging
 app.use("*", logger());
 
-// CORS - allow frontend access
+// CORS - allow same-origin frontend access
 app.use(
   "/api/*",
   cors({
-    origin: "*", 
+    origin: (origin, c) => {
+      // If no origin header is present (same-origin, e.g., browser-initiated API calls), allow it
+      if (!origin) return "*";
+      
+      const url = new URL(c.req.url);
+      const selfOrigin = `${url.protocol}//${url.host}`;
+      
+      // Strict same-origin match for Docker service environment
+      if (origin === selfOrigin) {
+        return origin;
+      }
+      return null;
+    },
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     exposeHeaders: ["Content-Disposition"],

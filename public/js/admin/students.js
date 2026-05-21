@@ -234,17 +234,20 @@
 
         const statusBadge = getStatusBadge(status);
         const name = s.namaPreRegister || '-';
+        const escapedName = UI.escapeHTML(name);
+        const escapedAsalSmp = UI.escapeHTML(s.asalSmpPreRegister || '-');
+        const escapedJalur = UI.escapeHTML(s.jalur || '-');
 
         return `
         <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors group">
           <td class="px-6 py-4">
             <div class="flex flex-col">
-              <span class="text-sm font-bold text-slate-800">${name}</span>
+              <span class="text-sm font-bold text-slate-800">${escapedName}</span>
               <span class="text-[10px] font-mono text-slate-400">${s.nisn || '-'}</span>
             </div>
           </td>
-          <td class="px-6 py-4 text-sm text-slate-600">${s.asalSmpPreRegister || '-'}</td>
-          <td class="px-6 py-4 text-sm font-medium text-slate-500">${s.jalur || '-'}</td>
+          <td class="px-6 py-4 text-sm text-slate-600">${escapedAsalSmp}</td>
+          <td class="px-6 py-4 text-sm font-medium text-slate-500">${escapedJalur}</td>
           <td class="px-6 py-4">${statusBadge}</td>
           <td class="px-6 py-4 text-xs text-slate-400">${new Date(s.updatedAt).toLocaleDateString('id-ID')}</td>
           <td class="px-6 py-4">
@@ -253,7 +256,7 @@
                 <span class="material-symbols-outlined text-lg">visibility</span>
               </button>
               ${canDelete ? `
-              <button onclick="deleteStudent('${s._id}', this)" data-name="${name.replace(/"/g, '&quot;')}" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all">
+              <button onclick="deleteStudent('${s._id}', this)" data-name="${escapedName}" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all">
                 <span class="material-symbols-outlined text-lg">delete</span>
               </button>
               ` : ''}

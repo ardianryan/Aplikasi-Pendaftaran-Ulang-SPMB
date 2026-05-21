@@ -86,6 +86,15 @@ spmb-wa/
     *   **Client-Side:** `/public/js/admin/role-guard.js` memuat pengaturan ini dan secara otomatis menyembunyikan navigasi menu atau elemen tombol tertentu serta melakukan redirect ke dashboard jika operator memaksa mengakses halaman terlarang.
     *   **Server-Side:** API dilindungi dengan middleware `requireAdmin` (untuk aksi khusus Super Admin) atau middleware berbasis role spesifik di `src/backend/middleware/auth.middleware.ts`.
 
+### 3.5 Standardisasi Keamanan Industri (Security Audit & Sanitization)
+*   **Pengerasan HTTP Headers (`secureHeaders`):** Dipasang di level global untuk menginjeksi header perlindungan otomatis seperti `X-Frame-Options: SAMEORIGIN` (mencegah Clickjacking) dan `X-Content-Type-Options: nosniff` (mencegah MIME Sniffing).
+*   **Proteksi CSRF (`csrf`):** Seluruh endpoint mutasi (`POST`/`PUT`/`DELETE`) dilindungi oleh middleware `csrf()` bawaan Hono untuk mencegah eksploitasi pihak ketiga.
+*   **CORS Same-Origin (Self-Origin) Terbatas:** Karena backend dan frontend berjalan dalam satu Docker service terpadu, CORS diatur secara dinamis untuk membatasi origin hanya dari asal host aplikasi itu sendiri (`origin === selfOrigin`), menolak request tidak sah dari domain lain.
+*   **Sanitasi Input Backend Otomatis (`sanitizeBody`):** Dipasang global di `src/index.tsx` sebelum parser Zod. Secara transparan dan rekursif memindai payload JSON untuk:
+    1.  *NoSQL Injection*: Menghapus semua kunci (keys) objek yang berawalan dengan `$` atau mengandung `.` untuk meniadakan query operator injection di MongoDB.
+    2.  *Stored XSS*: Membersihkan string values dari tag HTML berbahaya (`<script>`, `<iframe>`, dll.).
+*   **Client-Side HTML Escaping (`UI.escapeHTML`):** Seluruh variabel dinamis dari database (seperti nama siswa, alamat, dll.) wajib dibungkus dengan `UI.escapeHTML(str)` sebelum disisipkan ke DOM menggunakan `innerHTML` atau atribut markup seperti `data-name`. Ini untuk menghindari pemotongan string template oleh karakter petik satu (`'`) serta celah DOM XSS.
+
 ---
 
 ## ⚙️ 4. Pengaturan Sistem Dinamis (MongoDB `settings`)

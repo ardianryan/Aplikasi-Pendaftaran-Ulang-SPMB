@@ -40,6 +40,8 @@ This is **SPMB-WA**, a student re-registration (daftar ulang) web application fo
 
 10. **Queue Batch & Auto-Cleanup** — Queue tickets are generated in batches. When a session is ended manually or closed implicitly by starting a new one, all unserved `"waiting"` tickets are deleted automatically, and `lastIssuedNumber` is updated to the actual last called ticket sequence number. A new session with `continueFromLast` option will resume sequentially from that number.
 
+11. **Same-Origin & Input Sanitization (Security)** — The frontend and backend run in same-origin (same Docker service). The API CORS policy dynamically restricts traffic to self-origin (`origin === selfOrigin`). A global sanitization middleware (`sanitizeBody`) is mounted globally in `src/index.tsx` to recursively sanitize all request JSON bodies, stripping HTML tags from string values (XSS prevention) and completely deleting keys starting with `$` or containing `.` (NoSQL injection prevention). Dynamic frontend elements are strictly escaped using `UI.escapeHTML()` to prevent DOM XSS and quote-breaking syntax errors.
+
 ## Directory Structure
 
 ```

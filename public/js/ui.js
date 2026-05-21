@@ -208,5 +208,16 @@ window.UI = {
         if (e.key === 'Enter') document.getElementById(`${modalId}-confirm`).click();
       };
     });
+  },
+
+  // Escape HTML characters to prevent XSS and quote-breaking syntax errors
+  escapeHTML: function(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 };
