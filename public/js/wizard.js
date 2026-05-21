@@ -731,7 +731,7 @@ const Wizard = {
     const maxMB = doc?.max_size_mb || 5;
 
     zone.innerHTML = `
-      <div class="flex flex-col items-center justify-center p-6 text-center w-full" onclick="document.getElementById('file-${docId}').click()">
+      <div class="flex flex-col items-center justify-center p-6 text-center w-full">
         <div class="w-12 h-12 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
           <span class="material-symbols-outlined text-2xl">cloud_upload</span>
         </div>
