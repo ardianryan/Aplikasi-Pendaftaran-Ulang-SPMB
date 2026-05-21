@@ -862,6 +862,33 @@ const Wizard = {
           statusEl.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">cancel</span><span>Status: Ditolak</span>';
         }
       }
+
+      // Render Queue Ticket if available
+      const ticket = res.data?.queueTicket;
+      const ticketEl = document.getElementById("student-queue-ticket");
+      if (ticketEl) {
+        if (ticket) {
+          ticketEl.innerHTML = `
+            <div class="mt-2 mb-10 p-6 bg-blue-50/50 border-2 border-dashed border-blue-100 rounded-3xl max-w-sm mx-auto text-center">
+              <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm shadow-blue-50">
+                <span class="material-symbols-outlined text-2xl">confirmation_number</span>
+              </div>
+              <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest block mb-1">Nomor Antrean Anda</span>
+              <span class="text-4xl font-extrabold text-blue-700 tracking-tight block">${ticket.ticketNumber}</span>
+              <span class="text-[11px] font-medium text-slate-400 block mt-2">
+                Status: ${ticket.status === 'serving' ? '<span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-lg animate-pulse">Sedang Dilayani</span>' : 
+                          ticket.status === 'done' ? '<span class="text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded-lg">Selesai</span>' :
+                          ticket.status === 'skipped' ? '<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-lg">Dilewati</span>' :
+                          '<span class="text-blue-500 font-bold bg-blue-100/50 px-2 py-0.5 rounded-lg">Menunggu Panggilan</span>'}
+              </span>
+              <p class="text-[10px] text-slate-400 mt-4 leading-relaxed">Silakan tunjukkan nomor antrean ini kepada panitia loket verifikasi saat berkas fisik Anda diperiksa secara tatap muka.</p>
+            </div>
+          `;
+          ticketEl.classList.remove("hidden");
+        } else {
+          ticketEl.classList.add("hidden");
+        }
+      }
     } catch (e) {}
   },
 

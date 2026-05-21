@@ -300,7 +300,33 @@ export async function getReview(c: Context) {
       return error(c, "Data siswa tidak ditemukan.", 404);
     }
 
-    return success(c, student);
+    // Check for active queue ticket for this student
+    let queueTicket = null;
+    try {
+      const { QueueTicket } = await import("../models/QueueTicket");
+      const activeTicket = await QueueTicket.findOne({
+        studentNisn: nisn,
+        status: { $in: ["waiting", "serving", "skipped", "done"] }
+      })
+        .select("ticketNumber sequenceNumber status sessionId")
+        .lean();
+      
+      if (activeTicket) {
+        // Also check if the session is still active
+        const { Queue } = await import("../models/Queue");
+        const session = await Queue.findOne({ sessionId: activeTicket.sessionId, isActive: true }).lean();
+        if (session) {
+          queueTicket = activeTicket;
+        }
+      }
+    } catch (e) {
+      console.error("[STUDENT] Failed to fetch active queue ticket:", e);
+    }
+
+    return success(c, {
+      ...student,
+      queueTicket
+    });
   } catch (err: any) {
     console.error("[STUDENT] getReview error:", err);
     return error(c, "Gagal mengambil data review.", 500);
@@ -361,6 +387,76 @@ export async function submitFinal(c: Context) {
     student.submittedAt = new Date();
     student.wizardStep = WIZARD_STEPS.DONE;
     await student.save();
+
+    // ----------------------------------------------------
+    // Auto-Link Queue Ticket if active session exists
+    // ----------------------------------------------------
+    try {
+      const { Queue } = await import("../models/Queue");
+      const { QueueTicket } = await import("../models/QueueTicket");
+      const { getQueueSettings, broadcastQueueStatusUpdate } = await import("./queue.controller");
+
+      // Find an active session
+      const activeSession = await Queue.findOne({ isActive: true });
+      if (activeSession && activeSession.studentLinkEnabled) {
+        // 1. Check if this student already has a ticket in this session
+        const existingTicket = await QueueTicket.findOne({
+          sessionId: activeSession.sessionId,
+          studentNisn: student.nisn
+        });
+
+        if (!existingTicket) {
+          // 2. Try to find the next available pre-allocated ticket in the batch
+          const ticket = await QueueTicket.findOne({
+            sessionId: activeSession.sessionId,
+            status: "waiting",
+            studentNisn: null
+          }).sort({ sequenceNumber: 1 });
+
+          if (ticket) {
+            // Assign this pre-allocated ticket to the student
+            ticket.studentId = student._id;
+            ticket.studentName = student.biodata?.namaLengkap || student.namaPreRegister || "-";
+            ticket.studentNisn = student.nisn;
+            await ticket.save();
+          } else {
+            // 3. If no pre-allocated tickets are left, dynamically generate a new one on-demand
+            const settings = await getQueueSettings();
+            
+            const updatedSession = await Queue.findOneAndUpdate(
+              { sessionId: activeSession.sessionId, isActive: true },
+              { $inc: { lastIssuedNumber: 1 } },
+              { new: true }
+            );
+
+            if (updatedSession) {
+              const num = updatedSession.lastIssuedNumber;
+              const formatTicketNumber = (prefix: string, num: number, padding: number): string => {
+                return `${prefix}${String(num).padStart(padding, "0")}`;
+              };
+              const ticketNumber = formatTicketNumber(activeSession.prefix, num, settings.padding);
+
+              await QueueTicket.create({
+                sessionId: activeSession.sessionId,
+                ticketNumber,
+                sequenceNumber: num,
+                mode: activeSession.mode,
+                status: "waiting",
+                studentId: student._id,
+                studentName: student.biodata?.namaLengkap || student.namaPreRegister || "-",
+                studentNisn: student.nisn,
+              });
+            }
+          }
+
+          // Broadcast status update to all connected TV displays
+          await broadcastQueueStatusUpdate();
+        }
+      }
+    } catch (queueErr) {
+      console.error("[STUDENT] Auto-linking queue ticket failed:", queueErr);
+      // Don't fail the submission if queue ticket generation has an issue
+    }
 
     return success(
       c,

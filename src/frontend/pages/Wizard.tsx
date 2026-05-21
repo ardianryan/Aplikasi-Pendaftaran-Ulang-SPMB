@@ -897,6 +897,10 @@ export const Wizard = (props: any) => {
                   <span>MENUNGGU VERIFIKASI</span>
                 </div>
 
+                <div id="student-queue-ticket" className="hidden">
+                  {/* Populated dynamically */}
+                </div>
+
                 <div className="flex flex-col items-center gap-4">
                   <button id="btn-download-pdf" onclick="Wizard.downloadPdf()" className="px-10 py-5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all flex items-center gap-3 shadow-xl shadow-blue-200">
                     <span className="material-symbols-outlined">download</span>

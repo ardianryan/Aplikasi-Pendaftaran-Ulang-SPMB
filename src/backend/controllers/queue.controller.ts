@@ -83,7 +83,7 @@ async function cleanupEndedSession(sessionId: string) {
 }
 
 /** Ambil setting antrean dari DB */
-async function getQueueSettings() {
+export async function getQueueSettings() {
   const keys = [
     "queue_pre_reg_prefix",
     "queue_re_reg_prefix",
