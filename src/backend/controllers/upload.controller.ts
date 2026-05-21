@@ -90,8 +90,35 @@ export async function uploadDocument(c: Context) {
       }
     }
 
-    // Upload to R2
-    const result = await uploadToR2(nisn, docType as any, buffer, file.type, file.name);
+    // Upload to R2 with local fallback
+    let result;
+    try {
+      result = await uploadToR2(nisn, docType as any, buffer, file.type, file.name);
+    } catch (r2Err: any) {
+      console.warn(`[UPLOAD] R2 upload failed, falling back to local filesystem:`, r2Err.message);
+      
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      
+      const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
+      const localDir = path.join(process.cwd(), "public", "uploads", nisn);
+      
+      // Ensure the directory exists
+      await fs.mkdir(localDir, { recursive: true });
+      
+      const fileName = `${docType}.${ext}`;
+      const localPath = path.join(localDir, fileName);
+      
+      // Write file buffer to local disk
+      await fs.writeFile(localPath, buffer);
+      
+      result = {
+        key: `local://${nisn}/${fileName}`,
+        publicUrl: `/uploads/${nisn}/${fileName}`,
+        size: buffer.length,
+        mimeType: file.type,
+      };
+    }
 
     // Save document metadata to MongoDB
     const updatePath = `dokumen.${docType}`;

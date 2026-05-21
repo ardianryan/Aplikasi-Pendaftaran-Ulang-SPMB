@@ -42,6 +42,9 @@ async function init() {
 
 function getDocUrl(doc) {
   if (!doc || !doc.key) return '';
+  if (doc.key.startsWith('local://')) {
+    return `/uploads/${doc.key.replace('local://', '')}`;
+  }
   if (doc.key.startsWith('http')) return doc.key;
   return r2PublicUrl ? `${r2PublicUrl}/${doc.key}` : doc.key;
 }

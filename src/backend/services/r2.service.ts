@@ -41,9 +41,9 @@ export async function uploadToR2(
   mimeType: string,
   originalName: string
 ): Promise<UploadResult> {
-  const client = getR2Client();
-  const bucket = getR2Bucket();
-  const prefix = getR2Prefix();
+  const client = await getR2Client();
+  const bucket = await getR2Bucket();
+  const prefix = await getR2Prefix();
 
   // Extract file extension from original name
   const ext = originalName.split(".").pop()?.toLowerCase() || "pdf";
@@ -62,7 +62,7 @@ export async function uploadToR2(
 
   await client.send(command);
 
-  const publicUrl = getPublicUrl(key);
+  const publicUrl = await getPublicUrl(key);
 
   return {
     key,
@@ -73,16 +73,29 @@ export async function uploadToR2(
 }
 
 // ============================================
-// Delete File from R2
+// Delete File from R2 / Local Fallback
 // ============================================
 
 /**
- * Delete a file from Cloudflare R2
+ * Delete a file from Cloudflare R2 or Local fallback storage
  * @param key - The full object key to delete
  */
 export async function deleteFromR2(key: string): Promise<void> {
-  const client = getR2Client();
-  const bucket = getR2Bucket();
+  if (key.startsWith("local://")) {
+    try {
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      const relativePath = key.replace("local://", "");
+      const localPath = path.join(process.cwd(), "public", "uploads", relativePath);
+      await fs.unlink(localPath);
+    } catch (err: any) {
+      console.warn(`[UPLOAD] Gagal menghapus berkas lokal untuk key '${key}':`, err.message);
+    }
+    return;
+  }
+
+  const client = await getR2Client();
+  const bucket = await getR2Bucket();
 
   const command = new DeleteObjectCommand({
     Bucket: bucket,
@@ -97,12 +110,25 @@ export async function deleteFromR2(key: string): Promise<void> {
 // ============================================
 
 /**
- * Check if a file exists in R2
+ * Check if a file exists in R2 or Local fallback storage
  * @param key - The full object key to check
  */
 export async function fileExistsInR2(key: string): Promise<boolean> {
-  const client = getR2Client();
-  const bucket = getR2Bucket();
+  if (key.startsWith("local://")) {
+    try {
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      const relativePath = key.replace("local://", "");
+      const localPath = path.join(process.cwd(), "public", "uploads", relativePath);
+      await fs.access(localPath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  const client = await getR2Client();
+  const bucket = await getR2Bucket();
 
   try {
     const command = new HeadObjectCommand({
@@ -124,8 +150,12 @@ export async function fileExistsInR2(key: string): Promise<boolean> {
  * Construct the public URL for an uploaded file
  * @param key - The R2 object key
  */
-export function getPublicUrl(key: string): string {
-  const baseUrl = getR2PublicUrl();
+export async function getPublicUrl(key: string): Promise<string> {
+  if (key.startsWith("local://")) {
+    return `/uploads/${key.replace("local://", "")}`;
+  }
+
+  const baseUrl = await getR2PublicUrl();
   if (!baseUrl) {
     // If no public URL configured, return the key as-is
     return key;

@@ -21,6 +21,9 @@ import {
   getSettings,
   updateSettings,
   uploadSettingsFile,
+  testR2,
+  testSSO,
+  testGoogle,
   pullSSOMembers,
   createOperator,
   getOperators,
@@ -76,6 +79,9 @@ adminRoutes.get("/export", requireAdmin, exportStudents);
 adminRoutes.get("/settings", getSettings);
 adminRoutes.put("/settings", requireAdmin, updateSettings);
 adminRoutes.post("/settings/upload/:key", requireAdmin, uploadSettingsFile); // Upload logo/icon
+adminRoutes.post("/settings/test-r2", requireAdmin, testR2); // Test R2
+adminRoutes.post("/settings/test-sso", requireAdmin, testSSO); // Test ScholarGate SSO
+adminRoutes.post("/settings/test-google", requireAdmin, testGoogle); // Test Google OAuth
 
 // SSO & Operator Management
 adminRoutes.post("/sso/pull", requireAdmin, pullSSOMembers); // Pull guru/tendik from ScholarGate

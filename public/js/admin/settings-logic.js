@@ -8,7 +8,8 @@ const TEXT_SETTINGS = [
   'school_year', 'announcement_text',
   'kop_line1', 'kop_line2', 'kop_line3', 'kop_line4', 'kop_line5', 'kop_line6',
   'kop_city', 'landing_hero_title', 'landing_hero_subtitle',
-  'url_youtube_tutorial', 'url_download_center'
+  'url_youtube_tutorial', 'url_download_center',
+  'r2_endpoint', 'r2_bucket', 'r2_region', 'r2_access_key_id', 'r2_secret_access_key', 'r2_prefix', 'r2_public_url', 'sso_base_url', 'sso_api_key', 'google_client_id'
 ];
 
 const JSON_SETTINGS = [
@@ -155,5 +156,92 @@ async function uploadFile(key, input) {
   input.value = '';
 }
 
+
+async function testR2Connection() {
+  const btn = document.getElementById('btn-test-r2');
+  const btnText = document.getElementById('btn-test-r2-text');
+  const origText = btnText ? btnText.textContent : 'Uji Koneksi R2';
+
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.textContent = 'Menguji...';
+
+  try {
+    const data = {
+      r2_endpoint: document.getElementById('r2_endpoint')?.value || '',
+      r2_bucket: document.getElementById('r2_bucket')?.value || '',
+      r2_region: document.getElementById('r2_region')?.value || 'auto',
+      r2_access_key_id: document.getElementById('r2_access_key_id')?.value || '',
+      r2_secret_access_key: document.getElementById('r2_secret_access_key')?.value || '',
+      r2_prefix: document.getElementById('r2_prefix')?.value ?? 'uploads/'
+    };
+
+    const res = await API.request('/admin/settings/test-r2', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+
+    UI.toast(res.message || 'Koneksi R2 Berhasil!', 'success');
+  } catch (err) {
+    UI.toast(err.message || 'Koneksi R2 Gagal.', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.textContent = origText;
+  }
+}
+
+async function testSSOConnection() {
+  const btn = document.getElementById('btn-test-sso');
+  const btnText = document.getElementById('btn-test-sso-text');
+  const origText = btnText ? btnText.textContent : 'Uji Koneksi SSO';
+
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.textContent = 'Menguji...';
+
+  try {
+    const data = {
+      sso_base_url: document.getElementById('sso_base_url')?.value || '',
+      sso_api_key: document.getElementById('sso_api_key')?.value || ''
+    };
+
+    const res = await API.request('/admin/settings/test-sso', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+
+    UI.toast(res.message || 'Koneksi ScholarGate SSO Berhasil!', 'success');
+  } catch (err) {
+    UI.toast(err.message || 'Koneksi ScholarGate SSO Gagal.', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.textContent = origText;
+  }
+}
+
+async function testGoogleConnection() {
+  const btn = document.getElementById('btn-test-google');
+  const btnText = document.getElementById('btn-test-google-text');
+  const origText = btnText ? btnText.textContent : 'Uji Google OAuth';
+
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.textContent = 'Menguji...';
+
+  try {
+    const data = {
+      google_client_id: document.getElementById('google_client_id')?.value || ''
+    };
+
+    const res = await API.request('/admin/settings/test-google', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+
+    UI.toast(res.message || 'Format Google Client ID valid!', 'success');
+  } catch (err) {
+    UI.toast(err.message || 'Google OAuth Gagal.', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.textContent = origText;
+  }
+}
 
 loadSettings();

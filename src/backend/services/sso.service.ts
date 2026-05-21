@@ -5,8 +5,10 @@
  */
 
 // ============================================
-// Types
+// Imports & Types
 // ============================================
+
+import { Setting } from "../models/Setting";
 
 export interface SSOmember {
   id: string;
@@ -47,15 +49,17 @@ export interface SSOLookupResponse {
 // Config
 // ============================================
 
-function getBaseUrl(): string {
-  const url = process.env.SSO_BASE_URL;
-  if (!url) throw new Error("SSO_BASE_URL environment variable is not set");
+async function getBaseUrl(): Promise<string> {
+  const s = await Setting.findOne({ key: "sso_base_url" }).lean();
+  const url = s?.value;
+  if (!url) throw new Error("ScholarGate SSO Base URL belum diatur di Pengaturan Portal.");
   return url.replace(/\/$/, ""); // Remove trailing slash
 }
 
-function getApiKey(): string {
-  const key = process.env.SSO_API_KEY;
-  if (!key) throw new Error("SSO_API_KEY environment variable is not set");
+async function getApiKey(): Promise<string> {
+  const s = await Setting.findOne({ key: "sso_api_key" }).lean();
+  const key = s?.value;
+  if (!key) throw new Error("ScholarGate SSO API Key belum diatur di Pengaturan Portal.");
   return key;
 }
 
@@ -74,8 +78,8 @@ export async function fetchSSOMembers(
   page: number = 1,
   perPage: number = 100
 ): Promise<SSOListResponse> {
-  const baseUrl = getBaseUrl();
-  const apiKey = getApiKey();
+  const baseUrl = await getBaseUrl();
+  const apiKey = await getApiKey();
 
   const params = new URLSearchParams({
     page: String(page),
@@ -126,8 +130,8 @@ export async function fetchAllSSOMembers(role: string = ""): Promise<SSOmember[]
  * @param identifier - The value to search for (email)
  */
 export async function lookupSSOMember(identifier: string): Promise<SSOLookupResponse> {
-  const baseUrl = getBaseUrl();
-  const apiKey = getApiKey();
+  const baseUrl = await getBaseUrl();
+  const apiKey = await getApiKey();
 
   // Try lookup endpoint first
   try {
@@ -193,7 +197,8 @@ export async function verifyGoogleToken(idToken: string): Promise<{
     const data: any = await response.json();
 
     // Verify the token is for our app
-    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const s = await Setting.findOne({ key: "google_client_id" }).lean();
+    const clientId = s?.value;
     if (clientId && data.aud !== clientId) {
       return null;
     }

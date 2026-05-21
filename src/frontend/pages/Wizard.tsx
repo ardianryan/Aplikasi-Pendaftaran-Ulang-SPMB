@@ -539,7 +539,11 @@ export const Wizard = (props: any) => {
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3 ml-1">Alamat Ayah</label>
-                          <textarea id="ayah-alamat" rows={2} className="w-full px-6 py-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-medium" placeholder="Sama dengan alamat siswa..."></textarea>
+                          <textarea id="ayah-alamat" rows={2} className="w-full px-6 py-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-medium" placeholder="Nama Jalan, RT/RW, Desa/Kelurahan, Kecamatan..."></textarea>
+                          <div className="flex items-center gap-3 mt-3 ml-1">
+                            <input type="checkbox" id="ayah-alamat-sama" onchange="Wizard.handleSameAddress('ayah', this)" className="w-5 h-5 border border-slate-300 rounded-lg text-blue-600 focus:ring-blue-500/20 cursor-pointer" />
+                            <label for="ayah-alamat-sama" className="text-xs font-bold text-slate-500 cursor-pointer select-none">Sama dengan alamat siswa</label>
+                          </div>
                         </div>
                       </div>
 
@@ -636,7 +640,11 @@ export const Wizard = (props: any) => {
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3 ml-1">Alamat Ibu</label>
-                          <textarea id="ibu-alamat" rows={2} className="w-full px-6 py-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-medium" placeholder="Sama dengan alamat siswa..."></textarea>
+                          <textarea id="ibu-alamat" rows={2} className="w-full px-6 py-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-medium" placeholder="Nama Jalan, RT/RW, Desa/Kelurahan, Kecamatan..."></textarea>
+                          <div className="flex items-center gap-3 mt-3 ml-1">
+                            <input type="checkbox" id="ibu-alamat-sama" onchange="Wizard.handleSameAddress('ibu', this)" className="w-5 h-5 border border-slate-300 rounded-lg text-blue-600 focus:ring-blue-500/20 cursor-pointer" />
+                            <label for="ibu-alamat-sama" className="text-xs font-bold text-slate-500 cursor-pointer select-none">Sama dengan alamat siswa</label>
+                          </div>
                         </div>
                       </div>
 
@@ -733,7 +741,11 @@ export const Wizard = (props: any) => {
                         </div>
                         <div className="md:col-span-2">
                           <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3 ml-1">Alamat Wali</label>
-                          <textarea id="wali-alamat" rows={2} className="w-full px-6 py-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-medium" placeholder="Alamat lengkap wali..."></textarea>
+                          <textarea id="wali-alamat" rows={2} className="w-full px-6 py-4 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-medium" placeholder="Nama Jalan, RT/RW, Desa/Kelurahan, Kecamatan..."></textarea>
+                          <div className="flex items-center gap-3 mt-3 ml-1">
+                            <input type="checkbox" id="wali-alamat-sama" onchange="Wizard.handleSameAddress('wali', this)" className="w-5 h-5 border border-slate-300 rounded-lg text-blue-600 focus:ring-blue-500/20 cursor-pointer" />
+                            <label for="wali-alamat-sama" className="text-xs font-bold text-slate-500 cursor-pointer select-none">Sama dengan alamat siswa</label>
+                          </div>
                         </div>
                       </div>
 

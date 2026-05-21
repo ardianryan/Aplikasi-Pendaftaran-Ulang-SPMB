@@ -348,6 +348,112 @@ export const AdminSettings = (props: any) => {
           </div>
         </div>
 
+        {/* Integrasi & Konektivitas Section */}
+        <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-10 py-8 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
+             <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center text-blue-600">
+                <span className="material-symbols-outlined">api</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg">Integrasi & Konektivitas</h3>
+                <p className="text-xs text-slate-400 font-medium">Kelola integrasi Cloudflare R2, ScholarGate SSO, dan Google OAuth</p>
+              </div>
+          </div>
+          <div className="p-10 space-y-10">
+            
+            {/* Cloudflare R2 Storage */}
+            <div>
+              <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-slate-400">cloud_queue</span>
+                  <h4 className="font-bold text-slate-800 text-base">Penyimpanan Cloudflare R2 (S3-Compatible)</h4>
+                </div>
+                <button type="button" id="btn-test-r2" onclick="testR2Connection()" className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border border-slate-200">
+                  <span className="material-symbols-outlined text-sm">network_ping</span>
+                  <span id="btn-test-r2-text">Uji Koneksi R2</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">R2 Endpoint</label>
+                  <input type="text" id="r2_endpoint" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="https://<account-id>.r2.cloudflarestorage.com" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">R2 Bucket Name</label>
+                  <input type="text" id="r2_bucket" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="my-bucket-name" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">R2 Region</label>
+                  <input type="text" id="r2_region" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="auto" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">R2 Access Key ID</label>
+                  <input type="password" id="r2_access_key_id" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="Masukkan Access Key ID" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">R2 Secret Access Key</label>
+                  <input type="password" id="r2_secret_access_key" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="Masukkan Secret Access Key" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">R2 Path Prefix (Folder)</label>
+                  <input type="text" id="r2_prefix" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="uploads/" />
+                </div>
+                <div className="md:col-span-2 lg:col-span-3">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">R2 Public URL Base</label>
+                  <input type="text" id="r2_public_url" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="https://pub-xxxxxx.r2.dev or custom domain" />
+                  <p className="text-[10px] text-slate-400 mt-2 font-medium">Domain publik / CDN Cloudflare R2 untuk menampilkan berkas kepada admin/verifikator.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* ScholarGate SSO */}
+            <div className="pt-8 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-slate-400">admin_panel_settings</span>
+                  <h4 className="font-bold text-slate-800 text-base">SSO ScholarGate (Integrasi Operator)</h4>
+                </div>
+                <button type="button" id="btn-test-sso" onclick="testSSOConnection()" className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border border-slate-200">
+                  <span className="material-symbols-outlined text-sm">network_ping</span>
+                  <span id="btn-test-sso-text">Uji Koneksi SSO</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">ScholarGate Base URL</label>
+                  <input type="text" id="sso_base_url" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="https://scholargate.example.com" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">ScholarGate API Key</label>
+                  <input type="password" id="sso_api_key" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="Masukkan SSO API Key" />
+                </div>
+              </div>
+            </div>
+
+            {/* Google OAuth */}
+            <div className="pt-8 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-slate-400">g_translate</span>
+                  <h4 className="font-bold text-slate-800 text-base">Google OAuth (Login Operator)</h4>
+                </div>
+                <button type="button" id="btn-test-google" onclick="testGoogleConnection()" className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-2 border border-slate-200">
+                  <span className="material-symbols-outlined text-sm">network_ping</span>
+                  <span id="btn-test-google-text">Uji Google OAuth</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Google Client ID</label>
+                  <input type="text" id="google_client_id" className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:bg-white outline-none transition-all font-medium text-sm" placeholder="xxxxxx-xxxxxxxx.apps.googleusercontent.com" />
+                  <p className="text-[10px] text-slate-400 mt-2 font-medium">Client ID dari Google Cloud Console Credentials untuk Login dengan tombol Google.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         {/* Global Save Floating Bar */}
         <div className="flex justify-end pt-4 pb-12">
            <button id="btn-save" onclick="saveSettings()" className="px-12 py-5 bg-blue-600 text-white rounded-[2rem] font-extrabold text-sm hover:bg-blue-700 transition-all flex items-center gap-3 shadow-2xl shadow-blue-200">

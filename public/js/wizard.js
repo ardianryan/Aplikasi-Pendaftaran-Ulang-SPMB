@@ -423,6 +423,16 @@ const Wizard = {
     // Section G: Wali
     this.populateOrangTua("wali", data.wali || {});
 
+    // Update same-address checkbox states based on loaded data comparison
+    const studentAlamat = (data.alamat || {}).alamatLengkap || "";
+    ["ayah", "ibu", "wali"].forEach((prefix) => {
+      const parentAlamat = (data[prefix] || {}).alamat || "";
+      const chk = document.getElementById(`${prefix}-alamat-sama`);
+      if (chk) {
+        chk.checked = !!(studentAlamat && parentAlamat === studentAlamat);
+      }
+    });
+
     // Section H: Kegemaran
     const kg = data.kegemaran || {};
     this.setVal("gem-kesenian", kg.kesenian);
@@ -557,13 +567,46 @@ const Wizard = {
   setupAutoSave() {
     const form = document.getElementById("biodata-form");
     if (form) {
-      const handleInput = () => {
+      const handleInput = (e) => {
+        // If student address changed, check if any parent address checkbox is checked
+        if (e && e.target && e.target.id === "alm-alamatLengkap") {
+          const val = e.target.value;
+          ["ayah", "ibu", "wali"].forEach((prefix) => {
+            const chk = document.getElementById(`${prefix}-alamat-sama`);
+            if (chk && chk.checked) {
+              const target = document.getElementById(`${prefix}-alamat`);
+              if (target) target.value = val;
+            }
+          });
+        }
+
+        // If parent address is manually edited, uncheck the corresponding "same as student" checkbox
+        if (e && e.target && ["ayah-alamat", "ibu-alamat", "wali-alamat"].includes(e.target.id)) {
+          const prefix = e.target.id.split("-")[0];
+          const chk = document.getElementById(`${prefix}-alamat-sama`);
+          if (chk) chk.checked = false;
+        }
+
         this.isDirty = true;
         this.updateBiodataProgress(); // Live update progress
         this.scheduleAutoSave();
       };
       form.addEventListener("input", handleInput);
       form.addEventListener("change", handleInput);
+    }
+  },
+
+  handleSameAddress(prefix, checkbox) {
+    const studentAddressEl = document.getElementById("alm-alamatLengkap");
+    const parentAddressEl = document.getElementById(`${prefix}-alamat`);
+    
+    if (checkbox.checked) {
+      if (studentAddressEl && parentAddressEl) {
+        parentAddressEl.value = studentAddressEl.value;
+        this.isDirty = true;
+        this.updateBiodataProgress();
+        this.scheduleAutoSave();
+      }
     }
   },
 

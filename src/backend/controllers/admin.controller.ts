@@ -672,11 +672,13 @@ export async function uploadSettingsFile(c: Context) {
       const { PutObjectCommand } = await import("@aws-sdk/client-s3");
       const { getR2Client, getR2Bucket, getR2PublicUrl, getR2Prefix } = await import("../config/r2");
 
-      const r2Key = `${getR2Prefix()}settings/${key}.${ext}`;
+      const prefix = await getR2Prefix();
+      const r2Key = `${prefix}settings/${key}.${ext}`;
 
-      const client = getR2Client();
+      const client = await getR2Client();
+      const bucket = await getR2Bucket();
       await client.send(new PutObjectCommand({
-        Bucket: getR2Bucket(),
+        Bucket: bucket,
         Key: r2Key,
         Body: buffer,
         ContentType: file.type,
@@ -684,7 +686,7 @@ export async function uploadSettingsFile(c: Context) {
       }));
 
       // Build public URL
-      const publicBase = getR2PublicUrl();
+      const publicBase = await getR2PublicUrl();
       publicUrl = publicBase ? `${publicBase.replace(/\/$/, "")}/${r2Key}` : r2Key;
     }
 
@@ -1095,5 +1097,136 @@ export async function updateProfile(c: Context) {
   } catch (err: any) {
     console.error("[ADMIN] updateProfile error:", err);
     return error(c, "Gagal memperbarui profil.", 500);
+  }
+}
+
+// ============================================
+// POST /admin/settings/test-r2
+// Test Cloudflare R2 connectivity
+// ============================================
+export async function testR2(c: Context) {
+  try {
+    const body = await c.req.json();
+    
+    // Accept overrides from request body (for live testing on UI)
+    // or fallback to current settings
+    const endpoint = body.r2_endpoint || "";
+    const bucket = body.r2_bucket || "";
+    const accessKeyId = body.r2_access_key_id || "";
+    const secretAccessKey = body.r2_secret_access_key || "";
+    const region = body.r2_region || "auto";
+    const prefix = body.r2_prefix !== undefined ? body.r2_prefix : "uploads/";
+
+    if (!endpoint || !bucket || !accessKeyId || !secretAccessKey) {
+      return error(c, "Konfigurasi R2 belum lengkap. Mohon isi semua field wajib.", 400);
+    }
+
+    const { S3Client, PutObjectCommand, DeleteObjectCommand } = await import("@aws-sdk/client-s3");
+    
+    const client = new S3Client({
+      region,
+      endpoint,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+      forcePathStyle: true,
+    });
+
+    const testKey = `${prefix}test-connection-${Date.now()}.txt`;
+
+    // 1. Try to upload a small dummy file
+    await client.send(new PutObjectCommand({
+      Bucket: bucket,
+      Key: testKey,
+      Body: "Connection Test OK",
+      ContentType: "text/plain",
+      CacheControl: "private, no-cache",
+    }));
+
+    // 2. Try to delete the dummy file
+    await client.send(new DeleteObjectCommand({
+      Bucket: bucket,
+      Key: testKey,
+    }));
+
+    return success(c, null, "Koneksi R2 berhasil diuji! Upload & Delete akses terverifikasi.");
+  } catch (err: any) {
+    console.error("[ADMIN] R2 Connection Test failed:", err);
+    return error(c, `Koneksi R2 Gagal: ${err.message}`, 500);
+  }
+}
+
+// ============================================
+// POST /admin/settings/test-sso
+// Test ScholarGate SSO connectivity
+// ============================================
+export async function testSSO(c: Context) {
+  try {
+    const body = await c.req.json();
+    
+    const baseUrl = (body.sso_base_url || "").replace(/\/$/, "");
+    const apiKey = body.sso_api_key || "";
+
+    if (!baseUrl || !apiKey) {
+      return error(c, "Konfigurasi SSO belum lengkap. Mohon isi semua field.", 400);
+    }
+
+    const response = await fetch(`${baseUrl}/api/v1/members?per_page=1`, {
+      method: "GET",
+      headers: {
+        "X-API-Key": apiKey,
+        "Content-Type": "application/json",
+        "Referer": process.env.APP_URL || "https://spmb-wa.local",
+        "User-Agent": "SPMB-WA-Client/1.0",
+      },
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      return error(c, `ScholarGate SSO Gagal (${response.status}): ${text}`, 400);
+    }
+
+    return success(c, null, "Koneksi ScholarGate SSO berhasil terhubung!");
+  } catch (err: any) {
+    console.error("[ADMIN] SSO Connection Test failed:", err);
+    return error(c, `Koneksi ScholarGate SSO Gagal: ${err.message}`, 500);
+  }
+}
+
+// ============================================
+// POST /admin/settings/test-google
+// Test Google OAuth Client ID validation & connectivity
+// ============================================
+export async function testGoogle(c: Context) {
+  try {
+    const body = await c.req.json();
+    const clientId = body.google_client_id || "";
+
+    if (!clientId) {
+      return error(c, "Google Client ID wajib diisi.", 400);
+    }
+
+    // Basic format validation
+    if (!clientId.endsWith(".apps.googleusercontent.com")) {
+      return error(c, "Format Google Client ID tidak valid. Harus berakhiran '.apps.googleusercontent.com'", 400);
+    }
+
+    // Verify outward connectivity to Google OpenID configuration
+    const response = await fetch("https://accounts.google.com/.well-known/openid-configuration", {
+      method: "GET",
+      headers: {
+        "User-Agent": "SPMB-WA-Client/1.0",
+      },
+    });
+
+    if (!response.ok) {
+      return error(c, "Gagal menghubungi server Google OpenID Discovery.", 400);
+    }
+
+    return success(c, null, "Format Google Client ID valid & koneksi Google Discovery sukses!");
+  } catch (err: any) {
+    console.error("[ADMIN] Google Connection Test failed:", err);
+    return error(c, `Koneksi Google Gagal: ${err.message}`, 500);
   }
 }

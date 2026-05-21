@@ -24,8 +24,10 @@ authRoutes.post("/google", loginGoogle);
 authRoutes.post("/activate-operator", activateOperator);
 
 // Public: Get Google Client ID for frontend Sign-In button
-authRoutes.get("/google/client-id", (c) => {
-  const clientId = process.env.GOOGLE_CLIENT_ID || "";
+authRoutes.get("/google/client-id", async (c) => {
+  const { Setting } = await import("../models/Setting");
+  const s = await Setting.findOne({ key: "google_client_id" }).lean();
+  const clientId = s?.value || "";
   return c.json({
     success: true,
     data: { clientId: clientId || null },

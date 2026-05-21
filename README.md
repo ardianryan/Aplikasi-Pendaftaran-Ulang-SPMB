@@ -113,9 +113,26 @@ cp .env.example .env
 | `APP_URL` | URL utama aplikasi (untuk SSO Referer) | `http://localhost:3000` |
 | `JWT_SECRET` | Kunci rahasia untuk enkripsi token | - |
 | `MONGODB_URI` | URL koneksi ke database MongoDB | - |
-| `R2_*` | Konfigurasi Cloudflare R2 untuk penyimpanan file | - |
-| `SSO_*` | Integrasi SSO ScholarGate | - |
-| `GOOGLE_*` | Client ID & Secret untuk Google OAuth | - |
+
+---
+
+### 🌐 Pengaturan Integrasi & Konektivitas (Dashboard Admin)
+Untuk meningkatkan fleksibilitas dan keamanan, konfigurasi untuk **Cloudflare R2 Storage**, **ScholarGate SSO**, dan **Google OAuth** kini dikelola **sepenuhnya secara dinamis** melalui **Dashboard Pengaturan Admin (Integrasi & Konektivitas)**. 
+
+Anda tidak perlu menyunting berkas `.env` atau memulai ulang server untuk mengubah integrasi ini. Cukup buka dashboard admin di `/admin`, masuk ke **Pengaturan**, dan Anda akan menemukan panel konfigurasi berikut:
+
+1.  **Penyimpanan Cloudflare R2 (S3-Compatible):**
+    *   Mengatur `Endpoint`, `Bucket`, `Region`, `Access Key ID`, `Secret Access Key`, `Path Prefix`, dan `Public URL Base`.
+    *   Mendukung tombol **Uji Koneksi R2** untuk menguji coba aksi upload/delete secara langsung di UI.
+    *   **Fallback Lokal Otomatis:** Apabila koneksi R2 bermasalah atau belum dikonfigurasi, sistem akan secara otomatis menyimpan dokumen unggahan siswa ke penyimpanan lokal server (`/public/uploads/`) dengan prefiks `local://` secara transparan agar pendaftaran tidak terganggu!
+2.  **SSO ScholarGate (Integrasi Operator):**
+    *   Mengatur `Base URL` dan `API Key` untuk sinkronisasi data operator PPDB.
+    *   Mendukung tombol **Uji Koneksi SSO** untuk memastikan kunci API dan URL SSO terhubung dengan benar.
+3.  **Google OAuth (Login Operator):**
+    *   Mengatur `Google Client ID` (berakhiran `.apps.googleusercontent.com`).
+    *   Mendukung tombol **Uji Google OAuth** untuk memvalidasi format Client ID dan konektivitas keluar ke Google Discovery API.
+
+---
 
 ### A. Docker Compose (Paling Direkomendasikan)
 Cara ini akan menjalankan aplikasi beserta database MongoDB secara otomatis:

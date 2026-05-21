@@ -383,4 +383,60 @@ export const DEFAULT_SETTINGS = [
     value: true,
     description: "Operator diizinkan mengelola antrean (panggil, lewati, atur loket)",
   },
+
+  // === Cloudflare R2 Connection ===
+  {
+    key: "r2_endpoint",
+    value: process.env.R2_ENDPOINT || "",
+    description: "Endpoint Cloudflare R2 (S3-compatible)",
+  },
+  {
+    key: "r2_bucket",
+    value: process.env.R2_BUCKET || "",
+    description: "Nama bucket Cloudflare R2",
+  },
+  {
+    key: "r2_region",
+    value: process.env.R2_REGION || "auto",
+    description: "Region Cloudflare R2 (default: auto)",
+  },
+  {
+    key: "r2_access_key_id",
+    value: process.env.R2_ACCESS_KEY_ID || "",
+    description: "Access Key ID Cloudflare R2",
+  },
+  {
+    key: "r2_secret_access_key",
+    value: process.env.R2_SECRET_ACCESS_KEY || "",
+    description: "Secret Access Key Cloudflare R2",
+  },
+  {
+    key: "r2_prefix",
+    value: process.env.R2_PREFIX !== undefined ? process.env.R2_PREFIX : "uploads/",
+    description: "Prefix path untuk unggahan berkas R2 (misal: uploads/)",
+  },
+  {
+    key: "r2_public_url",
+    value: process.env.R2_PUBLIC_URL || "",
+    description: "Domain/URL publik R2 untuk preview berkas",
+  },
+
+  // === ScholarGate SSO Connection ===
+  {
+    key: "sso_base_url",
+    value: process.env.SSO_BASE_URL || "",
+    description: "Base URL integrasi SSO ScholarGate",
+  },
+  {
+    key: "sso_api_key",
+    value: process.env.SSO_API_KEY || "",
+    description: "API Key integrasi SSO ScholarGate",
+  },
+
+  // === Google OAuth Client ===
+  {
+    key: "google_client_id",
+    value: process.env.GOOGLE_CLIENT_ID || "",
+    description: "Client ID Google OAuth untuk masuk Operator",
+  },
 ];

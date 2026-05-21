@@ -77,8 +77,9 @@ routes.get("/settings/public", async (c) => {
       }
     }
 
-    // Also expose R2 public URL for document viewing
-    result.r2_public_url = process.env.R2_PUBLIC_URL || "";
+    // Also expose R2 public URL for document viewing from settings
+    const r2UrlSetting = settings.find((s: any) => s.key === "r2_public_url");
+    result.r2_public_url = r2UrlSetting ? r2UrlSetting.value : "";
 
     return c.json({ success: true, data: result });
   } catch (err: any) {
