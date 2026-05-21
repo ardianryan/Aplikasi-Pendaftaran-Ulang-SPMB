@@ -140,7 +140,8 @@
         : (status === 'buka' ? 'border-emerald-200 bg-emerald-50/30 hover:border-violet-400 hover:bg-violet-50' : 'border-slate-200 hover:border-violet-400 hover:bg-violet-50');
 
       return `
-        <button onclick="if(${isFull}) { alert('Loket penuh! Maksimal 2 operator.'); return; } selectCounter(${id}, '${name.replace(/'/g, "\\'")}')"
+        <button onclick="if(${isFull}) { alert('Loket penuh! Maksimal 2 operator.'); return; } selectCounter(${id}, this)"
+          data-name="${name.replace(/"/g, '&quot;')}"
           class="relative flex flex-col items-center gap-1.5 p-4 border-2 rounded-2xl transition-all col-span-3 sm:col-span-1 ${buttonStyle}">
           <span class="text-2xl">${status === 'istirahat' ? '☕' : '🖥️'}</span>
           <span class="text-xs font-bold text-slate-700">${name}</span>
@@ -178,7 +179,8 @@
     syncServingTicket();
   }
 
-  window.selectCounter = async function (id, name) {
+  window.selectCounter = async function (id, nameOrElement) {
+    const name = typeof nameOrElement === 'string' ? nameOrElement : nameOrElement.getAttribute('data-name');
     if (counterSelectError) {
       counterSelectError.classList.add('hidden');
     }

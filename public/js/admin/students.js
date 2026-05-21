@@ -253,7 +253,7 @@
                 <span class="material-symbols-outlined text-lg">visibility</span>
               </button>
               ${canDelete ? `
-              <button onclick="deleteStudent('${s._id}', '${name.replace(/'/g, "\\'")}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all">
+              <button onclick="deleteStudent('${s._id}', this)" data-name="${name.replace(/"/g, '&quot;')}" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all">
                 <span class="material-symbols-outlined text-lg">delete</span>
               </button>
               ` : ''}
@@ -294,7 +294,8 @@
 
   window.goToPage = (p) => { currentPage = p; loadStudents(); };
 
-  window.deleteStudent = async (id, name) => {
+  window.deleteStudent = async (id, nameOrElement) => {
+    const name = typeof nameOrElement === 'string' ? nameOrElement : nameOrElement.getAttribute('data-name');
     if (!await UI.confirm('Hapus Siswa?', `Hapus data ${name}? Tindakan ini tidak dapat dibatalkan.`)) return;
     try {
       await API.request(`/admin/students/${id}`, { method: 'DELETE' });

@@ -380,7 +380,7 @@
                 <button onclick="toggleRole('${op._id}', '${op.role === 'admin' ? 'operator' : 'admin'}')" class="p-1.5 rounded hover:bg-surface-container-low transition" title="${op.role === 'admin' ? 'Jadikan Operator' : 'Jadikan Admin'}">
                   <span class="material-symbols-outlined text-on-surface-variant" style="font-size:18px">${op.role === 'admin' ? 'arrow_downward' : 'arrow_upward'}</span>
                 </button>
-                <button onclick="deleteOp('${op._id}', '${op.nama.replace(/'/g, "\\'")}')" class="p-1.5 rounded hover:bg-error-container/30 transition" title="Hapus">
+                <button onclick="deleteOp('${op._id}', this)" data-name="${op.nama.replace(/"/g, '&quot;')}" class="p-1.5 rounded hover:bg-error-container/30 transition" title="Hapus">
                   <span class="material-symbols-outlined text-error" style="font-size:18px">delete</span>
                 </button>
               </div>
@@ -464,7 +464,8 @@
     }
 
     // Delete operator
-    async function deleteOp(id, nama) {
+    async function deleteOp(id, nameOrElement) {
+      const nama = typeof nameOrElement === 'string' ? nameOrElement : nameOrElement.getAttribute('data-name');
       if (!confirm(`Hapus operator "${nama}"? Akun ini tidak akan bisa login lagi.`)) return;
       try {
         await API.request(`/admin/operators/${id}`, { method: 'DELETE' });

@@ -191,7 +191,7 @@ function renderTable(operators) {
             <button onclick="toggleActive('${op._id}', ${!op.isActive})" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-all">
               <span class="material-symbols-outlined text-sm">${op.isActive ? 'block' : 'check_circle'}</span>
             </button>
-            <button onclick="deleteOp('${op._id}', '${op.nama.replace(/'/g, "\\'")}')" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all">
+            <button onclick="deleteOp('${op._id}', this)" data-name="${op.nama.replace(/"/g, '&quot;')}" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-all">
               <span class="material-symbols-outlined text-sm">delete</span>
             </button>
           </div>
@@ -233,7 +233,8 @@ async function toggleActive(id, isActive) {
   } catch (err) { UI.toast(err.message, 'error'); }
 }
 
-async function deleteOp(id, nama) {
+async function deleteOp(id, nameOrElement) {
+  const nama = typeof nameOrElement === 'string' ? nameOrElement : nameOrElement.getAttribute('data-name');
   if (!await UI.confirm('Hapus Operator?', `Hapus operator "${nama}"?`)) return;
   try {
     await API.request(`/admin/operators/${id}`, { method: 'DELETE' });
