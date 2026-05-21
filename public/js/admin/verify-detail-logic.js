@@ -390,7 +390,13 @@ async function downloadPdf() {
     const res = await fetch(`/api/admin/students/${studentId}/pdf`, { headers: { Authorization: `Bearer ${token}` } });
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `Buku_Induk_${student.nisn}.pdf`; a.click();
+    
+    const name = (student.biodata?.namaLengkap || student.namaPreRegister || "SISWA").toUpperCase();
+    const nisn = student.nisn || "";
+    const asalSmp = (student.pendidikan?.asalSekolah || student.asalSmpPreRegister || "SMP").toUpperCase();
+    const filename = `${name} - ${nisn} - ${asalSmp} - BUKU INDUK.pdf`;
+
+    const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
   } catch (err) { UI.toast('Gagal download PDF', 'error'); }
 }
 

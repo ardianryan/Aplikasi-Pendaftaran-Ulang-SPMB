@@ -582,7 +582,13 @@
         if (!res.ok) throw new Error('Gagal');
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `Buku_Induk_${student.nisn}.pdf`; a.click();
+
+        const name = (student.biodata?.namaLengkap || student.namaPreRegister || "SISWA").toUpperCase();
+        const nisn = student.nisn || "";
+        const asalSmp = (student.pendidikan?.asalSekolah || student.asalSmpPreRegister || "SMP").toUpperCase();
+        const filename = `${name} - ${nisn} - ${asalSmp} - BUKU INDUK.pdf`;
+
+        const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
         URL.revokeObjectURL(url);
       } catch (err) { showToast('Gagal download PDF', 'error'); }
     }

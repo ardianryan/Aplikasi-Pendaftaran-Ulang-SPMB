@@ -806,24 +806,155 @@ const Wizard = {
   },
 
   buildReviewHTML(d) {
+    const formatDate = (dateStr) => {
+      if (!dateStr) return "-";
+      try {
+        const dStr = new Date(dateStr);
+        if (isNaN(dStr.getTime())) return "-";
+        return dStr.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+      } catch (e) {
+        return "-";
+      }
+    };
+
     const b = d.biodata || {};
     const a = d.alamat || {};
-    return `
-      <div class="space-y-4">
-        <div class="bg-surface-container-low rounded-lg p-4">
-          <h4 class="font-bold text-sm text-primary mb-3">Data Diri</h4>
-          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-            <div><dt class="text-on-surface-variant">Nama</dt><dd class="font-medium">${b.namaLengkap || "-"}</dd></div>
-            <div><dt class="text-on-surface-variant">Jenis Kelamin</dt><dd class="font-medium">${b.jenisKelamin || "-"}</dd></div>
-            <div><dt class="text-on-surface-variant">NIK</dt><dd class="font-medium">${b.nik || "-"}</dd></div>
-            <div><dt class="text-on-surface-variant">Agama</dt><dd class="font-medium">${b.agama || "-"}</dd></div>
+    const k = d.kesehatan || {};
+    const p = d.pendidikan || {};
+    const ayah = d.ayah || {};
+    const ibu = d.ibu || {};
+    const wali = d.wali || {};
+    const h = d.kegemaran || {};
+
+    let waliHTML = "";
+    if (wali.nama && wali.nama.trim() !== "") {
+      waliHTML = `
+        <div class="bg-surface-container-low rounded-lg p-4 border border-slate-100 shadow-sm">
+          <h4 class="font-bold text-sm text-primary mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">supervisor_account</span> Data Wali (Opsional)
+          </h4>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div><dt class="text-slate-400 font-medium">Nama Wali</dt><dd class="font-bold text-slate-700">${wali.nama || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Status Hidup</dt><dd class="font-medium text-slate-700">${wali.status || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${wali.tempatLahir || "-"}, ${formatDate(wali.tanggalLahir)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${wali.agama || "-"} / ${wali.kewarganegaraan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Pendidikan & Pekerjaan</dt><dd class="font-medium text-slate-700">${wali.pendidikan || "-"} / ${wali.pekerjaan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Penghasilan Bulanan</dt><dd class="font-medium text-slate-700">${wali.penghasilan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">No. Telepon & Email</dt><dd class="font-medium text-slate-700">${wali.telepon || "-"} / ${wali.email || "-"}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat</dt><dd class="font-medium text-slate-700">${wali.alamat || "-"}</dd></div>
           </dl>
         </div>
-        <div class="bg-surface-container-low rounded-lg p-4">
-          <h4 class="font-bold text-sm text-primary mb-3">Alamat & Kontak</h4>
-          <dl class="grid grid-cols-1 gap-2 text-sm">
-            <div><dt class="text-on-surface-variant">Alamat</dt><dd class="font-medium">${a.alamatLengkap || "-"}</dd></div>
-            <div><dt class="text-on-surface-variant">Telepon</dt><dd class="font-medium">${a.telepon || "-"}</dd></div>
+      `;
+    }
+
+    return `
+      <div class="space-y-6 text-left">
+        <!-- Section A: Data Diri -->
+        <div class="bg-surface-container-low rounded-lg p-4 border border-slate-100 shadow-sm">
+          <h4 class="font-bold text-sm text-primary mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">person</span> Data Diri Peserta Didik
+          </h4>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div><dt class="text-slate-400 font-medium">Nama Lengkap</dt><dd class="font-bold text-slate-700">${b.namaLengkap || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Nama Panggilan</dt><dd class="font-medium text-slate-700">${b.namaPanggilan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">NIK</dt><dd class="font-medium text-slate-700">${b.nik || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Jenis Kelamin</dt><dd class="font-medium text-slate-700">${b.jenisKelamin || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${b.tempatLahir || "-"}, ${formatDate(b.tanggalLahir)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${b.agama || "-"} / ${b.kewarganegaraan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Anak Ke / Jumlah Saudara</dt><dd class="font-medium text-slate-700">Anak ke-${b.anakKe || "-"} dari ${b.jumlahSaudara || "-"} bersaudara</dd></div>
+            <div><dt class="text-slate-400 font-medium">Saudara Kandung/Tiri/Angkat</dt><dd class="font-medium text-slate-700">Kandung: ${b.saudaraKandung || "0"}, Tiri: ${b.saudaraTiri || "0"}, Angkat: ${b.saudaraAngkat || "0"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Status Yatim / Piatu</dt><dd class="font-medium text-slate-700">${b.statusYatim || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Bahasa Sehari-hari</dt><dd class="font-medium text-slate-700">${b.bahasaSehari || "-"}</dd></div>
+          </dl>
+        </div>
+
+        <!-- Section B: Tempat Tinggal -->
+        <div class="bg-surface-container-low rounded-lg p-4 border border-slate-100 shadow-sm">
+          <h4 class="font-bold text-sm text-primary mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">home</span> Tempat Tinggal & Kontak
+          </h4>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat Lengkap</dt><dd class="font-medium text-slate-700">${a.alamatLengkap || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">No. Telepon / HP</dt><dd class="font-medium text-slate-700">${a.telepon || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Email</dt><dd class="font-medium text-slate-700">${a.email || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tinggal Dengan</dt><dd class="font-medium text-slate-700">${a.tinggalDengan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Jarak ke Sekolah / Transportasi</dt><dd class="font-medium text-slate-700">${a.jarakSekolah || "-"} / ${a.transportasi || "-"}</dd></div>
+          </dl>
+        </div>
+
+        <!-- Section C: Kesehatan -->
+        <div class="bg-surface-container-low rounded-lg p-4 border border-slate-100 shadow-sm">
+          <h4 class="font-bold text-sm text-primary mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">medical_services</span> Kesehatan
+          </h4>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div><dt class="text-slate-400 font-medium">Golongan Darah</dt><dd class="font-medium text-slate-700">${k.golonganDarah || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tinggi / Berat Badan</dt><dd class="font-medium text-slate-700">${k.tinggiBadan || "-"} cm / ${k.beratBadan || "-"} kg</dd></div>
+            <div><dt class="text-slate-400 font-medium">Penyakit Pernah Diderita</dt><dd class="font-medium text-slate-700">${k.penyakit || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Kelainan Jasmani</dt><dd class="font-medium text-slate-700">${k.kelainanJasmani || "-"}</dd></div>
+          </dl>
+        </div>
+
+        <!-- Section D: Pendidikan -->
+        <div class="bg-surface-container-low rounded-lg p-4 border border-slate-100 shadow-sm">
+          <h4 class="font-bold text-sm text-primary mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">school</span> Pendidikan Sebelumnya
+          </h4>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div><dt class="text-slate-400 font-medium">Asal Sekolah (SMP)</dt><dd class="font-bold text-slate-700">${p.asalSekolah || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Nomor Ijazah</dt><dd class="font-medium text-slate-700">${p.nomorIjazah || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Lama Belajar</dt><dd class="font-medium text-slate-700">${p.lamaBelajar || "-"} tahun</dd></div>
+            <div><dt class="text-slate-400 font-medium">Kelas</dt><dd class="font-medium text-slate-700">${p.kelas || "-"}</dd></div>
+          </dl>
+        </div>
+
+        <!-- Section E: Data Ayah Kandung -->
+        <div class="bg-surface-container-low rounded-lg p-4 border border-slate-100 shadow-sm">
+          <h4 class="font-bold text-sm text-primary mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">person</span> Data Ayah Kandung
+          </h4>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div><dt class="text-slate-400 font-medium">Nama Ayah</dt><dd class="font-bold text-slate-700">${ayah.nama || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Status Hidup</dt><dd class="font-medium text-slate-700">${ayah.status || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${ayah.tempatLahir || "-"}, ${formatDate(ayah.tanggalLahir)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${ayah.agama || "-"} / ${ayah.kewarganegaraan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Pendidikan & Pekerjaan</dt><dd class="font-medium text-slate-700">${ayah.pendidikan || "-"} / ${ayah.pekerjaan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Penghasilan Bulanan</dt><dd class="font-medium text-slate-700">${ayah.penghasilan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">No. Telepon & Email</dt><dd class="font-medium text-slate-700">${ayah.telepon || "-"} / ${ayah.email || "-"}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat</dt><dd class="font-medium text-slate-700">${ayah.alamat || "-"}</dd></div>
+          </dl>
+        </div>
+
+        <!-- Section F: Data Ibu Kandung -->
+        <div class="bg-surface-container-low rounded-lg p-4 border border-slate-100 shadow-sm">
+          <h4 class="font-bold text-sm text-primary mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">person</span> Data Ibu Kandung
+          </h4>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div><dt class="text-slate-400 font-medium">Nama Ibu</dt><dd class="font-bold text-slate-700">${ibu.nama || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Status Hidup</dt><dd class="font-medium text-slate-700">${ibu.status || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Tempat, Tanggal Lahir</dt><dd class="font-medium text-slate-700">${ibu.tempatLahir || "-"}, ${formatDate(ibu.tanggalLahir)}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Agama & Kewarganegaraan</dt><dd class="font-medium text-slate-700">${ibu.agama || "-"} / ${ibu.kewarganegaraan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Pendidikan & Pekerjaan</dt><dd class="font-medium text-slate-700">${ibu.pendidikan || "-"} / ${ibu.pekerjaan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Penghasilan Bulanan</dt><dd class="font-medium text-slate-700">${ibu.penghasilan || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">No. Telepon & Email</dt><dd class="font-medium text-slate-700">${ibu.telepon || "-"} / ${ibu.email || "-"}</dd></div>
+            <div class="sm:col-span-2"><dt class="text-slate-400 font-medium">Alamat</dt><dd class="font-medium text-slate-700">${ibu.alamat || "-"}</dd></div>
+          </dl>
+        </div>
+
+        <!-- Section G: Wali -->
+        ${waliHTML}
+
+        <!-- Section H: Kegemaran -->
+        <div class="bg-surface-container-low rounded-lg p-4 border border-slate-100 shadow-sm">
+          <h4 class="font-bold text-sm text-primary mb-3 flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">interests</span> Kegemaran & Bakat
+          </h4>
+          <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div><dt class="text-slate-400 font-medium">Kesenian</dt><dd class="font-medium text-slate-700">${h.kesenian || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Olahraga</dt><dd class="font-medium text-slate-700">${h.olahraga || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Organisasi</dt><dd class="font-medium text-slate-700">${h.organisasi || "-"}</dd></div>
+            <div><dt class="text-slate-400 font-medium">Lain-lain</dt><dd class="font-medium text-slate-700">${h.lainLain || "-"}</dd></div>
           </dl>
         </div>
       </div>
@@ -863,33 +994,71 @@ const Wizard = {
         }
       }
 
-      // Render Queue Ticket if available
+      // Render Queue Ticket
       const ticket = res.data?.queueTicket;
-      const ticketEl = document.getElementById("student-queue-ticket");
-      if (ticketEl) {
-        if (ticket) {
-          ticketEl.innerHTML = `
-            <div class="mt-2 mb-10 p-6 bg-blue-50/50 border-2 border-dashed border-blue-100 rounded-3xl max-w-sm mx-auto text-center">
-              <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm shadow-blue-50">
-                <span class="material-symbols-outlined text-2xl">confirmation_number</span>
-              </div>
-              <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest block mb-1">Nomor Antrean Anda</span>
-              <span class="text-4xl font-extrabold text-blue-700 tracking-tight block">${ticket.ticketNumber}</span>
-              <span class="text-[11px] font-medium text-slate-400 block mt-2">
-                Status: ${ticket.status === 'serving' ? '<span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-lg animate-pulse">Sedang Dilayani</span>' : 
-                          ticket.status === 'done' ? '<span class="text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded-lg">Selesai</span>' :
-                          ticket.status === 'skipped' ? '<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-lg">Dilewati</span>' :
-                          '<span class="text-blue-500 font-bold bg-blue-100/50 px-2 py-0.5 rounded-lg">Menunggu Panggilan</span>'}
-              </span>
-              <p class="text-[10px] text-slate-400 mt-4 leading-relaxed">Silakan tunjukkan nomor antrean ini kepada panitia loket verifikasi saat berkas fisik Anda diperiksa secara tatap muka.</p>
-            </div>
-          `;
-          ticketEl.classList.remove("hidden");
-        } else {
-          ticketEl.classList.add("hidden");
-        }
-      }
+      this.renderQueueTicket(ticket);
     } catch (e) {}
+  },
+
+  renderQueueTicket(ticket) {
+    const ticketEl = document.getElementById("student-queue-ticket");
+    if (!ticketEl) return;
+
+    if (ticket) {
+      ticketEl.innerHTML = `
+        <div class="mt-2 mb-10 p-6 bg-blue-50/50 border-2 border-dashed border-blue-100 rounded-3xl max-w-sm mx-auto text-center shadow-sm">
+          <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm shadow-blue-50">
+            <span class="material-symbols-outlined text-2xl">confirmation_number</span>
+          </div>
+          <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest block mb-1">Nomor Antrean Anda</span>
+          <span class="text-4xl font-extrabold text-blue-700 tracking-tight block">${ticket.ticketNumber}</span>
+          <span class="text-[11px] font-medium text-slate-400 block mt-2">
+            Status: ${ticket.status === 'serving' ? '<span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-lg animate-pulse">Sedang Dilayani</span>' : 
+                      ticket.status === 'done' ? '<span class="text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded-lg">Selesai</span>' :
+                      ticket.status === 'skipped' ? '<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-lg">Dilewati</span>' :
+                      '<span class="text-blue-500 font-bold bg-blue-100/50 px-2 py-0.5 rounded-lg">Menunggu Panggilan</span>'}
+          </span>
+          <p class="text-[10px] text-slate-400 mt-4 leading-relaxed">Silakan tunjukkan nomor antrean ini kepada panitia loket verifikasi saat berkas fisik Anda diperiksa secara tatap muka.</p>
+        </div>
+      `;
+      ticketEl.classList.remove("hidden");
+      this.initQueueSSE();
+    } else {
+      ticketEl.innerHTML = "";
+      ticketEl.classList.add("hidden");
+      this.closeQueueSSE();
+    }
+  },
+
+  initQueueSSE() {
+    if (this.queueSSE) return;
+
+    this.queueSSE = new EventSource('/api/queue/stream');
+
+    const handleUpdate = async () => {
+      try {
+        const res = await API.getReview();
+        this.renderQueueTicket(res.data?.queueTicket);
+      } catch (err) {}
+    };
+
+    this.queueSSE.addEventListener('status_update', handleUpdate);
+    this.queueSSE.addEventListener('call', handleUpdate);
+    this.queueSSE.addEventListener('done', handleUpdate);
+    this.queueSSE.addEventListener('session_end', handleUpdate);
+    
+    this.queueSSE.onerror = () => {
+      // Silent error handler
+    };
+  },
+
+  closeQueueSSE() {
+    if (this.queueSSE) {
+      try {
+        this.queueSSE.close();
+      } catch (err) {}
+      this.queueSSE = null;
+    }
   },
 
   async downloadPdf() {
@@ -899,7 +1068,12 @@ const Wizard = {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Buku_Induk.pdf`;
+
+      const nama = (this.studentData?.nama || "SISWA").toUpperCase();
+      const nisn = this.studentData?.nisn || "";
+      const asalSmp = (this.studentData?.asalSmp || "SMP").toUpperCase();
+      a.download = `${nama} - ${nisn} - ${asalSmp} - BUKU INDUK.pdf`;
+
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -908,6 +1082,7 @@ const Wizard = {
       this.setButtonLoading("btn-download-pdf", false);
     }
   },
+
 
   // ============================================
   // Utilities

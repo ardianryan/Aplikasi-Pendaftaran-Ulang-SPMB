@@ -496,10 +496,14 @@ export async function downloadPdf(c: Context) {
     const pdfBuffer = await generatePdf(student);
 
     // Return PDF as download
+    const name = (student.biodata?.namaLengkap || student.namaPreRegister || "SISWA").toUpperCase();
+    const asalSmp = (student.pendidikan?.asalSekolah || student.asalSmpPreRegister || "SMP").toUpperCase();
+    const filename = `${name} - ${student.nisn} - ${asalSmp} - BUKU INDUK.pdf`;
+
     c.header("Content-Type", "application/pdf");
     c.header(
       "Content-Disposition",
-      `attachment; filename="Buku_Induk_${student.nisn}.pdf"`
+      `attachment; filename="${encodeURIComponent(filename)}"`
     );
 
     return c.body(pdfBuffer as any);
