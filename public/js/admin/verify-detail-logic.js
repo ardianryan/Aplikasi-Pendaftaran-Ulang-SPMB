@@ -26,7 +26,12 @@ async function init() {
     const studentJalur = student.jalur || "all";
     const berkasSettings = settingsRes.landing_berkas_json || [];
     DOC_TYPES = berkasSettings
-      .filter(b => b.active && (b.jalur.includes("all") || b.jalur.includes(studentJalur)))
+      .filter(b => {
+        if (!b.active) return false;
+        if (!b.jalur || b.jalur === "all" || (typeof b.jalur.includes === 'function' && b.jalur.includes("all"))) return true;
+        const jalurList = Array.isArray(b.jalur) ? b.jalur : (typeof b.jalur === 'string' ? b.jalur.split(",").map(s => s.trim()) : []);
+        return jalurList.includes(studentJalur);
+      })
       .map(b => ({
         key: b.id,
         label: b.title,

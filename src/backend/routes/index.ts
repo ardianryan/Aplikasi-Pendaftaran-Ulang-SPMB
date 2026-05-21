@@ -69,6 +69,7 @@ routes.get("/settings/public", async (c) => {
       "url_youtube_tutorial",
       "url_download_center",
       "queue_student_link_enabled",
+      "landing_berkas_json",
     ];
 
     const result: Record<string, any> = {};
