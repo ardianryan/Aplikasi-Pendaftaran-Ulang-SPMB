@@ -23,6 +23,8 @@ if (typeof window.API === 'undefined') {
   clearToken() {
     localStorage.removeItem("spmb_token");
     localStorage.removeItem("spmb_student");
+    localStorage.removeItem("spmb_selected_counter_id");
+    localStorage.removeItem("spmb_selected_counter_name");
   },
 
   /**

@@ -5,7 +5,7 @@
  */
 
 import { Hono } from "hono";
-import { adminAuth } from "../middleware/auth.middleware";
+import { adminAuth, requireAdmin, requirePermission } from "../middleware/auth.middleware";
 import {
   getStats,
   getStudents,
@@ -58,45 +58,45 @@ adminRoutes.put("/profile", updateProfile);
 
 // Student management
 adminRoutes.get("/students", getStudents);
-adminRoutes.post("/students", addStudent);
+adminRoutes.post("/students", requirePermission("operator_can_edit_student"), addStudent);
 adminRoutes.get("/students/:id", getStudentDetail);
 adminRoutes.get("/students/:id/pdf", adminDownloadPdf); // Admin download student PDF
-adminRoutes.put("/students/:id/update", updateStudentData); // Admin edit student data
-adminRoutes.delete("/students/:id", deleteStudent);
+adminRoutes.put("/students/:id/update", requirePermission("operator_can_edit_student"), updateStudentData); // Admin edit student data
+adminRoutes.delete("/students/:id", requirePermission("operator_can_delete_student"), deleteStudent);
 
 // Verification
-adminRoutes.put("/students/:id/verify", verifyStudent);
+adminRoutes.put("/students/:id/verify", requirePermission("operator_can_verify"), verifyStudent);
 
 // Import / Export
-adminRoutes.post("/import", importStudents);
-adminRoutes.get("/import/template", getImportTemplate);
-adminRoutes.get("/export", exportStudents);
+adminRoutes.post("/import", requireAdmin, importStudents);
+adminRoutes.get("/import/template", requireAdmin, getImportTemplate);
+adminRoutes.get("/export", requireAdmin, exportStudents);
 
 // Settings
 adminRoutes.get("/settings", getSettings);
-adminRoutes.put("/settings", updateSettings);
-adminRoutes.post("/settings/upload/:key", uploadSettingsFile); // Upload logo/icon
+adminRoutes.put("/settings", requireAdmin, updateSettings);
+adminRoutes.post("/settings/upload/:key", requireAdmin, uploadSettingsFile); // Upload logo/icon
 
 // SSO & Operator Management
-adminRoutes.post("/sso/pull", pullSSOMembers); // Pull guru/tendik from ScholarGate
-adminRoutes.get("/operators", getOperators); // List all operators
-adminRoutes.post("/operators", createOperator); // Create local operator
-adminRoutes.put("/operators/:id", updateOperator); // Update operator role/status
-adminRoutes.delete("/operators/:id", deleteOperator); // Remove operator
+adminRoutes.post("/sso/pull", requireAdmin, pullSSOMembers); // Pull guru/tendik from ScholarGate
+adminRoutes.get("/operators", requireAdmin, getOperators); // List all operators
+adminRoutes.post("/operators", requireAdmin, createOperator); // Create local operator
+adminRoutes.put("/operators/:id", requireAdmin, updateOperator); // Update operator role/status
+adminRoutes.delete("/operators/:id", requireAdmin, deleteOperator); // Remove operator
 
 // Referral Code Management
-adminRoutes.get("/referrals", getReferrals); // List all referral codes
-adminRoutes.post("/referrals", createReferral); // Create new prefix
-adminRoutes.delete("/referrals/:id", deleteReferral); // Delete referral
-adminRoutes.put("/referrals/:id/toggle", toggleReferral); // Toggle active/inactive
+adminRoutes.get("/referrals", requireAdmin, getReferrals); // List all referral codes
+adminRoutes.post("/referrals", requireAdmin, createReferral); // Create new prefix
+adminRoutes.delete("/referrals/:id", requireAdmin, deleteReferral); // Delete referral
+adminRoutes.put("/referrals/:id/toggle", requireAdmin, toggleReferral); // Toggle active/inactive
 
 // WhatsApp Gateway
-adminRoutes.get("/wa/status", waStatus);
-adminRoutes.post("/wa/test", waTest);
-adminRoutes.post("/wa/send", waSend);
-adminRoutes.get("/wa/blast/preview", waBlastPreview);
-adminRoutes.post("/wa/blast", waBlast);
-adminRoutes.get("/wa/logs", waLogs);
-adminRoutes.delete("/wa/logs/cleanup", waLogsCleanup);
+adminRoutes.get("/wa/status", requirePermission("operator_can_whatsapp"), waStatus);
+adminRoutes.post("/wa/test", requirePermission("operator_can_whatsapp"), waTest);
+adminRoutes.post("/wa/send", requirePermission("operator_can_whatsapp"), waSend);
+adminRoutes.get("/wa/blast/preview", requirePermission("operator_can_whatsapp"), waBlastPreview);
+adminRoutes.post("/wa/blast", requirePermission("operator_can_whatsapp"), waBlast);
+adminRoutes.get("/wa/logs", requirePermission("operator_can_whatsapp"), waLogs);
+adminRoutes.delete("/wa/logs/cleanup", requirePermission("operator_can_whatsapp"), waLogsCleanup);
 
 export { adminRoutes };

@@ -27,7 +27,7 @@ export const AdminVerifyDetail = (props: any) => {
               <span className="material-symbols-outlined text-lg">print</span>
               Cetak Buku Induk
             </button>
-            <button onclick="verifyAll()" className="px-6 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-100">
+            <button onclick="verifyAll()" id="btn-verify-all" className="px-6 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-100">
               <span className="material-symbols-outlined text-lg">done_all</span>
               Verifikasi Semua
             </button>

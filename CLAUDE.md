@@ -12,7 +12,7 @@ This is **SPMB-WA**, a student re-registration (daftar ulang) web application fo
 - **File Storage:** Cloudflare R2 (S3-compatible SDK)
 - **Frontend:** React (Hono JSX) + Tailwind CSS
 - **Routing:** Hono server-side routing for both API and Pages
-- **Auth:** JWT (stateless, stored in localStorage + Authorization header)
+- **Auth:** JWT (stateless, stored in localStorage + Authorization header, 8-hour expiration by default)
 - **Auth (Admin):** Local username/password OR Google OAuth (via ScholarGate SSO + referral code)
 - **PDF:** Puppeteer (HTML template → PDF)
 - **Excel:** ExcelJS for import/export
@@ -34,7 +34,11 @@ This is **SPMB-WA**, a student re-registration (daftar ulang) web application fo
 
 7. **Dynamic jalur/tahap** — Landing page jalurs and required files are fully configurable via Admin Dashboard (stored as JSON in settings).
 
-8. **Role-based access** — Operators have restricted views; Admins see all. Enforced via `adminAuth` middleware and `role-guard.js`.
+8. **Role-based access** — Dynamic settings-based permissions for operators (verify, edit, delete, WhatsApp, queue) managed in Admin Settings and enforced via `adminRole` in JWT, backend middlewares (`requireAdmin`), and client-side `role-guard.js` (hiding menus/elements).
+
+9. **8-Hour Session Duration** — JWT expiration is configured to `8h` by default (configurable via `JWT_EXPIRES_IN`) to prevent operators from being logged out during their shift.
+
+10. **Queue Batch & Auto-Cleanup** — Queue tickets are generated in batches. When a session is ended manually or closed implicitly by starting a new one, all unserved `"waiting"` tickets are deleted automatically, and `lastIssuedNumber` is updated to the actual last called ticket sequence number. A new session with `continueFromLast` option will resume sequentially from that number.
 
 ## Directory Structure
 
@@ -127,29 +131,26 @@ Files go to R2 with key: `{R2_PREFIX}{nisn}/{docType}.{ext}`
 ## Common Tasks
 
 ### Add a new setting
-1. Add to `DEFAULT_SETTINGS` array in `src/models/Setting.ts`
-2. Add key to `publicKeys` array in `src/routes/index.ts` (if public-facing)
-3. Add UI in `public/admin/settings.html`
-4. Add to `TEXT_SETTINGS` array in settings.html script
+1. Add to `DEFAULT_SETTINGS` array in `src/backend/models/Setting.ts`.
+2. Add key to public key filter in `src/backend/utils/settings.ts` or routes if public-facing.
+3. Add UI in `src/frontend/pages/AdminSettings.tsx` to allow editing.
 
 ### Add a new form field to biodata
-1. Add to Student schema in `src/models/Student.ts`
-2. Add HTML input in `public/wizard.html` (inside appropriate accordion)
-3. Add get/set in `public/js/wizard.js` (`populateBiodataForm` + `collectBiodataForm`)
-4. Add to verify-detail.html `renderBiodata()` function
-5. Add to PDF template in `src/templates/pdf/buku-induk.html`
-6. Add placeholder replacement in `src/services/pdf.service.ts`
+1. Add to Student schema in `src/backend/models/Student.ts`.
+2. Add input fields in `src/frontend/pages/Wizard.tsx` (inside the appropriate accordion section).
+3. Add get/set mappings in `public/js/wizard.js` (`populateBiodataForm` + `collectBiodataForm`).
+4. Add representation in `src/frontend/pages/AdminVerifyDetail.tsx`.
+5. Add to PDF template in `src/backend/templates/pdf/buku-induk.html` (if applicable) and configure placeholder replacement in `src/backend/services/pdf.service.ts`.
 
 ### Add a new admin page
-1. Create `public/admin/newpage.html` (copy sidebar from existing page)
-2. Include `settings-loader.js` and `role-guard.js`
-3. Add sidebar link in all other admin pages
-4. Pretty URL works automatically (no backend changes needed)
+1. Create page TSX file under `src/frontend/pages/AdminNewPage.tsx`.
+2. Define route in `src/index.tsx` pointing to the new page, wrapping it in admin validation/guards.
+3. Add sidebar navigation link in `src/frontend/layouts/AdminLayout.tsx`.
 
 ### Biodata validation
-- Auto-save (`PUT /biodata`): uses `biodataUpdateSchema` — VERY permissive (`z.record(z.any())`), accepts anything
-- Complete (`POST /biodata/complete`): uses `biodataCompleteSchema` — strict, checks required fields with `requiredSelect()`, `requiredString()`, `requiredNumber()` helpers
-- Locked fields (from import): `namaLengkap`, `tanggalLahir`, `asalSekolah` — readonly in frontend, skipped in backend save
+- Auto-save (`PUT /biodata`): uses `biodataUpdateSchema` — VERY permissive (`z.record(z.any())`), accepts anything.
+- Complete (`POST /biodata/complete`): uses `biodataCompleteSchema` — strict, checks required fields with `requiredSelect()`, `requiredString()`, `requiredNumber()` helpers.
+- Locked fields (from import): `namaLengkap`, `tanggalLahir`, `asalSekolah` — readonly in frontend, skipped in backend save.
 
 ## Testing
 

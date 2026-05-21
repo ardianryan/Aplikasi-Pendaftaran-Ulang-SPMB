@@ -357,4 +357,30 @@ export const DEFAULT_SETTINGS = [
     value: "dark",
     description: "Tema bawaan awal display publik antrean (dark = gelap, light = terang)",
   },
+  // === Hak Akses Operator ===
+  {
+    key: "operator_can_verify",
+    value: true,
+    description: "Operator diizinkan melakukan verifikasi berkas pendaftar",
+  },
+  {
+    key: "operator_can_edit_student",
+    value: true,
+    description: "Operator diizinkan menambah data manual dan mengubah biodata siswa",
+  },
+  {
+    key: "operator_can_delete_student",
+    value: false,
+    description: "Operator diizinkan menghapus data siswa",
+  },
+  {
+    key: "operator_can_whatsapp",
+    value: false,
+    description: "Operator diizinkan mengelola fitur WhatsApp Gateway dan logs",
+  },
+  {
+    key: "operator_can_manage_queue",
+    value: true,
+    description: "Operator diizinkan mengelola antrean (panggil, lewati, atur loket)",
+  },
 ];

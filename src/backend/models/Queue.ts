@@ -12,6 +12,12 @@ interface ICurrentServing {
   ticketNumber: string | null;
   ticketId: mongoose.Types.ObjectId | null;
   calledAt: Date | null;
+  status: "tutup" | "buka" | "istirahat";
+  operators: {
+    adminId: string;
+    name: string;
+    lastSeen: Date;
+  }[];
 }
 
 export interface IQueue extends Document {
@@ -37,6 +43,21 @@ const CurrentServingSubSchema = new Schema<ICurrentServing>(
     ticketNumber: { type: String, default: null },
     ticketId: { type: Schema.Types.ObjectId, ref: "QueueTicket", default: null },
     calledAt: { type: Date, default: null },
+    status: {
+      type: String,
+      enum: ["tutup", "buka", "istirahat"],
+      default: "tutup",
+    },
+    operators: {
+      type: [
+        {
+          adminId: { type: String, required: true },
+          name: { type: String, required: true },
+          lastSeen: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
   },
   { _id: false }
 );

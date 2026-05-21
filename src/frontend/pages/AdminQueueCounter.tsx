@@ -41,6 +41,11 @@ export const AdminQueueCounter = (props: any) => {
               <p>Selesai hari ini: <span id="statDone" className="font-bold text-slate-700">0</span></p>
               <p>Dilewati: <span id="statSkipped" className="font-bold text-slate-500">0</span></p>
             </div>
+            <button id="btnToggleBreak"
+              className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1">
+              <span className="material-symbols-outlined text-sm">coffee</span>
+              <span id="btnToggleBreakText">Istirahat</span>
+            </button>
             <button id="btnChangeCounter"
               className="px-3 py-2 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-200 transition-all">
               Ganti Loket
@@ -73,24 +78,23 @@ export const AdminQueueCounter = (props: any) => {
             </div>
 
             {/* Tombol Aksi */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-4">
               <button id="btnDone"
-                className="flex flex-col items-center gap-2 py-5 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex flex-col items-center justify-center gap-1 py-4 bg-emerald-500 text-white font-bold rounded-2xl hover:bg-emerald-600 active:scale-95 transition-all shadow-lg shadow-emerald-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                 disabled>
-                <span className="text-2xl">✅</span>
-                <span className="text-sm">Selesai</span>
+                <span className="material-symbols-outlined text-3xl mb-1">check_circle</span>
+                <span className="text-sm tracking-wide">Selesai</span>
               </button>
               <button id="btnCallNext"
-                className="flex flex-col items-center gap-2 py-5 bg-violet-600 text-white font-bold rounded-2xl hover:bg-violet-700 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex flex-col items-center justify-center gap-1 py-4 bg-violet-600 text-white font-bold rounded-2xl hover:bg-violet-700 active:scale-95 transition-all shadow-lg shadow-violet-600/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                 disabled>
-                <span className="text-2xl">→</span>
-                <span className="text-sm">Panggil Berikutnya</span>
+                <span id="btnCallNextIcon" className="material-symbols-outlined text-3xl mb-1">arrow_forward</span>
+                <span id="btnCallNextText" className="text-sm tracking-wide">Panggil Berikutnya</span>
               </button>
               <button id="btnSkip"
-                className="flex flex-col items-center gap-2 py-5 bg-amber-500 text-white font-bold rounded-2xl hover:bg-amber-600 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                disabled>
-                <span className="text-2xl">⏭</span>
-                <span className="text-sm">Lewati</span>
+                className="hidden flex flex-col items-center justify-center gap-1 py-4 bg-amber-500 text-white font-bold rounded-2xl hover:bg-amber-600 active:scale-95 transition-all shadow-lg shadow-amber-500/30 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none">
+                <span className="material-symbols-outlined text-3xl mb-1">skip_next</span>
+                <span className="text-sm tracking-wide">Lewati</span>
               </button>
             </div>
 
@@ -111,28 +115,6 @@ export const AdminQueueCounter = (props: any) => {
               </div>
             </div>
 
-            {/* Issue Tiket Baru (untuk meja registrasi yang juga bisa dari loket) */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-4">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Terbitkan Tiket Baru</p>
-              <div id="issueTicketSection" className="flex gap-2">
-                <div id="nisnInputWrapper" class="hidden flex-1">
-                  <input
-                    id="issueNisnInput"
-                    type="text"
-                    placeholder="NISN siswa (opsional)"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"
-                  />
-                </div>
-                <button id="btnIssueTicket"
-                  className="flex-1 px-4 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all">
-                  + Terbitkan Nomor
-                </button>
-              </div>
-              <div id="lastIssuedDisplay" class="hidden mt-3 text-center">
-                <p className="text-xs text-slate-400">Tiket terakhir:</p>
-                <p id="lastIssuedNumber" className="font-mono font-black text-2xl text-slate-800">—</p>
-              </div>
-            </div>
           </div>
 
           {/* === KANAN: DAFTAR ANTREAN MENUNGGU === */}

@@ -73,6 +73,7 @@
     // Tombol
     if (btnStartPreReg) btnStartPreReg.disabled = true;
     if (btnStartReReg) btnStartReReg.disabled = true;
+    if (btnAddTickets) btnAddTickets.classList.remove('hidden');
     if (btnEndSession) btnEndSession.disabled = false;
 
     // Grid loket
@@ -93,6 +94,7 @@
     if (counterSection) counterSection.classList.add('hidden');
     if (btnStartPreReg) btnStartPreReg.disabled = false;
     if (btnStartReReg) btnStartReReg.disabled = false;
+    if (btnAddTickets) btnAddTickets.classList.add('hidden');
     if (btnEndSession) btnEndSession.disabled = true;
     if (ticketTableBody) {
       ticketTableBody.innerHTML = '<tr><td colspan="6" class="px-6 py-16 text-center text-slate-300 text-sm">Belum ada sesi aktif</td></tr>';
@@ -109,21 +111,63 @@
 
     const allCounters = counterNames.map((name, i) => {
       const serving = currentServing.find(c => c.counterId === (i + 1));
-      return { id: i + 1, name, ticketNumber: serving?.ticketNumber || null };
+      return {
+        id: i + 1,
+        name,
+        ticketNumber: serving?.ticketNumber || null,
+        status: serving?.status || 'tutup',
+        operators: serving?.operators || []
+      };
     });
 
-    counterGrid.innerHTML = allCounters.map(c => `
-      <div class="flex flex-col items-center gap-2 p-4 rounded-2xl border text-center transition-all ${c.ticketNumber ? 'bg-violet-50 border-violet-200' : 'bg-slate-50 border-slate-100'}">
-        <span class="text-lg">🖥️</span>
-        <p class="text-xs font-bold text-slate-500">${c.name}</p>
-        <p class="font-mono font-black text-lg ${c.ticketNumber ? 'text-violet-700' : 'text-slate-300'}">
-          ${c.ticketNumber || 'idle'}
-        </p>
-        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${c.ticketNumber ? 'bg-violet-100 text-violet-600' : 'bg-slate-100 text-slate-400'}">
-          ${c.ticketNumber ? 'Melayani' : 'Menunggu'}
-        </span>
-      </div>
-    `).join('');
+    counterGrid.innerHTML = allCounters.map(c => {
+      let cardClass = '';
+      let badgeClass = '';
+      let statusLabel = '';
+      let numberText = '';
+
+      if (c.status === 'tutup') {
+        cardClass = 'bg-slate-50/50 border-slate-200 opacity-60';
+        badgeClass = 'bg-slate-100 text-slate-400 border-slate-200';
+        statusLabel = 'Tutup';
+        numberText = '<span class="text-slate-300 font-bold text-base">—</span>';
+      } else if (c.status === 'istirahat') {
+        cardClass = 'bg-amber-50/50 border-amber-200';
+        badgeClass = 'bg-amber-100 text-amber-600 border-amber-200';
+        statusLabel = 'Istirahat';
+        numberText = '<span class="text-amber-500 font-bold text-base">Break</span>';
+      } else { // status === 'buka'
+        if (c.ticketNumber) {
+          cardClass = 'bg-violet-50 border-violet-200 shadow-sm';
+          badgeClass = 'bg-violet-100 text-violet-600 border-violet-200';
+          statusLabel = 'Melayani';
+          numberText = c.ticketNumber;
+        } else {
+          cardClass = 'bg-emerald-50/50 border-emerald-200';
+          badgeClass = 'bg-emerald-100 text-emerald-600 border-emerald-200';
+          statusLabel = 'Buka';
+          numberText = '<span class="text-emerald-500 font-bold text-xs uppercase tracking-wider">Standby</span>';
+        }
+      }
+
+      const operatorList = c.operators.length > 0
+        ? `<p class="text-[10px] text-slate-400 mt-1 font-semibold">👤 ${c.operators.map(o => o.name).join(', ')}</p>`
+        : '';
+
+      return `
+        <div class="flex flex-col items-center gap-2 p-4 rounded-2xl border text-center transition-all ${cardClass}">
+          <span class="text-lg">🖥️</span>
+          <p class="text-xs font-bold text-slate-500">${c.name}</p>
+          <p class="font-mono font-black text-lg text-slate-800">
+            ${numberText}
+          </p>
+          <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${badgeClass}">
+            ${statusLabel}
+          </span>
+          ${operatorList}
+        </div>
+      `;
+    }).join('');
   }
 
   // ============================================
@@ -204,13 +248,62 @@
   // ============================================
   // KONTROL SESI
   // ============================================
-  async function startSession(mode) {
-    if (!confirm(`Mulai sesi antrean mode "${mode === 'pre_registration' ? 'Pra-Pendaftaran' : 'Daftar Ulang'}"?\nSesi aktif sebelumnya (jika ada) akan diakhiri.`)) return;
+  let pendingStartMode = null;
+
+  // DOM Refs for Modals
+  const startSessionModal      = document.getElementById('startSessionModal');
+  const startSessionBatchSize  = document.getElementById('startSessionBatchSize');
+  const startSessionContinue   = document.getElementById('startSessionContinue');
+  const btnStartModalCancel    = document.getElementById('btnStartModalCancel');
+  const btnStartModalConfirm   = document.getElementById('btnStartModalConfirm');
+  const startModalTitle        = document.getElementById('startModalTitle');
+  const startModalSubtitle     = document.getElementById('startModalSubtitle');
+
+  const addTicketsModal        = document.getElementById('addTicketsModal');
+  const addTicketsCount        = document.getElementById('addTicketsCount');
+  const btnAddTicketsCancel    = document.getElementById('btnAddTicketsCancel');
+  const btnAddTicketsConfirm   = document.getElementById('btnAddTicketsConfirm');
+  const btnAddTickets          = document.getElementById('btnAddTickets');
+
+  async function triggerStartSession(mode) {
+    pendingStartMode = mode;
+    if (startModalTitle) {
+      startModalTitle.textContent = mode === 'pre_registration' ? 'Mulai Pra-Pendaftaran' : 'Mulai Daftar Ulang';
+    }
+    
+    // Periksa status portal untuk Daftar Ulang
+    if (mode === 're_registration') {
+      try {
+        const settingsRes = await API.request('/settings/public');
+        const isOpen = settingsRes.success && (settingsRes.data?.registration_open === 'true' || settingsRes.data?.registration_open === true);
+        if (!isOpen && startModalSubtitle) {
+          startModalSubtitle.innerHTML = `<span class="text-amber-500 font-bold">⚠️ Peringatan:</span> Portal pendaftaran siswa saat ini ditutup. Sesi antrean tetap bisa berjalan, namun disarankan untuk mengaktifkannya di Pengaturan.`;
+        } else if (startModalSubtitle) {
+          startModalSubtitle.textContent = 'Masukkan konfigurasi awal sesi antrean Daftar Ulang';
+        }
+      } catch (e) {
+        if (startModalSubtitle) startModalSubtitle.textContent = 'Masukkan konfigurasi awal sesi antrean';
+      }
+    } else {
+      if (startModalSubtitle) startModalSubtitle.textContent = 'Masukkan konfigurasi awal sesi antrean Pra-Pendaftaran';
+    }
+
+    if (startSessionBatchSize) startSessionBatchSize.value = "50";
+    if (startSessionContinue) startSessionContinue.checked = false;
+
+    if (startSessionModal) startSessionModal.classList.remove('hidden');
+  }
+
+  async function confirmStartSession() {
+    const batchSize = parseInt(startSessionBatchSize?.value) || 50;
+    const continueFromLast = startSessionContinue?.checked || false;
+
+    if (startSessionModal) startSessionModal.classList.add('hidden');
 
     try {
       const res = await API.request('/queue/session/start', {
         method: 'POST',
-        body: JSON.stringify({ mode })
+        body: JSON.stringify({ mode: pendingStartMode, batchSize, continueFromLast })
       });
       if (res.success) {
         UI.toast('Sesi antrean dimulai', 'success');
@@ -238,6 +331,32 @@
     }
   }
 
+  // Tambah Tiket Dinamis
+  function triggerAddTickets() {
+    if (addTicketsCount) addTicketsCount.value = "10";
+    if (addTicketsModal) addTicketsModal.classList.remove('hidden');
+  }
+
+  async function confirmAddTickets() {
+    const count = parseInt(addTicketsCount?.value) || 10;
+    if (addTicketsModal) addTicketsModal.classList.add('hidden');
+
+    try {
+      const res = await API.request('/queue/session/add-tickets', {
+        method: 'POST',
+        body: JSON.stringify({ count })
+      });
+      if (res.success) {
+        UI.toast(res.message || 'Tiket berhasil ditambahkan', 'success');
+        loadSession();
+      } else {
+        UI.toast(res.message || 'Gagal menambahkan tiket', 'error');
+      }
+    } catch (err) {
+      UI.toast('Gagal menambahkan tiket', 'error');
+    }
+  }
+
   // ============================================
   // SSE untuk update real-time stats loket
   // ============================================
@@ -259,13 +378,20 @@
   // ============================================
   // EVENT LISTENERS
   // ============================================
-  if (btnStartPreReg) btnStartPreReg.addEventListener('click', () => startSession('pre_registration'));
-  if (btnStartReReg) btnStartReReg.addEventListener('click', () => startSession('re_registration'));
+  if (btnStartPreReg) btnStartPreReg.addEventListener('click', () => triggerStartSession('pre_registration'));
+  if (btnStartReReg) btnStartReReg.addEventListener('click', () => triggerStartSession('re_registration'));
   if (btnEndSession) btnEndSession.addEventListener('click', endSession);
   if (btnRefreshTickets) btnRefreshTickets.addEventListener('click', () => { currentPage = 1; loadTickets(); });
   if (ticketStatusFilter) ticketStatusFilter.addEventListener('change', () => { currentPage = 1; loadTickets(); });
   if (ticketPrevPage) ticketPrevPage.addEventListener('click', () => { if (currentPage > 1) { currentPage--; loadTickets(); } });
   if (ticketNextPage) ticketNextPage.addEventListener('click', () => { if (currentPage < totalPages) { currentPage++; loadTickets(); } });
+
+  // Modal event listeners
+  if (btnStartModalCancel) btnStartModalCancel.addEventListener('click', () => { if (startSessionModal) startSessionModal.classList.add('hidden'); });
+  if (btnStartModalConfirm) btnStartModalConfirm.addEventListener('click', confirmStartSession);
+  if (btnAddTickets) btnAddTickets.addEventListener('click', triggerAddTickets);
+  if (btnAddTicketsCancel) btnAddTicketsCancel.addEventListener('click', () => { if (addTicketsModal) addTicketsModal.classList.add('hidden'); });
+  if (btnAddTicketsConfirm) btnAddTicketsConfirm.addEventListener('click', confirmAddTickets);
 
   // ============================================
   // INIT

@@ -276,13 +276,33 @@
     }
 
     counterGrid.innerHTML = counters.map(c => {
-      const isServing = !!c.ticketNumber;
+      const status = c.status || 'tutup';
+      const ticketNumber = c.ticketNumber;
+      
+      let statusIndicator = '';
+      let rowStyle = '';
+      
+      if (status === 'tutup') {
+        statusIndicator = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-red-500/10 text-red-400 border border-red-500/20 uppercase tracking-wider">Tutup</span>`;
+        rowStyle = 'border border-white/5 opacity-60';
+      } else if (status === 'istirahat') {
+        statusIndicator = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase tracking-wider">Istirahat</span>`;
+        rowStyle = 'border border-amber-500/10 bg-amber-500/5';
+      } else {
+        // Status: buka
+        if (ticketNumber) {
+          statusIndicator = `<span class="font-mono font-black text-base text-blue-300">${ticketNumber}</span>`;
+          rowStyle = 'bg-blue-500/10 border border-blue-500/20';
+        } else {
+          statusIndicator = `<span class="px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">Standby</span>`;
+          rowStyle = 'border border-emerald-500/10 bg-emerald-500/5';
+        }
+      }
+
       return `
-        <div class="counter-row flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${isServing ? 'bg-blue-500/10 border border-blue-500/20' : ''}">
-          <span class="text-xs font-bold text-white/40 truncate" style="max-width:120px">${c.counterName || `Loket ${c.counterId}`}</span>
-          <span class="font-mono font-black text-sm ${isServing ? 'text-blue-300' : 'text-white/20'}">
-            ${c.ticketNumber || 'idle'}
-          </span>
+        <div class="counter-row flex items-center justify-between px-3 py-2.5 rounded-xl transition-all ${rowStyle}">
+          <span class="text-xs font-bold text-white/60 truncate" style="max-width:120px">${c.counterName || `Loket ${c.counterId}`}</span>
+          ${statusIndicator}
         </div>
       `;
     }).join('');

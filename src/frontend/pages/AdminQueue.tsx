@@ -49,6 +49,10 @@ export const AdminQueue = (props: any) => {
               className="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all">
               ▶ Mulai Daftar Ulang
             </button>
+            <button id="btnAddTickets"
+              className="hidden px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold rounded-xl transition-all">
+              + Tambah Tiket
+            </button>
             <button id="btnEndSession" disabled
               className="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
               ⏹ Akhiri Sesi
@@ -107,7 +111,7 @@ export const AdminQueue = (props: any) => {
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-400">
                 <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">No Tiket</th>
@@ -139,6 +143,87 @@ export const AdminQueue = (props: any) => {
             <button id="ticketNextPage" disabled
               className="p-2 border border-slate-200 rounded-xl text-slate-400 hover:bg-white hover:text-violet-600 disabled:opacity-30 transition-all">
               ›
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal Mulai Sesi */}
+      <div id="startSessionModal"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 hidden"
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+        <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm">
+          <h2 className="text-xl font-black text-slate-800 mb-2" id="startModalTitle">Mulai Sesi Antrean</h2>
+          <p className="text-sm text-slate-500 mb-6" id="startModalSubtitle">Masukkan konfigurasi awal sesi antrean</p>
+          
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Jumlah Tiket Awal</label>
+              <input
+                id="startSessionBatchSize"
+                type="number"
+                min="1"
+                max="500"
+                value="50"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <input
+                id="startSessionContinue"
+                type="checkbox"
+                className="w-4 h-4 rounded text-violet-600 focus:ring-violet-500/20 focus:ring-2"
+              />
+              <label htmlFor="startSessionContinue" className="text-sm font-semibold text-slate-600 select-none cursor-pointer">
+                Lanjutkan dari nomor terakhir
+              </label>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button id="btnStartModalCancel"
+              className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold rounded-xl transition-all">
+              Batal
+            </button>
+            <button id="btnStartModalConfirm"
+              className="flex-1 px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold rounded-xl transition-all">
+              Mulai Sesi
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal Tambah Tiket */}
+      <div id="addTicketsModal"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 hidden"
+        style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+        <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm">
+          <h2 className="text-xl font-black text-slate-800 mb-2">Tambah Nomor Antrean</h2>
+          <p className="text-sm text-slate-500 mb-6">Tambahkan nomor antrean tambahan secara batch ke sesi aktif</p>
+          
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Jumlah Tiket Tambahan</label>
+              <input
+                id="addTicketsCount"
+                type="number"
+                min="1"
+                max="200"
+                value="10"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <button id="btnAddTicketsCancel"
+              className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold rounded-xl transition-all">
+              Batal
+            </button>
+            <button id="btnAddTicketsConfirm"
+              className="flex-1 px-4 py-3 bg-violet-600 hover:bg-violet-700 text-white text-sm font-bold rounded-xl transition-all">
+              Tambah
             </button>
           </div>
         </div>

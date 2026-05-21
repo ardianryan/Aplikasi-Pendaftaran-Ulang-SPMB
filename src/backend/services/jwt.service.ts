@@ -36,7 +36,7 @@ function getSecret(): string {
 }
 
 function getExpiresIn(): string {
-  return process.env.JWT_EXPIRES_IN || "24h";
+  return process.env.JWT_EXPIRES_IN || "8h";
 }
 
 // ============================================

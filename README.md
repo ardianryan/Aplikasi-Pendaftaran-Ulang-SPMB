@@ -26,6 +26,13 @@
 
 Aplikasi registrasi ulang (daftar ulang) peserta didik baru untuk **SMAN 1 Gedeg, Kabupaten Mojokerto**. Dibangun dengan pendekatan **Mobile-First**, **Wizard Step-by-Step**, dan standar aksesibilitas **WCAG**.
 
+## 🌟 Fitur Unggulan Terbaru
+
+*   🔑 **Durasi Sesi Kerja Operator 8 Jam:** Batas kedaluwarsa token JWT diatur selama 8 jam secara default agar operator/panitia PPDB dapat bekerja seharian dengan nyaman tanpa perlu login ulang berkali-kali.
+*   🛡️ **Hak Akses & Role Peran Operator Dinamis:** Super Admin dapat mengkonfigurasi hak akses khusus operator secara granular (verifikasi dokumen, edit data siswa, hapus data, integrasi WA blast, manajemen antrean) secara dinamis langsung dari Dashboard Pengaturan.
+*   📡 **Sistem Antrean Digital Cerdas:** Dilengkapi layar publik realtime (SSE), pemanggilan suara (TTS), integrasi bel *AudioContext*, manajemen status loket ("Istirahat"), auto-cleanup sisa antrean waiting di database, serta pemanggilan bertahap sequential dari nomor terakhir.
+*   📱 **Responsivitas Maksimal & Horizontal Scroll:** Semua halaman siswa bebas dari sidebar pada mode mobile, dan semua tabel admin dilengkapi pembungkus responsive scroll agar antarmuka tidak rusak di layar kecil.
+
 ## 🛠️ Tech Stack
 
 | Layer | Teknologi |
@@ -63,10 +70,10 @@ Dilengkapi dengan modul display antrean mandiri (route `/antrean`) yang dirancan
 
 ### ✨ Fitur Antrean Utama:
 * **Real-time Updates (SSE):** Menggunakan Server-Sent Events untuk sinkronisasi seketika (pemanggilan nomor, update status loket) tanpa membebani server, dilengkapi fallback polling otomatis jika koneksi terputus.
-* **Premium & Aesthetic UI:** Antarmuka responsif dengan animasi transisi halus, mendukung **Light Mode / Dark Mode** secara dinamis, serta desain berbasis tata letak split-screen proporsional.
+* **Premium & Aesthetic UI & Mobile-Ready:** Antarmuka responsif dengan animasi transisi halus, mendukung **Light Mode / Dark Mode** secara dinamis, desain berbasis tata letak split-screen proporsional, serta tabel ramah mobile dengan fitur horizontal scroll.
 * **Text-to-Speech & Chime:** Pemanggilan otomatis menggunakan *Web Speech API* dalam Bahasa Indonesia yang jernih, didahului dengan bunyi bel (chime) "Ting-Tung" hasil sintesis *AudioContext* langsung di browser.
 * **Pengumuman Split-Screen:** Layar terbagi cerdas yang dapat menayangkan teks pengumuman interaktif (HTML/Quill Editor) atau pemutaran video (YouTube iframe) secara berdampingan dengan panggilan nomor antrean.
-* **Manajemen Loket Admin:** Petugas verifikasi dapat membuka/menutup sesi, memanggil antrean (`next`), melewati (`skip`), hingga memanggil ulang (`recall`) langsung dari dashboard admin.
+* **Manajemen Loket & Sesi Batch Pintar:** Petugas dapat memanggil antrean, melewati (`skip`), memanggil ulang (`recall`), serta mengatur status istirahat loket. Sesi dikelola secara batch, di mana sisa tiket waiting otomatis **dibersihkan (cleanup)** dari DB saat sesi berakhir, dan sesi baru dengan opsi *Lanjutkan* berjalan secara sequential mulus dari nomor terpanggil terakhir.
 
 ## 🚀 Quick Start (Development)
 
@@ -154,6 +161,14 @@ Setelah instalasi selesai dan database di-seed (`npm run seed`), Anda dapat masu
 | **Coolify** | ✅ Recommended | Hubungkan repo & pilih build pack **Docker Compose**. |
 | **Vercel** | ✅ Compatible | Klik **Import** di dashboard Vercel (Node.js Runtime). |
 | **Railway** | ✅ Compatible | Gunakan `Dockerfile` yang tersedia. |
+
+## 📚 Dokumentasi Developer & Panduan AI
+
+Untuk membantu pengembangan proyek secara berkelanjutan, silakan merujuk pada berkas panduan teknis berikut:
+*   [CLAUDE.md](file:///Users/ardianryan/spmb-wa/CLAUDE.md) — Panduan konteks proyek, perintah CLI penting, struktur database, serta alur validasi dan tugas pengembangan umum untuk AI Coding Assistant.
+*   [Guide-for-ide.md](file:///Users/ardianryan/spmb-wa/Guide-for-ide.md) — Panduan komprehensif bagi developer manusia maupun AI mengenai peta navigasi direktori, batasan arsitektur Hono Server-Side JSX, logika perlindungan form (`lockedGuard`), integrasi WhatsApp, dan sistem antrean digital.
+
+---
 
 ## 📁 Struktur Folder Utama
 

@@ -270,6 +270,84 @@ export const AdminSettings = (props: any) => {
           </div>
         </div>
 
+        {/* Hak Akses Operator Section */}
+        <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+          <div className="px-10 py-8 border-b border-slate-100 bg-slate-50/50 flex items-center gap-4">
+             <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center text-blue-600">
+                <span className="material-symbols-outlined">shield_person</span>
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg">Hak Akses Operator</h3>
+                <p className="text-xs text-slate-400 font-medium">Kelola izin dan batasan akses untuk akun bertipe Operator</p>
+              </div>
+          </div>
+          <div className="p-10 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              
+              {/* Operator Can Verify */}
+              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="font-bold text-sm text-slate-800">Izin Verifikasi Berkas</p>
+                  <p className="text-[10px] text-slate-400 font-medium leading-relaxed">Mengizinkan operator melakukan verifikasi dan validasi berkas dokumen pendaftar.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input type="checkbox" id="operator_can_verify" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+
+              {/* Operator Can Edit Student */}
+              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="font-bold text-sm text-slate-800">Izin Tambah & Edit Siswa</p>
+                  <p className="text-[10px] text-slate-400 font-medium leading-relaxed">Mengizinkan operator menambah siswa secara manual dan mengedit biodata lengkap.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input type="checkbox" id="operator_can_edit_student" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+
+              {/* Operator Can Delete Student */}
+              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="font-bold text-sm text-slate-800">Izin Hapus Siswa</p>
+                  <p className="text-[10px] text-slate-400 font-medium leading-relaxed">Mengizinkan operator menghapus data siswa pendaftar dari sistem database.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input type="checkbox" id="operator_can_delete_student" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+
+              {/* Operator Can WhatsApp */}
+              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="font-bold text-sm text-slate-800">Izin WhatsApp Gateway</p>
+                  <p className="text-[10px] text-slate-400 font-medium leading-relaxed">Mengizinkan operator mengirim pesan kustom, logs blast WA, dan melihat history logs.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input type="checkbox" id="operator_can_whatsapp" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+
+              {/* Operator Can Manage Queue */}
+              <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="font-bold text-sm text-slate-800">Izin Manajemen Antrean</p>
+                  <p className="text-[10px] text-slate-400 font-medium leading-relaxed">Mengizinkan operator membuka sesi antrean loket, memanggil, melompati, dan melayani antrean.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input type="checkbox" id="operator_can_manage_queue" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                </label>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
         {/* Global Save Floating Bar */}
         <div className="flex justify-end pt-4 pb-12">
            <button id="btn-save" onclick="saveSettings()" className="px-12 py-5 bg-blue-600 text-white rounded-[2rem] font-extrabold text-sm hover:bg-blue-700 transition-all flex items-center gap-3 shadow-2xl shadow-blue-200">

@@ -52,6 +52,9 @@ spmb-wa/
     *   `public/js/wizard.js`: State machine langkah-demi-langkah pengisian siswa.
 *   **CSS & UI Framework:** Proyek ini menggunakan **Tailwind CSS via CDN** dikombinasikan dengan Vanilla CSS kustom di `Landing.tsx` atau layout pendukung untuk performa maksimal tanpa compile step.
 
+### 2.3 Durasi Sesi Kerja Operator (8 Jam)
+*   JWT token didesain kedaluwarsa dalam waktu **8 jam** secara default (`JWT_EXPIRES_IN || "8h"`). Ini memungkinkan operator bekerja sepanjang jam dinas tatap muka tanpa perlu melakukan login ulang berkali-kali.
+
 ---
 
 ## 🔒 3. Logika Bisnis & Aturan Keamanan Penting
@@ -70,6 +73,18 @@ spmb-wa/
 *   Data disimpan dalam struktur dokumen bersarang tunggal (nested document) di MongoDB.
 *   Sub-dokumen utama meliputi: `biodata`, `alamat`, `kesehatan`, `pendidikan`, `ayah`, `ibu`, `wali`, `dokumen`, `verifikasi`.
 *   Pencarian admin menggunakan indeks teks pada kolom `namaPreRegister`.
+
+### 3.4 Aturan Peran Operator & Hak Akses Dinamis (`role-guard.js`)
+*   Sistem memisahkan hak akses menjadi `admin` dan `operator`.
+*   Hak akses operator dikonfigurasi secara dinamis oleh Super Admin melalui Dashboard Pengaturan dengan parameter tersimpan di DB:
+    *   `operator_can_verify`: Hak melakukan verifikasi dokumen siswa.
+    *   `operator_can_edit_student`: Hak mengedit biodata siswa.
+    *   `operator_can_delete_student`: Hak menghapus data siswa.
+    *   `operator_can_whatsapp`: Hak mengelola/mengirim broadcast WhatsApp.
+    *   `operator_can_manage_queue`: Hak mengelola sesi dan panggilan antrean.
+*   **Enforcement:**
+    *   **Client-Side:** `/public/js/admin/role-guard.js` memuat pengaturan ini dan secara otomatis menyembunyikan navigasi menu atau elemen tombol tertentu serta melakukan redirect ke dashboard jika operator memaksa mengakses halaman terlarang.
+    *   **Server-Side:** API dilindungi dengan middleware `requireAdmin` (untuk aksi khusus Super Admin) atau middleware berbasis role spesifik di `src/backend/middleware/auth.middleware.ts`.
 
 ---
 
@@ -132,11 +147,16 @@ Aplikasi ini sangat bergantung pada koleksi `settings` untuk branding dinamis da
 3.  **Blast Queue & Anti-Ban Delay:** Saat melakukan pengiriman blast secara massal, gunakan delay penundaan minimal **5 detik** antar nomor telepon. Gunakan queue asinkronus agar proses blast tidak memblokir server utama, yang dijalankan di background oleh `processBlastQueue`.
 4.  **Logging Standard:** Setiap pesan yang terkirim (sukses/gagal) wajib dicatat dalam model `WALog` dengan informasi pengirim (`sentBy`), penerima, isi pesan, dan detail error jika ada.
 
-### 5.5 Arsitektur Antrean (Server-Sent Events)
-1.  **State Management:** Status antrean dan loket disimpan *in-memory* di `queue.service.ts` agar performa seketika. DB hanya menyimpan settings tampilan.
-2.  **Broadcast Realtime:** Saat admin mengubah state loket (memanggil, melewati, mereset), controller akan memanggil `broadcastQueueUpdate()` di `queue.sse.ts`.
-3.  **SSE Endpoint:** Frontend layar TV (`/antrean`) mem-buka koneksi `EventSource` ke `GET /api/queue/stream`. Hono menggunakan *streaming response* untuk menjaga koneksi ini tetap terbuka dan terus mendorong state terbaru (`data: {...}`).
-4.  **Audio Context Chime:** Terdapat bel unik yang dijalankan sepenuhnya di browser client via *AudioContext API* murni (tanpa file mp3 eksternal) sebelum sistem Text-to-Speech browser membaca nomor urut dan nomor loket.
+### 5.5 Arsitektur Antrean (Server-Sent Events & Sesi Batch MongoDB)
+1.  **State Management & MongoDB Persistence:** Data sesi antrean aktif (`queues`) dan tiket antrean (`queue_tickets`) disimpan di database MongoDB untuk durabilitas dan pemantauan historis. Tiket antrean diterbitkan secara batch sesuai ukuran batch yang dimasukkan admin saat memulai sesi.
+2.  **Auto-Cleanup & Lanjutan Cerdas:** 
+    *   Saat sesi antrean diakhiri (baik manual lewat tombol akhiri sesi maupun implisit saat sesi baru dimulai), seluruh tiket tersisa yang masih berstatus `"waiting"` otomatis **dihapus** demi efisiensi DB.
+    *   Nomor terakhir yang diterbitkan (`lastIssuedNumber`) diperbarui menjadi nomor urut tiket terakhir yang **benar-benar dipanggil/dilayani** (atau start number sesi jika belum ada yang dipanggil).
+    *   Saat memulai sesi baru dengan mencentang **"Lanjutkan dari nomor terakhir"**, sistem mengambil nilai `lastIssuedNumber` yang telah diperbarui tersebut sehingga kelanjutan nomor tiket bersifat presisi tanpa melompati sisa tiket waiting yang dibuang.
+3.  **Broadcast Realtime:** Saat admin mengubah state loket (memanggil, melewati, menyelesaikan), controller memanggil `broadcastQueueStatusUpdate()` di `queue.sse.ts` untuk mendorong event SSE.
+4.  **SSE Endpoint:** Frontend layar TV (`/antrean`) membuka koneksi `EventSource` ke `GET /api/queue/stream`. Hono menggunakan streaming response untuk menjaga koneksi tetap hidup dan mendorong payload state terbaru (`data: {...}`).
+5.  **Audio Context Chime & TTS:** Bunyi bel "Ting-Tung" disintesis client-side menggunakan *AudioContext API* murni (tanpa file mp3 eksternal) lalu diteruskan ke *Web Speech API* browser untuk pemanggilan Text-To-Speech yang jernih.
+6.  **Persistensi & Status Loket Operator:** Pilihan loket operator disimpan dalam client-side state sehingga me-refresh halaman tidak mereset pilihan loket. Terdapat tombol "Ganti Loket" dan fitur "Istirahat" (mengubah status menjadi istirahat di display). Pilihan loket ini dihapus secara otomatis dari localStorage saat operator melakukan logout.
 
 
 ---
@@ -148,3 +168,5 @@ Aplikasi ini sangat bergantung pada koleksi `settings` untuk branding dinamis da
 3.  **Accordion Sidebar Admin:** Sidebar admin menggunakan tag HTML `<details>` asli. Pastikan properti `open` dihitung dengan mencocokkan rute yang aktif menggunakan array rute (`currentPath.startsWith(...)`) agar navigasi tidak tertutup otomatis setelah halaman dimuat ulang.
 4.  **API.request Auto-Prepend Path:** Pada berkas client-side Javascript, wrapper global `API.request(url, ...)` akan **secara otomatis menambahkan prefix `/api`** di depannya. Oleh karena itu, jangan menuliskan `/api/admin/settings` saat memanggil request, tulislah `/admin/settings` agar url request tidak berlipat ganda menjadi `/api/api/admin/settings` (yang mengakibatkan error 404).
 5.  **WhatsApp Integration & Network Host:** Docker Container WhatsApp Gateway (GOWA atau HonoWA) berada di luar kontainer SPMB-WA. Pastikan Host URL yang disimpan di panel konfigurasi admin diakses secara benar via port internal docker network (misal: `http://gowa:3000`) atau via IP publik jika server hosting-nya terpisah.
+6.  **Responsivitas Tabel Mobile:** Semua tabel di dashboard admin wajib dibungkus dalam div berkelas `.overflow-x-auto` agar jika tabel melebar secara horizontal di perangkat mobile, ia dapat di-scroll secara horizontal daripada memaksa melebarkan layar kontainer utama atau membuat tata letak pecah.
+7.  **Standby Lobby Operator & Panggil Ulang:** Saat operator bersiap di loket, pastikan antarmuka melakukan refresh status standby loket secara asinkronus (SSE / API polling) tanpa merusak tombol panggil ulang. Pilihan loket harus bersih saat logout agar tidak bertabrakan dengan operator lain pada sesi berikutnya.

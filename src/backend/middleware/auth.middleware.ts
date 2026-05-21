@@ -97,3 +97,44 @@ export async function adminAuth(c: Context, next: Next) {
     return error(c, err.message || "Token admin tidak valid.", 401);
   }
 }
+
+/**
+ * Middleware: Requires the admin role to be "admin" (Super Admin)
+ */
+export async function requireAdmin(c: Context, next: Next) {
+  const role = c.get("adminRole");
+  if (role !== "admin") {
+    return error(c, "Akses ditolak. Tindakan ini memerlukan hak akses Super Admin.", 403);
+  }
+  await next();
+}
+
+/**
+ * Middleware: Requires a specific operator permission key to be true
+ * Super Admins (role === "admin") bypass this check.
+ */
+export function requirePermission(key: string) {
+  return async function (c: Context, next: Next) {
+    const role = c.get("adminRole");
+    if (role === "admin") {
+      await next();
+      return;
+    }
+
+    try {
+      const { getSettingsMap } = await import("../utils/settings");
+      const settings = await getSettingsMap();
+      const isAllowed = settings[key] === true;
+      if (!isAllowed) {
+        return error(
+          c,
+          `Akses ditolak. Operator tidak memiliki hak akses untuk tindakan ini.`,
+          403
+        );
+      }
+      await next();
+    } catch (err) {
+      return error(c, "Gagal memverifikasi hak akses operator.", 500);
+    }
+  };
+}

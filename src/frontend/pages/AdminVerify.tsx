@@ -49,7 +49,7 @@ export const AdminVerify = (props: any) => {
       {/* Table Card */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left whitespace-nowrap">
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500">
                 <th className="px-6 py-4 font-bold text-[10px] uppercase tracking-widest">No</th>

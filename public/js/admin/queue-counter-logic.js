@@ -13,6 +13,9 @@
   let statSkipped = 0;
   let currentSessionId = null;
   let sessionData = null;
+  let currentCounterStatus = 'tutup';
+
+  let recallCount = 0;
 
   // DOM refs
   const counterSelectModal = document.getElementById('counterSelectModal');
@@ -39,6 +42,7 @@
   const btnCallSpecific    = document.getElementById('btnCallSpecific');
   const btnIssueTicket     = document.getElementById('btnIssueTicket');
   const btnChangeCounter   = document.getElementById('btnChangeCounter');
+  const btnToggleBreak     = document.getElementById('btnToggleBreak');
   const statDoneEl         = document.getElementById('statDone');
   const statSkippedEl      = document.getElementById('statSkipped');
 
@@ -62,6 +66,32 @@
       sessionActive = session.isActive;
       studentLinkEnabled = session.studentLinkEnabled || false;
 
+      // Check if counter is saved in localStorage
+      const savedCounterId = localStorage.getItem('spmb_selected_counter_id');
+      const savedCounterName = localStorage.getItem('spmb_selected_counter_name');
+      if (savedCounterId && savedCounterName) {
+        try {
+          const joinRes = await API.request('/queue/counter/join', {
+            method: 'POST',
+            body: JSON.stringify({ counterId: parseInt(savedCounterId) })
+          });
+          if (joinRes.success) {
+            setupActiveCounter(parseInt(savedCounterId), savedCounterName);
+            const myCounter = session.currentServing.find(cs => cs.counterId === parseInt(savedCounterId));
+            if (myCounter) {
+              updateBreakButtonUI(myCounter.status);
+            }
+            return;
+          } else {
+            localStorage.removeItem('spmb_selected_counter_id');
+            localStorage.removeItem('spmb_selected_counter_name');
+          }
+        } catch (e) {
+          localStorage.removeItem('spmb_selected_counter_id');
+          localStorage.removeItem('spmb_selected_counter_name');
+        }
+      }
+
       // Tampilkan modal pilih loket
       renderCounterSelectList(session.counterNames, session.currentServing);
     } catch (err) {
@@ -69,8 +99,8 @@
     }
   }
 
-  function showError(msg) {
-    if (counterSelectList) counterSelectList.innerHTML = '';
+  function showError(msg, clearList = true) {
+    if (clearList && counterSelectList) counterSelectList.innerHTML = '';
     if (counterSelectError) {
       counterSelectError.classList.remove('hidden');
       counterSelectError.textContent = msg;
@@ -85,19 +115,46 @@
     counterSelectList.innerHTML = names.map((name, i) => {
       const id = i + 1;
       const serving = currentServing?.find(c => c.counterId === id);
-      const isServing = serving && serving.ticketNumber;
+      const operators = serving?.operators || [];
+      const isFull = operators.length >= 2;
+      const status = serving?.status || 'tutup';
+      
+      let statusBadge = '';
+      if (status === 'istirahat') {
+        statusBadge = '<span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-100 text-amber-800">Istirahat</span>';
+      } else if (status === 'buka') {
+        statusBadge = '<span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-emerald-100 text-emerald-800">Buka</span>';
+      } else {
+        statusBadge = '<span class="px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-100 text-slate-500">Tutup</span>';
+      }
+      
+      let opText = '';
+      if (operators.length > 0) {
+        opText = `<span class="text-[9px] text-slate-500 font-medium">${operators.length}/2 Op: ${operators.map(o => o.name).join(', ')}</span>`;
+      } else {
+        opText = `<span class="text-[9px] text-slate-400 font-medium">Kosong</span>`;
+      }
+
+      const buttonStyle = isFull 
+        ? 'border-red-200 bg-red-50/50 cursor-not-allowed opacity-80' 
+        : (status === 'buka' ? 'border-emerald-200 bg-emerald-50/30 hover:border-violet-400 hover:bg-violet-50' : 'border-slate-200 hover:border-violet-400 hover:bg-violet-50');
+
       return `
-        <button onclick="selectCounter(${id}, '${name.replace(/'/g, "\\'")}')"
-          class="relative flex flex-col items-center gap-1 p-3 border-2 rounded-2xl transition-all ${isServing ? 'border-blue-300 bg-blue-50' : 'border-slate-200 hover:border-violet-400 hover:bg-violet-50'}">
-          <span class="text-2xl">🖥️</span>
+        <button onclick="if(${isFull}) { alert('Loket penuh! Maksimal 2 operator.'); return; } selectCounter(${id}, '${name.replace(/'/g, "\\'")}')"
+          class="relative flex flex-col items-center gap-1.5 p-4 border-2 rounded-2xl transition-all col-span-3 sm:col-span-1 ${buttonStyle}">
+          <span class="text-2xl">${status === 'istirahat' ? '☕' : '🖥️'}</span>
           <span class="text-xs font-bold text-slate-700">${name}</span>
-          ${isServing ? `<span class="text-[10px] text-blue-500 font-bold">${serving.ticketNumber}</span>` : ''}
+          <div class="flex items-center gap-1 flex-wrap justify-center">
+            ${statusBadge}
+            ${serving && serving.ticketNumber ? `<span class="px-1.5 py-0.5 rounded text-[8px] font-black bg-blue-100 text-blue-800">${serving.ticketNumber}</span>` : ''}
+          </div>
+          ${opText}
         </button>
       `;
     }).join('');
   }
 
-  window.selectCounter = function (id, name) {
+  function setupActiveCounter(id, name) {
     selectedCounterId = id;
     selectedCounterName = name;
     if (counterSelectModal) counterSelectModal.classList.add('hidden');
@@ -119,7 +176,52 @@
     loadCounterStats();
     // Muat tiket yang sedang dilayani saat ini di loket ini
     syncServingTicket();
+  }
+
+  window.selectCounter = async function (id, name) {
+    if (counterSelectError) {
+      counterSelectError.classList.add('hidden');
+    }
+    
+    try {
+      const res = await API.request('/queue/counter/join', {
+        method: 'POST',
+        body: JSON.stringify({ counterId: id })
+      });
+      
+      if (res.success) {
+        localStorage.setItem('spmb_selected_counter_id', id);
+        localStorage.setItem('spmb_selected_counter_name', name);
+        setupActiveCounter(id, name);
+        if (res.data) {
+          updateBreakButtonUI(res.data.status);
+        }
+      } else {
+        showError(res.message || 'Gagal masuk ke loket ini. Loket mungkin penuh.', false);
+      }
+    } catch (err) {
+      showError(err.message || 'Gagal masuk ke loket ini. Loket mungkin penuh.', false);
+    }
   };
+
+  function updateBreakButtonUI(status) {
+    currentCounterStatus = status;
+    if (!btnToggleBreak) return;
+    
+    if (status === 'istirahat') {
+      btnToggleBreak.className = "px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1";
+      btnToggleBreak.innerHTML = `
+        <span class="material-symbols-outlined text-sm">play_arrow</span>
+        <span id="btnToggleBreakText">Kembali Melayani</span>
+      `;
+    } else {
+      btnToggleBreak.className = "px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1";
+      btnToggleBreak.innerHTML = `
+        <span class="material-symbols-outlined text-sm">coffee</span>
+        <span id="btnToggleBreakText">Istirahat</span>
+      `;
+    }
+  }
 
   // ============================================
   // Sinkronisasi nomor yang sedang dilayani dari DB
@@ -161,6 +263,7 @@
         // Jika loket ini yang memanggil, update display
         if (data.counterId === selectedCounterId) {
           updateServingDisplay(data.ticketNumber, data.studentName, data.studentNisn, new Date().toISOString());
+          updateBreakButtonUI('buka');
         }
         // Refresh waiting list setelah panggilan
         loadWaitingList();
@@ -193,6 +296,12 @@
       try {
         const data = JSON.parse(e.data);
         if (data.waiting) renderWaitingList(data.waiting);
+        if (selectedCounterId && data.currentServing) {
+          const myCounter = data.currentServing.find(cs => cs.counterId === selectedCounterId);
+          if (myCounter) {
+            updateBreakButtonUI(myCounter.status);
+          }
+        }
       } catch(err) {}
     });
 
@@ -242,6 +351,10 @@
   // DISPLAY NOMOR YANG DILAYANI
   // ============================================
   function updateServingDisplay(number, studentName, studentNisn, calledAt) {
+    if (servingNumber && servingNumber.textContent !== number && number) {
+      recallCount = 0;
+    }
+    
     if (servingNumber) {
       servingNumber.textContent = number || '—';
       servingNumber.style.color = number ? '#1e293b' : '#e2e8f0';
@@ -263,7 +376,30 @@
     }
 
     if (btnDone) btnDone.disabled = !number;
-    if (btnSkip) btnSkip.disabled = !number;
+    updateActionButtons(number);
+  }
+
+  function updateActionButtons(number) {
+    const activeText = document.getElementById('btnCallNextText');
+    const activeIcon = document.getElementById('btnCallNextIcon');
+    if (!number) {
+        if (activeText) activeText.textContent = "Panggil Berikutnya";
+        if (activeIcon) activeIcon.textContent = "arrow_forward";
+        if (btnSkip) btnSkip.classList.add('hidden');
+    } else {
+        if (activeText) {
+            activeText.textContent = recallCount === 0 ? "Panggil Ulang" : `Panggil Ulang (${recallCount}/2)`;
+        }
+        if (activeIcon) activeIcon.textContent = "campaign";
+        if (btnSkip) {
+            if (recallCount >= 2) {
+                btnSkip.classList.remove('hidden');
+                btnSkip.disabled = false;
+            } else {
+                btnSkip.classList.add('hidden');
+            }
+        }
+    }
   }
 
   function clearServingDisplay() {
@@ -299,26 +435,44 @@
   // AKSI TOMBOL
   // ============================================
 
-  // Panggil berikutnya
+  // Panggil berikutnya / Panggil ulang
   if (btnCallNext) {
     btnCallNext.addEventListener('click', async () => {
       if (!selectedCounterId) return;
-      setLoading(btnCallNext, true, '→');
+      const isRecall = servingNumber && servingNumber.textContent && servingNumber.textContent !== '—';
+      
+      setLoading(btnCallNext, true);
       try {
-        const res = await API.request('/queue/call', {
-          method: 'POST',
-          body: JSON.stringify({ counterId: selectedCounterId })
-        });
-        if (res.success) {
-          updateServingDisplay(res.data.ticketNumber, res.data.studentName, null, new Date().toISOString());
-          loadWaitingList();
+        if (isRecall) {
+          const res = await API.request('/queue/call/specific', {
+            method: 'POST',
+            body: JSON.stringify({ counterId: selectedCounterId, ticketNumber: servingNumber.textContent })
+          });
+          if (res.success) {
+            recallCount++;
+            updateActionButtons(servingNumber.textContent);
+          } else {
+            alert(res.message || 'Gagal memanggil ulang');
+          }
         } else {
-          alert(res.message || 'Tidak ada antrean menunggu');
+          const res = await API.request('/queue/call', {
+            method: 'POST',
+            body: JSON.stringify({ counterId: selectedCounterId })
+          });
+          if (res.success) {
+            recallCount = 0;
+            updateServingDisplay(res.data.ticketNumber, res.data.studentName, null, new Date().toISOString());
+            loadWaitingList();
+          } else {
+            alert(res.message || 'Tidak ada antrean menunggu');
+          }
         }
       } catch(err) {
         alert('Gagal memanggil antrean');
       } finally {
-        setLoading(btnCallNext, false, '→');
+        setLoading(btnCallNext, false);
+        const hasServing = servingNumber && servingNumber.textContent && servingNumber.textContent !== '—';
+        updateActionButtons(hasServing ? servingNumber.textContent : null);
       }
     });
   }
@@ -454,25 +608,62 @@
 
   // Ganti loket
   if (btnChangeCounter) {
-    btnChangeCounter.addEventListener('click', () => {
+    btnChangeCounter.addEventListener('click', async () => {
+      try {
+        await API.request('/queue/counter/leave', { method: 'POST' });
+      } catch (err) {
+        // Silently continue
+      }
+      
+      localStorage.removeItem('spmb_selected_counter_id');
+      localStorage.removeItem('spmb_selected_counter_name');
+      
+      selectedCounterId = null;
+      selectedCounterName = null;
+      
       if (sseSource) sseSource.close();
       if (counterPanel) counterPanel.classList.add('hidden');
       if (counterSelectModal) counterSelectModal.classList.remove('hidden');
+      
       init();
+    });
+  }
+
+  // Istirahat / Kembali Melayani
+  if (btnToggleBreak) {
+    btnToggleBreak.addEventListener('click', async () => {
+      if (!selectedCounterId) return;
+      const nextStatus = currentCounterStatus === 'istirahat' ? 'buka' : 'istirahat';
+      try {
+        const res = await API.request('/queue/counter/status', {
+          method: 'POST',
+          body: JSON.stringify({ status: nextStatus })
+        });
+        if (res.success && res.data) {
+          updateBreakButtonUI(res.data.status);
+        } else {
+          alert(res.message || 'Gagal mengubah status loket');
+        }
+      } catch (err) {
+        alert('Gagal mengubah status loket');
+      }
     });
   }
 
   // ============================================
   // HELPER: Loading state tombol
   // ============================================
-  function setLoading(btn, loading, originalText) {
+  function setLoading(btn, loading) {
     if (!btn) return;
     btn.disabled = loading;
     if (loading) {
-      btn.setAttribute('data-original', btn.textContent);
-      btn.textContent = '...';
+      if (!btn.hasAttribute('data-original-html')) {
+        btn.setAttribute('data-original-html', btn.innerHTML);
+      }
+      btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-2xl mb-1">sync</span><span class="text-sm font-bold tracking-wide">Memuat...</span>';
     } else {
-      btn.textContent = btn.getAttribute('data-original') || originalText;
+      const orig = btn.getAttribute('data-original-html');
+      if (orig) btn.innerHTML = orig;
     }
   }
 

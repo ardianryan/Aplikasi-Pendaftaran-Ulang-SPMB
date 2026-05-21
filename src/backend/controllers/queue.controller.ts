@@ -6,6 +6,7 @@
 import { Context } from "hono";
 import { streamSSE } from "hono/streaming";
 import { v4 as uuidv4 } from "uuid";
+import mongoose from "mongoose";
 import { Queue } from "../models/Queue";
 import { QueueTicket } from "../models/QueueTicket";
 import { Student } from "../models/Student";
@@ -29,6 +30,56 @@ async function getActiveSessionDoc() {
 /** Format nomor tiket: prefix + nomor dengan padding */
 function formatTicketNumber(prefix: string, num: number, padding: number): string {
   return `${prefix}${String(num).padStart(padding, "0")}`;
+}
+
+/**
+ * Membersihkan antrean yang tersisa (waiting) pada sesi yang berakhir,
+ * dan memperbarui lastIssuedNumber sesi tersebut ke nomor antrean terakhir yang dipanggil.
+ */
+async function cleanupEndedSession(sessionId: string) {
+  try {
+    const session = await Queue.findOne({ sessionId });
+    if (!session) return;
+
+    // 1. Cari tiket dengan status selain "waiting" (yaitu "serving", "done", "skipped")
+    // yang memiliki sequenceNumber terbesar dalam sesi ini.
+    const lastCalledTicket = await QueueTicket.findOne({
+      sessionId,
+      status: { $ne: "waiting" }
+    }).sort({ sequenceNumber: -1 });
+
+    let finalLastIssuedNumber = 0;
+
+    if (lastCalledTicket) {
+      finalLastIssuedNumber = lastCalledTicket.sequenceNumber;
+    } else {
+      // Jika sama sekali tidak ada tiket yang dipanggil/dilayani dalam sesi ini,
+      // cari tiket dengan sequenceNumber terkecil dalam sesi ini, lalu kurangi 1.
+      const firstTicket = await QueueTicket.findOne({ sessionId }).sort({ sequenceNumber: 1 });
+      if (firstTicket) {
+        finalLastIssuedNumber = Math.max(0, firstTicket.sequenceNumber - 1);
+      } else {
+        // Fallback ke 0 jika tidak ada tiket sama sekali di database
+        finalLastIssuedNumber = 0;
+      }
+    }
+
+    // 2. Perbarui lastIssuedNumber pada sesi Queue
+    await Queue.updateOne(
+      { sessionId },
+      { lastIssuedNumber: finalLastIssuedNumber }
+    );
+
+    // 3. Hapus semua tiket "waiting" pada sesi ini
+    const deleteResult = await QueueTicket.deleteMany({
+      sessionId,
+      status: "waiting"
+    });
+
+    console.log(`[Queue Cleanup] Sesi ${sessionId} dibersihkan. lastIssuedNumber diupdate ke ${finalLastIssuedNumber}. Menghapus ${deleteResult.deletedCount} tiket waiting.`);
+  } catch (err) {
+    console.error(`[Queue Cleanup] Gagal membersihkan sesi ${sessionId}:`, err);
+  }
 }
 
 /** Ambil setting antrean dari DB */
@@ -336,11 +387,30 @@ export const startSession = async (c: Context) => {
     const mode: "pre_registration" | "re_registration" =
       body.mode === "re_registration" ? "re_registration" : "pre_registration";
 
+    const batchSize = parseInt(body.batchSize) || 50;
+    const continueFromLast = body.continueFromLast === true || body.continueFromLast === "true";
+
     const settings = await getQueueSettings();
     const prefix = mode === "pre_registration" ? settings.preRegPrefix : settings.reRegPrefix;
 
-    // Tutup sesi aktif sebelumnya jika ada
-    await Queue.updateMany({ isActive: true }, { isActive: false, endedAt: new Date() });
+    // Tutup dan bersihkan sesi aktif sebelumnya jika ada
+    const activeSessions = await Queue.find({ isActive: true });
+    for (const activeSess of activeSessions) {
+      await Queue.updateOne(
+        { sessionId: activeSess.sessionId },
+        { isActive: false, endedAt: new Date() }
+      );
+      await cleanupEndedSession(activeSess.sessionId);
+    }
+
+    // 1. Dapatkan startNumber jika continue dari sesi terakhir
+    let startNumber = 0;
+    if (continueFromLast) {
+      const lastSession = await Queue.findOne({ mode }).sort({ createdAt: -1 });
+      if (lastSession) {
+        startNumber = lastSession.lastIssuedNumber || 0;
+      }
+    }
 
     // Bangun currentServing kosong sesuai jumlah loket
     const count = settings.counterCount;
@@ -354,17 +424,39 @@ export const startSession = async (c: Context) => {
       ticketNumber: null,
       ticketId: null,
       calledAt: null,
+      status: "tutup",
+      operators: [],
     }));
 
+    const sessionId = uuidv4();
+
+    // 2. Pre-generate tiket antrean secara batch
+    const tickets = [];
+    for (let i = 1; i <= batchSize; i++) {
+      const seqNum = startNumber + i;
+      const ticketNumber = formatTicketNumber(prefix, seqNum, settings.padding);
+      tickets.push({
+        sessionId,
+        ticketNumber,
+        sequenceNumber: seqNum,
+        mode,
+        status: "waiting",
+      });
+    }
+
+    if (tickets.length > 0) {
+      await QueueTicket.insertMany(tickets);
+    }
+
     const session = await Queue.create({
-      sessionId: uuidv4(),
+      sessionId,
       mode,
       prefix,
       counterCount: count,
       counterNames: names,
       studentLinkEnabled: settings.studentLinkEnabled,
       currentServing,
-      lastIssuedNumber: 0,
+      lastIssuedNumber: startNumber + batchSize,
       isActive: true,
       startedAt: new Date(),
     });
@@ -404,6 +496,9 @@ export const endSession = async (c: Context) => {
       { sessionId: session.sessionId },
       { isActive: false, endedAt: new Date() }
     );
+
+    // Bersihkan tiket waiting tersisa dan perbarui lastIssuedNumber
+    await cleanupEndedSession(session.sessionId);
 
     await broadcastQueueEvent({
       type: "session_end",
@@ -542,6 +637,7 @@ export const callNext = async (c: Context) => {
           "currentServing.$.ticketNumber": nextTicket.ticketNumber,
           "currentServing.$.ticketId": nextTicket._id,
           "currentServing.$.calledAt": now,
+          "currentServing.$.status": "buka",
         },
       }
     );
@@ -627,6 +723,7 @@ export const callSpecific = async (c: Context) => {
           "currentServing.$.ticketNumber": ticket.ticketNumber,
           "currentServing.$.ticketId": ticket._id,
           "currentServing.$.calledAt": now,
+          "currentServing.$.status": "buka",
         },
       }
     );
@@ -809,6 +906,215 @@ export const getTicketList = async (c: Context) => {
         mode: session.mode,
         prefix: session.prefix,
       },
+    });
+  } catch (err: any) {
+    return c.json({ success: false, message: err.message }, 500);
+  }
+};
+
+// ============================================
+// 12. OPERATOR / ADMIN — NEW HANDLERS
+// ============================================
+
+export const addSessionTickets = async (c: Context) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const count = parseInt(body.count);
+    if (!count || count < 1) {
+      return c.json({ success: false, message: "Jumlah tiket tidak valid" }, 400);
+    }
+
+    const session = await getActiveSessionDoc();
+    if (!session) {
+      return c.json({ success: false, message: "Tidak ada sesi antrean aktif" }, 400);
+    }
+
+    const settings = await getQueueSettings();
+
+    // Increment lastIssuedNumber atomically by `count`
+    const updatedSession = await Queue.findOneAndUpdate(
+      { sessionId: session.sessionId, isActive: true },
+      { $inc: { lastIssuedNumber: count } },
+      { new: true }
+    );
+
+    if (!updatedSession) {
+      return c.json({ success: false, message: "Sesi tidak ditemukan" }, 404);
+    }
+
+    const endNum = updatedSession.lastIssuedNumber;
+    const startNum = endNum - count;
+
+    const tickets = [];
+    for (let i = 1; i <= count; i++) {
+      const seqNum = startNum + i;
+      const ticketNumber = formatTicketNumber(session.prefix, seqNum, settings.padding);
+      tickets.push({
+        sessionId: session.sessionId,
+        ticketNumber,
+        sequenceNumber: seqNum,
+        mode: session.mode,
+        status: "waiting",
+      });
+    }
+
+    await QueueTicket.insertMany(tickets);
+    await broadcastQueueStatusUpdate();
+
+    return c.json({ success: true, message: `${count} tiket baru berhasil ditambahkan` });
+  } catch (err: any) {
+    return c.json({ success: false, message: err.message }, 500);
+  }
+};
+
+export const joinCounter = async (c: Context) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const counterId = parseInt(body.counterId);
+    if (!counterId || counterId < 1) {
+      return c.json({ success: false, message: "counterId tidak valid" }, 400);
+    }
+
+    const session = await getActiveSessionDoc();
+    if (!session) {
+      return c.json({ success: false, message: "Tidak ada sesi antrean aktif" }, 400);
+    }
+
+    const adminId = c.get("adminId");
+    const username = c.get("adminUsername");
+    const admin = await mongoose.model("Admin").findById(adminId).lean() as any;
+    const name = admin?.nama || username || "Operator";
+
+    const queue = await Queue.findOne({ sessionId: session.sessionId, isActive: true });
+    if (!queue) {
+      return c.json({ success: false, message: "Sesi tidak ditemukan" }, 404);
+    }
+
+    // 1. Clean this operator from any other counters
+    for (const cs of queue.currentServing) {
+      const idx = cs.operators.findIndex(o => o.adminId === adminId);
+      if (idx !== -1) {
+        cs.operators.splice(idx, 1);
+        if (cs.operators.length === 0) {
+          cs.status = "tutup";
+        }
+      }
+    }
+
+    // Find target counter
+    const target = queue.currentServing.find(cs => cs.counterId === counterId);
+    if (!target) {
+      return c.json({ success: false, message: "Loket tidak ditemukan" }, 404);
+    }
+
+    // Cek batasan maksimal 2 operator
+    if (target.operators.length >= 2) {
+      const opNames = target.operators.map(o => o.name).join(" dan ");
+      return c.json({
+        success: false,
+        message: `Loket ini sudah ditangani oleh ${opNames}. Maksimal 2 operator.`
+      }, 400);
+    }
+
+    // Tambahkan operator ke target counter
+    target.operators.push({
+      adminId,
+      name,
+      lastSeen: new Date()
+    });
+
+    // Ubah status menjadi "buka" jika sebelumnya "tutup"
+    if (target.status === "tutup") {
+      target.status = "buka";
+    }
+
+    await queue.save();
+    await broadcastQueueStatusUpdate();
+
+    return c.json({
+      success: true,
+      data: {
+        counterId: target.counterId,
+        counterName: target.counterName,
+        status: target.status,
+        operators: target.operators
+      }
+    });
+  } catch (err: any) {
+    return c.json({ success: false, message: err.message }, 500);
+  }
+};
+
+export const leaveCounter = async (c: Context) => {
+  try {
+    const session = await getActiveSessionDoc();
+    if (!session) {
+      return c.json({ success: true, message: "Tidak ada sesi aktif" });
+    }
+
+    const adminId = c.get("adminId");
+
+    const queue = await Queue.findOne({ sessionId: session.sessionId, isActive: true });
+    if (!queue) {
+      return c.json({ success: true, message: "Sesi tidak ditemukan" });
+    }
+
+    let leftCounterId = null;
+    for (const cs of queue.currentServing) {
+      const idx = cs.operators.findIndex(o => o.adminId === adminId);
+      if (idx !== -1) {
+        cs.operators.splice(idx, 1);
+        leftCounterId = cs.counterId;
+        if (cs.operators.length === 0) {
+          cs.status = "tutup";
+        }
+      }
+    }
+
+    if (leftCounterId !== null) {
+      await queue.save();
+      await broadcastQueueStatusUpdate();
+    }
+
+    return c.json({ success: true, message: "Berhasil meninggalkan loket" });
+  } catch (err: any) {
+    return c.json({ success: false, message: err.message }, 500);
+  }
+};
+
+export const updateCounterStatus = async (c: Context) => {
+  try {
+    const body = await c.req.json().catch(() => ({}));
+    const status: "buka" | "istirahat" = body.status === "istirahat" ? "istirahat" : "buka";
+
+    const session = await getActiveSessionDoc();
+    if (!session) {
+      return c.json({ success: false, message: "Tidak ada sesi aktif" }, 400);
+    }
+
+    const adminId = c.get("adminId");
+
+    const queue = await Queue.findOne({ sessionId: session.sessionId, isActive: true });
+    if (!queue) {
+      return c.json({ success: false, message: "Sesi tidak ditemukan" }, 404);
+    }
+
+    // Temukan loket tempat operator aktif
+    const target = queue.currentServing.find(cs => cs.operators.some(o => o.adminId === adminId));
+    if (!target) {
+      return c.json({ success: false, message: "Anda tidak sedang aktif di loket mana pun" }, 400);
+    }
+
+    target.status = status;
+    await queue.save();
+    await broadcastQueueStatusUpdate();
+
+    return c.json({
+      success: true,
+      data: {
+        counterId: target.counterId,
+        status: target.status
+      }
     });
   } catch (err: any) {
     return c.json({ success: false, message: err.message }, 500);

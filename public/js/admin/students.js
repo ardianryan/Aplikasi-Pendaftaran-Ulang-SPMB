@@ -194,7 +194,22 @@
     }
   }
 
+  function getPermission(key, defaultVal = true) {
+    if (admin.role === 'admin') return true;
+    const settings = window.__SPMB_ADMIN_SETTINGS || JSON.parse(sessionStorage.getItem('spmb_admin_settings') || '{}');
+    return settings[key] !== undefined ? (settings[key] === true || settings[key] === 'true') : defaultVal;
+  }
+
+  function checkAddButton() {
+    const canEdit = getPermission('operator_can_edit_student', true);
+    const addBtn = document.getElementById('addStudentBtn');
+    if (addBtn) {
+      addBtn.style.display = canEdit ? '' : 'none';
+    }
+  }
+
   function renderTable(students) {
+    const canDelete = getPermission('operator_can_delete_student', false);
     if (students.length === 0) {
       tableBody.innerHTML = `
         <tr>
@@ -237,9 +252,11 @@
               <button onclick="viewStudent('${s._id}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all">
                 <span class="material-symbols-outlined text-lg">visibility</span>
               </button>
+              ${canDelete ? `
               <button onclick="deleteStudent('${s._id}', '${name.replace(/'/g, "\\'")}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all">
                 <span class="material-symbols-outlined text-lg">delete</span>
               </button>
+              ` : ''}
             </div>
           </td>
         </tr>
@@ -355,7 +372,14 @@
   }
 
   // Initial load
+  checkAddButton();
   loadStudents();
   API.populateJalurOptions('filterJalur');
+
+  // Listen for dynamic settings updates
+  document.addEventListener('spmb_settings_ready', () => {
+    checkAddButton();
+    loadStudents();
+  });
 
 })();

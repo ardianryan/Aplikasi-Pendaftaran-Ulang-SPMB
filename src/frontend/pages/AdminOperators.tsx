@@ -88,7 +88,7 @@ export const AdminOperators = (props: any) => {
             <div id="pull-result" className="hidden text-[10px] font-bold text-emerald-600 uppercase tracking-widest"></div>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full text-left whitespace-nowrap">
               <thead>
                 <tr className="bg-slate-50/50 text-slate-500">
                   <th className="px-8 py-4 font-bold text-[10px] uppercase tracking-widest">Operator</th>

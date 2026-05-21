@@ -42,8 +42,11 @@ export const AdminLayout = (props: any) => {
         ` }} />
       </head>
       <body className="bg-slate-50 font-body text-slate-900 min-h-screen flex">
+        {/* Mobile Overlay */}
+        <div id="sidebarOverlay" className="fixed inset-0 bg-slate-900/50 z-30 hidden md:hidden transition-opacity opacity-0" onclick="toggleSidebar()"></div>
+
         {/* Sidebar */}
-        <nav className="hidden md:flex flex-col fixed top-0 left-0 w-64 h-screen bg-white border-r border-slate-200 p-6 z-40">
+        <nav id="adminSidebar" className="flex flex-col fixed top-0 left-0 w-64 h-screen bg-white border-r border-slate-200 p-6 z-40 transition-transform duration-300 -translate-x-full md:translate-x-0">
           <div className="flex items-center gap-3 mb-10">
             {props.settings?.app_logo ? (
               <img src={props.settings.app_logo} alt="Logo" className="w-8 h-8 object-contain" />
@@ -235,13 +238,18 @@ export const AdminLayout = (props: any) => {
         </nav>
 
         {/* Main Content */}
-        <div className="flex-1 md:ml-64 flex flex-col min-h-screen">
+        <div className="flex-1 md:ml-64 flex flex-col min-h-screen min-w-0">
           {/* Top Bar */}
-          <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-4">
+          <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 md:px-8 py-4">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="font-bold text-xl text-slate-800">{props.title || 'Dashboard'}</h1>
-                <p className="text-xs text-slate-500 font-medium">{props.subtitle || 'Selamat datang kembali'}</p>
+              <div className="flex items-center gap-4">
+                <button className="md:hidden p-2 -ml-2 text-slate-500 hover:bg-slate-100 rounded-xl transition" onclick="toggleSidebar()">
+                  <span className="material-symbols-outlined">menu</span>
+                </button>
+                <div>
+                  <h1 className="font-bold text-xl text-slate-800 leading-tight">{props.title || 'Dashboard'}</h1>
+                  <p className="text-xs text-slate-500 font-medium">{props.subtitle || 'Selamat datang kembali'}</p>
+                </div>
               </div>
               <div className="flex items-center gap-4">
                 <button className="p-2 text-slate-400 hover:bg-slate-100 rounded-xl transition">
@@ -262,16 +270,29 @@ export const AdminLayout = (props: any) => {
           </header>
 
           {/* Page Content */}
-          <main className="p-8 flex-1">
+          <main className="p-4 md:p-8 flex-1 w-full max-w-full">
             {props.children}
           </main>
           
-          <footer className="p-8 text-center text-slate-400 text-xs font-medium border-t border-slate-100">
+          <footer className="p-4 md:p-8 text-center text-slate-400 text-xs font-medium border-t border-slate-100">
             &copy; {new Date().getFullYear()} {props.schoolName || 'SMAN 1 Gedeg'} - {props.appName || 'SPMB'}
           </footer>
         </div>
 
         <script dangerouslySetInnerHTML={{ __html: `
+          function toggleSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar.classList.contains('-translate-x-full')) {
+              sidebar.classList.remove('-translate-x-full');
+              overlay.classList.remove('hidden');
+              setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            } else {
+              sidebar.classList.add('-translate-x-full');
+              overlay.classList.add('opacity-0');
+              setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+          }
           function logout() {
             API.logout();
           }

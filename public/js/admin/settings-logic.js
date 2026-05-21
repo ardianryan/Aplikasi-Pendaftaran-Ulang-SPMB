@@ -39,6 +39,20 @@ async function loadSettings() {
       uploadEnabled.checked = settings.upload_document_enabled.value !== false && settings.upload_document_enabled.value !== 'false';
     }
 
+    const operatorPermissions = [
+      'operator_can_verify',
+      'operator_can_edit_student',
+      'operator_can_delete_student',
+      'operator_can_whatsapp',
+      'operator_can_manage_queue'
+    ];
+    for (const key of operatorPermissions) {
+      const el = document.getElementById(key);
+      if (el && settings[key]) {
+        el.checked = settings[key].value === true || settings[key].value === 'true';
+      }
+    }
+
     for (const key of JSON_SETTINGS) {
       const el = document.getElementById(key);
       if (el && settings[key]) {
@@ -97,8 +111,23 @@ async function saveSettings() {
     const uploadEnabled = document.getElementById('upload_document_enabled');
     data.upload_document_enabled = uploadEnabled ? uploadEnabled.checked : true;
 
+    const operatorPermissions = [
+      'operator_can_verify',
+      'operator_can_edit_student',
+      'operator_can_delete_student',
+      'operator_can_whatsapp',
+      'operator_can_manage_queue'
+    ];
+    for (const key of operatorPermissions) {
+      const el = document.getElementById(key);
+      if (el) {
+        data[key] = el.checked;
+      }
+    }
+
     await API.request('/admin/settings', { method: 'PUT', body: JSON.stringify(data) });
     sessionStorage.removeItem('spmb_public_settings');
+    sessionStorage.removeItem('spmb_admin_settings');
     UI.toast('Pengaturan berhasil disimpan.', 'success');
   } catch (err) {
     UI.toast(err.message || 'Gagal menyimpan.', 'error');

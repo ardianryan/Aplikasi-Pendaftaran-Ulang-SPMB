@@ -6,6 +6,13 @@ const studentId = new URLSearchParams(window.location.search).get('id');
 
 let DOC_TYPES = []; // Populated dynamically from settings
 
+function getPermission(key, defaultVal = true) {
+  const admin = JSON.parse(localStorage.getItem('spmb_admin') || '{}');
+  if (admin.role === 'admin') return true;
+  const settings = window.__SPMB_ADMIN_SETTINGS || JSON.parse(sessionStorage.getItem('spmb_admin_settings') || '{}');
+  return settings[key] !== undefined ? (settings[key] === true || settings[key] === 'true') : defaultVal;
+}
+
 async function init() {
   if (!studentId) { window.location.href = '/admin/verify'; return; }
   try {
@@ -53,7 +60,9 @@ function render() {
   document.getElementById('side-nisn').textContent = student.nisn;
   document.getElementById('profile-jalur').textContent = student.jalur || '-';
   document.getElementById('profile-smp').textContent = student.pendidikan?.asalSekolah || student.asalSmpPreRegister || '-';
-  const waBtn = alm.telepon ? `
+  
+  const canWa = getPermission('operator_can_whatsapp', false);
+  const waBtn = (alm.telepon && canWa) ? `
     <button onclick="sendWaPrompt()" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 active:bg-emerald-200 transition text-xs font-semibold rounded-xl border border-emerald-100">
       <span class="material-symbols-outlined text-[16px]">chat</span>
       Kirim WA
@@ -68,9 +77,29 @@ function render() {
     <span class="text-[10px] font-medium opacity-60 mt-1 block">${alm.email || ''}</span>
   `;
 
+  const canVerify = getPermission('operator_can_verify', true);
+  const btnVerifyAll = document.getElementById('btn-verify-all');
+  if (btnVerifyAll) {
+    btnVerifyAll.style.display = canVerify ? '' : 'none';
+  }
+
   renderStatus();
   renderDocuments();
   renderBiodata();
+
+  // Apply biodata edit permissions
+  const canEdit = getPermission('operator_can_edit_student', true);
+  const saveBtn = document.getElementById('btn-save');
+  if (saveBtn) {
+    saveBtn.style.display = canEdit ? '' : 'none';
+  }
+
+  if (!canEdit) {
+    document.querySelectorAll('#biodata-fields input, #biodata-fields select').forEach(el => {
+      el.disabled = true;
+      el.classList.add('opacity-75', 'cursor-not-allowed');
+    });
+  }
 }
 
 function renderStatus() {
@@ -93,6 +122,7 @@ function renderStatus() {
 function renderDocuments() {
   const docs = student.dokumen || {};
   const docStatuses = student.verifikasi?.dokumenStatus || {};
+  const canVerify = getPermission('operator_can_verify', true);
 
   document.getElementById('documents-list').innerHTML = DOC_TYPES.map(dt => {
     const doc = docs[dt.key];
@@ -128,10 +158,10 @@ function renderDocuments() {
           <p class="text-xs text-slate-400 font-medium leading-relaxed">${dt.desc}</p>
           
           <div class="flex gap-3">
-            ${hasFile && !isValid ? `
+            ${hasFile && !isValid && canVerify ? `
               <button onclick="verifyDoc('${dt.key}')" class="px-4 py-2 bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-emerald-700 transition-all">Terima</button>
             ` : ''}
-            ${hasFile && !isRejected ? `
+            ${hasFile && !isRejected && canVerify ? `
               <button onclick="rejectDoc('${dt.key}')" class="px-4 py-2 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-red-100 transition-all">Tolak</button>
             ` : ''}
           </div>
@@ -393,3 +423,9 @@ async function sendWaPrompt() {
 }
 
 init();
+
+document.addEventListener('spmb_settings_ready', () => {
+  if (student) {
+    render();
+  }
+});
