@@ -424,6 +424,20 @@ function openDocModal(title, url, mime) {
   modal.classList.remove('hidden');
   modal.classList.add('flex');
 }
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('doc-modal') && !e.target.closest('button')) return;
+  const modal = document.getElementById('doc-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+// Close on Escape key press
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
 async function sendWaPrompt() {
   const message = await UI.prompt('Kirim Pesan WhatsApp', `Tulis pesan kustom untuk dikirim via gateway WA ke ${student.biodata?.namaLengkap || student.namaPreRegister}:`, 'Halo, silakan lengkapi berkas pendaftaran Anda...');
   if (!message) return;

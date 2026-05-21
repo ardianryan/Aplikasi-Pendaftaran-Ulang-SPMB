@@ -94,6 +94,7 @@ export const AdminVerify = (props: any) => {
         let totalPages = 1;
         let totalItems = 0;
         let searchTimeout = null;
+        let lastDataHash = '';
 
         const searchInput = document.getElementById('searchInput');
         const filterStatus = document.getElementById('filterStatus');
@@ -106,7 +107,11 @@ export const AdminVerify = (props: any) => {
 
         searchInput.addEventListener('input', () => {
           clearTimeout(searchTimeout);
-          searchTimeout = setTimeout(() => { currentPage = 1; loadData(); }, 400);
+          searchTimeout = setTimeout(() => { 
+            searchTimeout = null;
+            currentPage = 1; 
+            loadData(); 
+          }, 400);
         });
         filterStatus.addEventListener('change', () => { currentPage = 1; loadData(); });
         filterJalur.addEventListener('change', () => { currentPage = 1; loadData(); });
@@ -116,12 +121,23 @@ export const AdminVerify = (props: any) => {
         API.populateJalurOptions('filterJalur');
         loadData();
 
+        // Polling every 5 seconds for real-time updates
+        const pollInterval = setInterval(() => {
+          // Skip polling if the user is typing/searching
+          if (searchTimeout) return;
+          loadData();
+        }, 5000);
+
+        window.addEventListener('beforeunload', () => {
+          clearInterval(pollInterval);
+        });
+
         async function loadData() {
           const params = new URLSearchParams({
             page: currentPage,
             limit,
             status: filterStatus.value,
-            sort: '-submittedAt',
+            sort: 'submittedAt',
           });
           const search = searchInput.value.trim();
           const jalur = filterJalur.value;
@@ -133,10 +149,28 @@ export const AdminVerify = (props: any) => {
             const students = Array.isArray(res.data) ? res.data : [];
             totalItems = res.meta?.total || 0;
             totalPages = res.meta?.totalPages || 1;
-            renderTable(students);
-            renderPagination();
+            
+            // Build a unique data hash to compare if there are actual updates
+            const docs = ['kartuKeluarga', 'ijazahSkl', 'aktaKelahiran', 'foto4x6'];
+            const dataHash = JSON.stringify(students.map(s => ({
+              id: s._id,
+              status: s.verifikasi?.status,
+              uploaded: docs.filter(d => s.dokumen?.[d]?.key).length,
+              name: s.namaPreRegister,
+              jalur: s.jalur,
+              nisn: s.nisn
+            }))) + '_' + totalItems + '_' + currentPage;
+
+            if (dataHash !== lastDataHash) {
+              lastDataHash = dataHash;
+              renderTable(students);
+              renderPagination();
+            }
           } catch (err) {
-            tableBody.innerHTML = '<tr><td colSpan="6" class="px-6 py-20 text-center text-slate-400">Gagal memuat data</td></tr>';
+            // Only show error on first load or if table is empty
+            if (!lastDataHash) {
+              tableBody.innerHTML = '<tr><td colSpan="6" class="px-6 py-20 text-center text-slate-400">Gagal memuat data</td></tr>';
+            }
           }
         }
 
@@ -160,7 +194,7 @@ export const AdminVerify = (props: any) => {
             const uploaded = docs.filter(d => s.dokumen?.[d]?.key).length;
 
             return \`
-              <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
+              <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all border-l-4 \${s.verifikasi?.status === 'verified' ? 'border-l-emerald-500' : s.verifikasi?.status === 'rejected' ? 'border-l-red-500' : 'border-l-amber-500'}">
                 <td class="px-6 py-4 text-xs font-bold text-slate-400">\${startNum + i + 1}</td>
                 <td class="px-6 py-4">
                   <p class="font-bold text-slate-800">\${escapedName}</p>

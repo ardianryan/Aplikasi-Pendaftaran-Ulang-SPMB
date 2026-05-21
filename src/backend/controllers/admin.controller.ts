@@ -340,16 +340,23 @@ export async function verifyStudent(c: Context) {
     const body = await c.req.json();
     const { status, catatan, dokumenStatus } = body;
 
-    if (!["verified", "rejected"].includes(status)) {
+    if (status && !["verified", "rejected"].includes(status)) {
       return error(c, "Status harus 'verified' atau 'rejected'.", 400);
     }
 
+    if (!status && !dokumenStatus) {
+      return error(c, "Status atau status dokumen harus ditentukan.", 400);
+    }
+
     const updateData: Record<string, any> = {
-      "verifikasi.status": status,
       "verifikasi.verifiedBy": adminId,
       "verifikasi.verifiedAt": new Date(),
-      "verifikasi.catatan": catatan || "",
     };
+
+    if (status) {
+      updateData["verifikasi.status"] = status;
+      updateData["verifikasi.catatan"] = catatan || "";
+    }
 
     // Update individual document verification status if provided
     if (dokumenStatus) {
@@ -373,57 +380,61 @@ export async function verifyStudent(c: Context) {
     }
 
     // Try sending WhatsApp notification (graceful degradation)
-    try {
-      const adapter = await createWhatsAppAdapter();
-      if (adapter && student.alamat?.telepon) {
-        const templateKey = status === "verified" ? "wa_template_verified" : "wa_template_rejected";
-        const tplSetting = await Setting.findOne({ key: templateKey }).lean();
-        const template = tplSetting?.value;
-        
-        if (template) {
-          const schoolSettings = await Setting.find({
-            key: { $in: ["school_name", "school_year", "app_name"] },
-          }).lean();
-          const settingsMap: Record<string, string> = {};
-          for (const s of schoolSettings) settingsMap[s.key] = String(s.value || "");
-          const appUrl = process.env.APP_URL || "http://localhost:3000";
+    if (status) {
+      try {
+        const adapter = await createWhatsAppAdapter();
+        if (adapter && student.alamat?.telepon) {
+          const templateKey = status === "verified" ? "wa_template_verified" : "wa_template_rejected";
+          const tplSetting = await Setting.findOne({ key: templateKey }).lean();
+          const template = tplSetting?.value;
+          
+          if (template) {
+            const schoolSettings = await Setting.find({
+              key: { $in: ["school_name", "school_year", "app_name"] },
+            }).lean();
+            const settingsMap: Record<string, string> = {};
+            for (const s of schoolSettings) settingsMap[s.key] = String(s.value || "");
+            const appUrl = process.env.APP_URL || "http://localhost:3000";
 
-          const studentName = student.biodata?.namaLengkap || student.namaPreRegister || (student as any).namaLengkap || "";
-          const vars: Record<string, string> = {
-            nama: studentName,
-            nisn: student.nisn || "",
-            jalur: student.jalur || "",
-            sekolah: settingsMap.school_name || "",
-            tahun: settingsMap.school_year || "",
-            url: appUrl,
-          };
+            const studentName = student.biodata?.namaLengkap || student.namaPreRegister || (student as any).namaLengkap || "";
+            const vars: Record<string, string> = {
+              nama: studentName,
+              nisn: student.nisn || "",
+              jalur: student.jalur || "",
+              sekolah: settingsMap.school_name || "",
+              tahun: settingsMap.school_year || "",
+              url: appUrl,
+            };
 
-          const message = renderTemplate(template, vars);
-          const waResult = await adapter.sendMessage(student.alamat.telepon, message);
+            const message = renderTemplate(template, vars);
+            const waResult = await adapter.sendMessage(student.alamat.telepon, message);
 
-          // Log the message
-          const adminUsername = c.get("adminUsername") || "admin";
-          await WALog.create({
-            recipientPhone: normalizePhone(student.alamat.telepon),
-            recipientName: studentName,
-            recipientNisn: student.nisn || "",
-            messageType: status === "verified" ? "verified" : "rejected",
-            messageContent: message,
-            status: waResult.success ? "sent" : "failed",
-            messageId: waResult.messageId || "",
-            errorMessage: waResult.error || "",
-            sentBy: adminUsername,
-          });
+            // Log the message
+            const adminUsername = c.get("adminUsername") || "admin";
+            await WALog.create({
+              recipientPhone: normalizePhone(student.alamat.telepon),
+              recipientName: studentName,
+              recipientNisn: student.nisn || "",
+              messageType: status === "verified" ? "verified" : "rejected",
+              messageContent: message,
+              status: waResult.success ? "sent" : "failed",
+              messageId: waResult.messageId || "",
+              errorMessage: waResult.error || "",
+              sentBy: adminUsername,
+            });
+          }
         }
+      } catch (waErr: any) {
+        console.error("[WA-AUTO-NOTIF] Gagal mengirim notifikasi otomatis:", waErr.message);
       }
-    } catch (waErr: any) {
-      console.error("[WA-AUTO-NOTIF] Gagal mengirim notifikasi otomatis:", waErr.message);
     }
 
     return success(
       c,
       student,
-      `Data siswa berhasil ${status === "verified" ? "diverifikasi" : "ditolak"}.`
+      status
+        ? `Data siswa berhasil ${status === "verified" ? "diverifikasi" : "ditolak"}.`
+        : "Dokumen siswa berhasil diperbarui."
     );
   } catch (err: any) {
     console.error("[ADMIN] verifyStudent error:", err);
