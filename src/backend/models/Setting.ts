@@ -357,6 +357,16 @@ export const DEFAULT_SETTINGS = [
     value: "dark",
     description: "Tema bawaan awal display publik antrean (dark = gelap, light = terang)",
   },
+  {
+    key: "queue_average_service_time",
+    value: 15,
+    description: "Estimasi rata-rata waktu pelayanan per pendaftar (menit)",
+  },
+  {
+    key: "queue_operational_hours",
+    value: "Senin - Jumat, 08:00 - 14:00 WIB",
+    description: "Informasi jam operasional pelayanan antrean verifikasi",
+  },
   // === Hak Akses Operator ===
   {
     key: "operator_can_verify",

@@ -430,18 +430,20 @@ export const startSession = async (c: Context) => {
 
     const sessionId = uuidv4();
 
-    // 2. Pre-generate tiket antrean secara batch
+    // 2. Pre-generate tiket antrean secara batch jika studentLinkEnabled dinonaktifkan
     const tickets = [];
-    for (let i = 1; i <= batchSize; i++) {
-      const seqNum = startNumber + i;
-      const ticketNumber = formatTicketNumber(prefix, seqNum, settings.padding);
-      tickets.push({
-        sessionId,
-        ticketNumber,
-        sequenceNumber: seqNum,
-        mode,
-        status: "waiting",
-      });
+    if (!settings.studentLinkEnabled) {
+      for (let i = 1; i <= batchSize; i++) {
+        const seqNum = startNumber + i;
+        const ticketNumber = formatTicketNumber(prefix, seqNum, settings.padding);
+        tickets.push({
+          sessionId,
+          ticketNumber,
+          sequenceNumber: seqNum,
+          mode,
+          status: "waiting",
+        });
+      }
     }
 
     if (tickets.length > 0) {
@@ -456,7 +458,7 @@ export const startSession = async (c: Context) => {
       counterNames: names,
       studentLinkEnabled: settings.studentLinkEnabled,
       currentServing,
-      lastIssuedNumber: startNumber + batchSize,
+      lastIssuedNumber: settings.studentLinkEnabled ? startNumber : (startNumber + batchSize),
       isActive: true,
       startedAt: new Date(),
     });

@@ -189,6 +189,34 @@ export const AdminQueueSettings = (props: any) => {
           </div>
         </div>
 
+        {/* === OPERASIONAL & LAYANAN === */}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+          <h3 className="font-bold text-slate-700 mb-1">Operasional & Estimasi Pelayanan</h3>
+          <p className="text-xs text-slate-400 mb-6">Konfigurasi jam kerja antrean dan rata-rata waktu layanan per siswa</p>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                Rata-Rata Waktu Pelayanan (Menit)
+              </label>
+              <input id="queueAverageServiceTime" type="number" min="1" max="180"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 text-sm focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 transition-all"
+                placeholder="15" />
+              <p className="text-[10px] text-slate-400 mt-1">Digunakan untuk menghitung estimasi waktu tunggu siswa secara dinamis.</p>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                Informasi Jam Operasional Pelayanan
+              </label>
+              <input id="queueOperationalHours" type="text"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 text-sm focus:outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-400 transition-all"
+                placeholder="Senin - Jumat, 08:00 - 14:00 WIB" />
+              <p className="text-[10px] text-slate-400 mt-1">Ditampilkan pada dashboard siswa saat sesi antrean belum dibuka.</p>
+            </div>
+          </div>
+        </div>
+
         {/* === PENGUMUMAN & MEDIA DISPLAY TV === */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 lg:col-span-2">
           <h3 className="font-bold text-slate-700 mb-1">Pengumuman & Media Display TV</h3>

@@ -16,6 +16,7 @@ import {
   getReview,
   submitFinal,
   downloadPdf,
+  requestQueueTicket,
 } from "../controllers/student.controller";
 
 const studentRoutes = new Hono();
@@ -46,5 +47,8 @@ studentRoutes.post("/submit", lockedGuard, submitFinal);
 
 // GET /student/pdf - Download PDF bukti registrasi
 studentRoutes.get("/pdf", downloadPdf);
+
+// POST /student/queue/join - Claim queue ticket dynamically
+studentRoutes.post("/queue/join", requestQueueTicket);
 
 export { studentRoutes };

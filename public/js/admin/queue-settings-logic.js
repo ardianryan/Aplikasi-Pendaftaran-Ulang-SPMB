@@ -22,6 +22,8 @@
   const btnCopyUrl              = document.getElementById('btnCopyUrl');
   const btnSaveSettings         = document.getElementById('btnSaveSettings');
   const toast                   = document.getElementById('toast');
+  const queueAverageServiceTime = document.getElementById('queueAverageServiceTime');
+  const queueOperationalHours   = document.getElementById('queueOperationalHours');
 
   // Announcement DOM refs
   const queueDisplayAnnouncementType = document.getElementById('queueDisplayAnnouncementType');
@@ -106,6 +108,14 @@
       if (queueStudentLinkEnabled) {
         queueStudentLinkEnabled.checked = !!data.queue_student_link_enabled?.value;
         toggleStudentLinkNote(!!data.queue_student_link_enabled?.value);
+      }
+
+      // Operational & Service time
+      if (queueAverageServiceTime) {
+        queueAverageServiceTime.value = data.queue_average_service_time?.value ?? 15;
+      }
+      if (queueOperationalHours) {
+        queueOperationalHours.value = data.queue_operational_hours?.value ?? "Senin - Jumat, 08:00 - 14:00 WIB";
       }
 
       // 4 Setting Media Baru
@@ -210,7 +220,11 @@
       queue_display_announcement_type: queueDisplayAnnouncementType?.value || 'none',
       queue_display_theme: queueDisplayTheme?.value || 'dark',
       queue_display_announcement_yt_id: queueDisplayAnnouncementYtId?.value?.trim() || '',
-      queue_display_announcement_html: quill ? quill.root.innerHTML : ''
+      queue_display_announcement_html: quill ? quill.root.innerHTML : '',
+
+      // Dynamic Operational & Estimations
+      queue_average_service_time: parseInt(queueAverageServiceTime?.value || '15'),
+      queue_operational_hours: queueOperationalHours?.value?.trim() || 'Senin - Jumat, 08:00 - 14:00 WIB'
     };
 
     // Validasi

@@ -996,37 +996,154 @@ const Wizard = {
 
       // Render Queue Ticket
       const ticket = res.data?.queueTicket;
-      this.renderQueueTicket(ticket);
+      const queueConfig = res.data?.queueConfig;
+      this.renderQueueTicket(ticket, queueConfig);
     } catch (e) {}
   },
 
-  renderQueueTicket(ticket) {
+  async claimQueueTicket() {
+    try {
+      this.setButtonLoading("btn-claim-ticket", true);
+      const res = await API.request("/student/queue/join", { method: "POST" });
+      UI.toast(res.message || "Nomor antrean berhasil diambil!", "success");
+      await this.renderDone();
+    } catch (err) {
+      UI.toast(err.message || "Gagal mengambil nomor antrean.", "error");
+    } finally {
+      this.setButtonLoading("btn-claim-ticket", false);
+    }
+  },
+
+  renderQueueTicket(ticket, queueConfig) {
     const ticketEl = document.getElementById("student-queue-ticket");
     if (!ticketEl) return;
 
     if (ticket) {
+      // Kondisi 3: Siswa memiliki tiket antrean aktif
       ticketEl.innerHTML = `
-        <div class="mt-2 mb-10 p-6 bg-blue-50/50 border-2 border-dashed border-blue-100 rounded-3xl max-w-sm mx-auto text-center shadow-sm">
-          <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm shadow-blue-50">
+        <div class="mt-6 mb-8 p-8 bg-gradient-to-br from-indigo-50/80 via-blue-50/50 to-white border border-blue-100 rounded-3xl max-w-md mx-auto text-center shadow-md relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-24 h-24 bg-blue-100/30 rounded-full blur-xl pointer-events-none"></div>
+
+          <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm shadow-blue-50">
             <span class="material-symbols-outlined text-2xl">confirmation_number</span>
           </div>
+          
           <span class="text-[10px] font-bold text-blue-500 uppercase tracking-widest block mb-1">Nomor Antrean Anda</span>
-          <span class="text-4xl font-extrabold text-blue-700 tracking-tight block">${ticket.ticketNumber}</span>
-          <span class="text-[11px] font-medium text-slate-400 block mt-2">
-            Status: ${ticket.status === 'serving' ? '<span class="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-lg animate-pulse">Sedang Dilayani</span>' : 
-                      ticket.status === 'done' ? '<span class="text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded-lg">Selesai</span>' :
-                      ticket.status === 'skipped' ? '<span class="text-amber-600 font-bold bg-amber-50 px-2 py-0.5 rounded-lg">Dilewati</span>' :
-                      '<span class="text-blue-500 font-bold bg-blue-100/50 px-2 py-0.5 rounded-lg">Menunggu Panggilan</span>'}
-          </span>
-          <p class="text-[10px] text-slate-400 mt-4 leading-relaxed">Silakan tunjukkan nomor antrean ini kepada panitia loket verifikasi saat berkas fisik Anda diperiksa secara tatap muka.</p>
+          <span class="text-5xl font-extrabold text-blue-700 tracking-tight block">${ticket.ticketNumber}</span>
+          
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-100 rounded-full text-xs font-bold text-slate-600 shadow-sm mt-3 mb-6">
+            <span class="w-2 h-2 rounded-full ${ticket.status === 'serving' ? 'bg-emerald-500 animate-ping' : 'bg-blue-400'}"></span>
+            <span>Status: </span>
+            ${ticket.status === 'serving' ? '<span class="text-emerald-600 font-extrabold">Sedang Dilayani</span>' : 
+              ticket.status === 'done' ? '<span class="text-slate-500 font-extrabold">Selesai</span>' :
+              ticket.status === 'skipped' ? '<span class="text-amber-600 font-extrabold">Dilewati</span>' :
+              '<span class="text-blue-500 font-extrabold">Menunggu Panggilan</span>'}
+          </div>
+
+          ${ticket.status === 'waiting' ? `
+            <div class="grid grid-cols-2 gap-4 border-t border-b border-blue-100/60 py-4 mb-4">
+              <div class="text-center border-r border-blue-100/40">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Estimasi Tunggu</span>
+                <span class="text-base font-extrabold text-blue-700">~${ticket.estimatedWaitMinutes} Menit</span>
+                <span class="text-[9px] font-semibold text-slate-400 block mt-0.5">${ticket.waitingAhead} siswa di depan</span>
+              </div>
+              <div class="text-center">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Jam Kehadiran</span>
+                <span class="text-base font-extrabold text-indigo-700">${ticket.recommendedTimeWindow || '-'}</span>
+                <span class="text-[9px] font-semibold text-slate-400 block mt-0.5">Rekomendasi Hadir</span>
+              </div>
+            </div>
+          ` : ticket.status === 'serving' ? `
+            <div class="mt-4 bg-emerald-50/80 border border-emerald-100 rounded-2xl py-4 px-4 mb-4 text-center">
+              <span class="material-symbols-outlined text-emerald-600 text-2xl animate-bounce mb-1 block">campaign</span>
+              <span class="text-sm font-bold text-emerald-800 block">Nomor Anda Sedang Dipanggil!</span>
+              <span class="text-xs font-semibold text-emerald-600 mt-1 block">Silakan menuju ke meja/loket verifikasi pendaftaran sekarang.</span>
+            </div>
+          ` : ticket.status === 'skipped' ? `
+            <div class="mt-4 bg-amber-50/80 border border-amber-100 rounded-2xl py-4 px-4 mb-4 text-center">
+              <span class="material-symbols-outlined text-amber-600 text-2xl mb-1 block">warning</span>
+              <span class="text-sm font-bold text-amber-800 block">Antrean Anda Dilewati</span>
+              <span class="text-xs font-medium text-slate-500 mt-1 block">Anda tidak berada di lokasi saat dipanggil. Hubungi panitia di loket untuk dipanggil ulang.</span>
+            </div>
+          ` : `
+            <div class="mt-4 bg-slate-50 border border-slate-100 rounded-2xl py-4 px-4 mb-4 text-center">
+              <span class="material-symbols-outlined text-slate-500 text-2xl mb-1 block">task_alt</span>
+              <span class="text-sm font-bold text-slate-700 block">Verifikasi Fisik Selesai</span>
+              <span class="text-xs font-medium text-slate-500 mt-1 block">Proses verifikasi berkas fisik Anda telah selesai diproses. Terima kasih!</span>
+            </div>
+          `}
+
+          <p class="text-[10px] text-slate-400 leading-relaxed">
+            Harap datang tepat waktu sesuai rekomendasi jam kehadiran. Tiket antrean ini hanya berlaku hari ini dan akan kedaluwarsa setelah sesi ditutup oleh admin.
+          </p>
+        </div>
+      `;
+      ticketEl.classList.remove("hidden");
+      this.initQueueSSE();
+    } else if (queueConfig && queueConfig.isActive === true && queueConfig.studentLinkEnabled === true) {
+      // Kondisi 2: Sesi aktif & siswa belum mengambil antrean
+      ticketEl.innerHTML = `
+        <div class="mt-6 mb-8 p-8 bg-gradient-to-br from-indigo-600 via-indigo-600 to-blue-700 text-white rounded-3xl max-w-md mx-auto text-center shadow-xl shadow-indigo-100 relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+          <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+
+          <div class="w-16 h-16 bg-white/15 text-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner">
+            <span class="material-symbols-outlined text-3xl">confirmation_number</span>
+          </div>
+          <h3 class="text-xl font-extrabold mb-2 tracking-tight text-white">Ambil Nomor Antrean</h3>
+          <p class="text-sm text-indigo-100/90 leading-relaxed mb-6">
+            Sesi verifikasi berkas fisik hari ini telah dibuka secara online. Ambil nomor antrean Anda sekarang secara mandiri.
+          </p>
+          
+          <div class="p-4 bg-white/10 border border-white/10 rounded-2xl text-left mb-6 backdrop-blur-sm">
+            <div class="flex gap-3">
+              <span class="material-symbols-outlined text-amber-300 text-xl shrink-0 mt-0.5">warning</span>
+              <div>
+                <span class="text-xs font-bold text-white block mb-0.5">Peringatan Penting</span>
+                <span class="text-[11px] font-medium text-indigo-100 leading-relaxed block">
+                  Tiket ini hanya berlaku untuk sesi hari ini. Pastikan Anda mengklik tombol saat Anda sudah siap menuju lokasi sekolah atau telah berada di dekat lokasi pendaftaran.
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-claim-ticket" onclick="Wizard.claimQueueTicket()" class="w-full py-4 px-6 bg-white text-indigo-700 hover:bg-slate-50 font-extrabold rounded-2xl transition-all duration-255 active:scale-[0.98] flex items-center justify-center gap-3 shadow-lg shadow-indigo-950/20 text-sm">
+            <span class="material-symbols-outlined text-lg">add_circle</span>
+            <span class="btn-text">Ambil Nomor Antrean Hari Ini</span>
+          </button>
         </div>
       `;
       ticketEl.classList.remove("hidden");
       this.initQueueSSE();
     } else {
-      ticketEl.innerHTML = "";
-      ticketEl.classList.add("hidden");
-      this.closeQueueSSE();
+      // Kondisi 1: Sesi nonaktif / link dinonaktifkan
+      ticketEl.innerHTML = `
+        <div class="mt-6 mb-8 p-8 bg-slate-50 border border-slate-200 rounded-3xl max-w-md mx-auto text-center shadow-sm">
+          <div class="w-16 h-16 bg-slate-100 text-slate-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm shadow-slate-100">
+            <span class="material-symbols-outlined text-3xl">schedule</span>
+          </div>
+          <h3 class="text-lg font-bold text-slate-800 mb-2">Antrean Belum Dibuka</h3>
+          <p class="text-sm text-slate-500 leading-relaxed mb-6">
+            ${!queueConfig || queueConfig.isActive === false 
+              ? 'Formulir Buku Induk Anda telah berhasil dikirim & dikunci. Sesi pelayanan antrean verifikasi berkas fisik hari ini belum dibuka oleh panitia.' 
+              : 'Formulir Buku Induk Anda telah dikirim. Saat ini antrean online mandiri dinonaktifkan. Silakan datangi loket verifikasi fisik di sekolah secara langsung.'}
+          </p>
+          <div class="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm text-left">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-slate-400 text-xl">calendar_month</span>
+              <div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Jam Operasional Loket</span>
+                <span class="text-xs font-extrabold text-slate-700 block">${queueConfig?.operationalHours || 'Senin - Jumat, 08:00 - 14:00 WIB'}</span>
+              </div>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-6 leading-relaxed">
+            Harap persiapkan berkas fisik pendukung Anda dan cetak dokumen Buku Induk di atas sebelum menuju ke sekolah.
+          </p>
+        </div>
+      `;
+      ticketEl.classList.remove("hidden");
+      this.initQueueSSE(); // Tetap mendengarkan agar otomatis berubah jika sesi dibuka
     }
   },
 
@@ -1038,7 +1155,7 @@ const Wizard = {
     const handleUpdate = async () => {
       try {
         const res = await API.getReview();
-        this.renderQueueTicket(res.data?.queueTicket);
+        this.renderQueueTicket(res.data?.queueTicket, res.data?.queueConfig);
       } catch (err) {}
     };
 
@@ -1046,6 +1163,7 @@ const Wizard = {
     this.queueSSE.addEventListener('call', handleUpdate);
     this.queueSSE.addEventListener('done', handleUpdate);
     this.queueSSE.addEventListener('session_end', handleUpdate);
+    this.queueSSE.addEventListener('session_start', handleUpdate);
     
     this.queueSSE.onerror = () => {
       // Silent error handler

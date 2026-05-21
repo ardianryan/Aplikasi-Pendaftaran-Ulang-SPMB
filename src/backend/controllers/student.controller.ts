@@ -300,6 +300,35 @@ export async function getReview(c: Context) {
       return error(c, "Data siswa tidak ditemukan.", 404);
     }
 
+    // Load active session and settings
+    let queueConfig = {
+      isActive: false,
+      studentLinkEnabled: false,
+      averageServiceTime: 15,
+      operationalHours: "Senin - Jumat, 08:00 - 14:00 WIB"
+    };
+
+    let activeSession = null;
+
+    try {
+      const { Queue } = await import("../models/Queue");
+      const { Setting } = await import("../models/Setting");
+      
+      activeSession = await Queue.findOne({ isActive: true }).lean();
+      
+      const timeSetting = await Setting.findOne({ key: "queue_average_service_time" }).lean();
+      const hoursSetting = await Setting.findOne({ key: "queue_operational_hours" }).lean();
+      
+      queueConfig = {
+        isActive: !!activeSession,
+        studentLinkEnabled: activeSession ? !!activeSession.studentLinkEnabled : false,
+        averageServiceTime: timeSetting ? Number(timeSetting.value) : 15,
+        operationalHours: hoursSetting ? String(hoursSetting.value) : "Senin - Jumat, 08:00 - 14:00 WIB"
+      };
+    } catch (err) {
+      console.error("[STUDENT] Failed to load queue session or settings:", err);
+    }
+
     // Check for active queue ticket for this student
     let queueTicket = null;
     try {
@@ -316,7 +345,39 @@ export async function getReview(c: Context) {
         const { Queue } = await import("../models/Queue");
         const session = await Queue.findOne({ sessionId: activeTicket.sessionId, isActive: true }).lean();
         if (session) {
-          queueTicket = activeTicket;
+          let waitingAhead = 0;
+          let estimatedWaitMinutes = 0;
+          let recommendedTimeWindow = null;
+
+          if (activeTicket.status === "waiting") {
+            waitingAhead = await QueueTicket.countDocuments({
+              sessionId: activeTicket.sessionId,
+              status: "waiting",
+              sequenceNumber: { $lt: activeTicket.sequenceNumber }
+            });
+
+            const openOperators = session.currentServing ? session.currentServing.filter((op: any) => op.status === "buka").length : 0;
+            const activeOperators = openOperators > 0 ? openOperators : 1;
+            estimatedWaitMinutes = Math.round((waitingAhead * queueConfig.averageServiceTime) / activeOperators);
+
+            const now = new Date();
+            const centerTime = new Date(now.getTime() + estimatedWaitMinutes * 60 * 1000);
+            const startTime = new Date(centerTime.getTime() - 10 * 60 * 1000);
+            const endTime = new Date(centerTime.getTime() + 10 * 60 * 1000);
+            const adjustedStartTime = startTime.getTime() < now.getTime() ? now : startTime;
+
+            const formatTime = (d: Date) => {
+              return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+            };
+            recommendedTimeWindow = `${formatTime(adjustedStartTime)} - ${formatTime(endTime)} WIB`;
+          }
+
+          queueTicket = {
+            ...activeTicket,
+            waitingAhead,
+            estimatedWaitMinutes,
+            recommendedTimeWindow
+          };
         }
       }
     } catch (e) {
@@ -325,7 +386,8 @@ export async function getReview(c: Context) {
 
     return success(c, {
       ...student,
-      queueTicket
+      queueTicket,
+      queueConfig
     });
   } catch (err: any) {
     console.error("[STUDENT] getReview error:", err);
@@ -388,75 +450,7 @@ export async function submitFinal(c: Context) {
     student.wizardStep = WIZARD_STEPS.DONE;
     await student.save();
 
-    // ----------------------------------------------------
-    // Auto-Link Queue Ticket if active session exists
-    // ----------------------------------------------------
-    try {
-      const { Queue } = await import("../models/Queue");
-      const { QueueTicket } = await import("../models/QueueTicket");
-      const { getQueueSettings, broadcastQueueStatusUpdate } = await import("./queue.controller");
-
-      // Find an active session
-      const activeSession = await Queue.findOne({ isActive: true });
-      if (activeSession && activeSession.studentLinkEnabled) {
-        // 1. Check if this student already has a ticket in this session
-        const existingTicket = await QueueTicket.findOne({
-          sessionId: activeSession.sessionId,
-          studentNisn: student.nisn
-        });
-
-        if (!existingTicket) {
-          // 2. Try to find the next available pre-allocated ticket in the batch
-          const ticket = await QueueTicket.findOne({
-            sessionId: activeSession.sessionId,
-            status: "waiting",
-            studentNisn: null
-          }).sort({ sequenceNumber: 1 });
-
-          if (ticket) {
-            // Assign this pre-allocated ticket to the student
-            ticket.studentId = student._id;
-            ticket.studentName = student.biodata?.namaLengkap || student.namaPreRegister || "-";
-            ticket.studentNisn = student.nisn;
-            await ticket.save();
-          } else {
-            // 3. If no pre-allocated tickets are left, dynamically generate a new one on-demand
-            const settings = await getQueueSettings();
-            
-            const updatedSession = await Queue.findOneAndUpdate(
-              { sessionId: activeSession.sessionId, isActive: true },
-              { $inc: { lastIssuedNumber: 1 } },
-              { new: true }
-            );
-
-            if (updatedSession) {
-              const num = updatedSession.lastIssuedNumber;
-              const formatTicketNumber = (prefix: string, num: number, padding: number): string => {
-                return `${prefix}${String(num).padStart(padding, "0")}`;
-              };
-              const ticketNumber = formatTicketNumber(activeSession.prefix, num, settings.padding);
-
-              await QueueTicket.create({
-                sessionId: activeSession.sessionId,
-                ticketNumber,
-                sequenceNumber: num,
-                mode: activeSession.mode,
-                status: "waiting",
-                studentId: student._id,
-                studentName: student.biodata?.namaLengkap || student.namaPreRegister || "-",
-                studentNisn: student.nisn,
-              });
-            }
-          }
-
-          // Broadcast status update to all connected TV displays
-          await broadcastQueueStatusUpdate();
-        }
-      }
-    } catch (queueErr) {
-      console.error("[STUDENT] Auto-linking queue ticket failed:", queueErr);
-      // Don't fail the submission if queue ticket generation has an issue
-    }
+    // Auto-link queue ticket is removed to support interactive click-to-queue ticket system.
 
     return success(
       c,
@@ -510,5 +504,83 @@ export async function downloadPdf(c: Context) {
   } catch (err: any) {
     console.error("[STUDENT] downloadPdf error:", err);
     return error(c, "Gagal menghasilkan PDF.", 500);
+  }
+}
+
+// ============================================
+// POST /student/queue/join
+// Claims a queue ticket dynamically for the active session
+// ============================================
+
+export async function requestQueueTicket(c: Context) {
+  const nisn = c.get("studentNisn");
+
+  try {
+    const student = await Student.findOne({ nisn });
+
+    if (!student) {
+      return error(c, "Data siswa tidak ditemukan.", 404);
+    }
+
+    if (!student.isSubmitted) {
+      return error(c, "Anda harus melakukan pengiriman final Buku Induk terlebih dahulu.", 400);
+    }
+
+    const { Queue } = await import("../models/Queue");
+    const { QueueTicket } = await import("../models/QueueTicket");
+    const { getQueueSettings, broadcastQueueStatusUpdate } = await import("./queue.controller");
+
+    // Find active session
+    const activeSession = await Queue.findOne({ isActive: true });
+    if (!activeSession) {
+      return error(c, "Sesi antrean pelayanan verifikasi berkas belum dibuka oleh panitia.", 400);
+    }
+
+    // Check if student already has a ticket in this session
+    const existingTicket = await QueueTicket.findOne({
+      sessionId: activeSession.sessionId,
+      studentNisn: student.nisn
+    }).lean();
+
+    if (existingTicket) {
+      return success(c, existingTicket, "Anda sudah memiliki tiket antrean.");
+    }
+
+    // Increment lastIssuedNumber atomically
+    const settings = await getQueueSettings();
+    const updatedSession = await Queue.findOneAndUpdate(
+      { sessionId: activeSession.sessionId, isActive: true },
+      { $inc: { lastIssuedNumber: 1 } },
+      { new: true }
+    );
+
+    if (!updatedSession) {
+      return error(c, "Gagal mengklaim nomor antrean, silakan coba lagi.", 500);
+    }
+
+    const num = updatedSession.lastIssuedNumber;
+    const formatTicketNumber = (prefix: string, num: number, padding: number): string => {
+      return `${prefix}${String(num).padStart(padding, "0")}`;
+    };
+    const ticketNumber = formatTicketNumber(activeSession.prefix, num, settings.padding);
+
+    const ticket = await QueueTicket.create({
+      sessionId: activeSession.sessionId,
+      ticketNumber,
+      sequenceNumber: num,
+      mode: activeSession.mode,
+      status: "waiting",
+      studentId: student._id,
+      studentName: student.biodata?.namaLengkap || student.namaPreRegister || "-",
+      studentNisn: student.nisn,
+    });
+
+    // Broadcast SSE update
+    await broadcastQueueStatusUpdate();
+
+    return success(c, ticket, "Nomor antrean berhasil diambil.");
+  } catch (err: any) {
+    console.error("[STUDENT] requestQueueTicket error:", err);
+    return error(c, "Gagal memproses klaim nomor antrean.", 500);
   }
 }
